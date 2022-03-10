@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import json
+import yaml
 import locale
 import math
 import os
