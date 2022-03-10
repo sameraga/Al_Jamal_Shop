@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import yaml
 import bbbb
 import json
 import locale
@@ -53,7 +54,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.stackedWidget.setCurrentIndex(0)
         else:
             self.lbl_wrong.setText('* اسم المستخدم أو كلمة المرور غير صحيحة !!!')
-            # self.lbl_wrong.setVisible(True)
+            self.lbl_wrong.setVisible(True)
 
 
 if __name__ == '__main__':
