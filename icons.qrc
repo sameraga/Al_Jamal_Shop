@@ -1,0 +1,30 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>icons/02.png</file>
+    <file>icons/add-user.png</file>
+    <file>icons/archeology.png</file>
+    <file>icons/delete-user.png</file>
+    <file>icons/edit.png</file>
+    <file>icons/emp.png</file>
+    <file>icons/exit_icon.png</file>
+    <file>icons/empty.png</file>
+    <file>icons/first-white.png</file>
+    <file>icons/last-white.png</file>
+    <file>icons/next-white.png</file>
+    <file>icons/padlock.png</file>
+    <file>icons/previous-white.png</file>
+    <file>icons/previous.png</file>
+    <file>icons/printer.png</file>
+    <file>icons/refresh.png</file>
+    <file>icons/remove-user.png</file>
+    <file>icons/conect1.png</file>
+    <file>icons/detal1.png</file>
+    <file>icons/health1.png</file>
+    <file>icons/honesty1.png</file>
+    <file>icons/transfer1.png</file>
+    <file>icons/visit1.png</file>
+    <file>icons/ph1.png</file>
+    <file>icons/ph2.png</file>
+    <file>icons/ph3.jpg</file>
+  </qresource>
+</RCC>
