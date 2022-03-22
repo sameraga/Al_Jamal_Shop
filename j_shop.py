@@ -123,7 +123,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.btn_delete_product.clicked.connect(self.delete_product)
         self.btn_clear_product.clicked.connect(self.clear_product_inputs)
         # print and to exel
-        self.btn_print_table_p.clicked.connect(self.print_product)
+        self.btn_print_table_p.clicked.connect(self.print_table_product)
         self.btn_to_exel_p.clicked.connect(lambda: self.to_excel(self.p_table))
 
         # pages
@@ -184,13 +184,44 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             else:
                 QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن الكود مكرر')
         else:
-            QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب أن تدخل الكود والاسم')
+            QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب أن تدخل الكود واسم المادة')
 
     def update_product(self):
-        pass
+        product = self.save_product_info()
+        if product['code'] and product['name']:
+            if len(product['code']) < 6:
+                QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن رقم الكود غير كامل')
+            else:
+                if product['code'] == self.m_c:
+                    database.db.update_row("product", product, self.m_id)
+                    self.update_product_table()
+                    self.clear_product_inputs()
+                    toaster_Notify.QToaster.show_message(parent=self, message=f"تعديل مادة\nتم تعديل المادة{product['name']} بنجاح")
+                elif int(database.db.count_row("product", product['code'])) == 0:
+                    database.db.update_row("product", product, self.m_id)
+                    self.update_product_table()
+                    self.clear_product_inputs()
+                    toaster_Notify.QToaster.show_message(parent=self, message=f"تعديل مادة\nتم تعديل المادة{product['name']} بنجاح")
+                else:
+                    QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن الكود مكرر')
+        else:
+            QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب أن تدخل الكود واسم المادة')
 
     def delete_product(self):
-        pass
+        product = self.save_product_info()
+        msg = QtWidgets.QMessageBox()
+        if product['code']:
+            button_reply = msg.question(self, 'تأكيد', f"هل أنت متأكد من حذف {product['name']} ؟ ",
+                                        msg.Yes | msg.No,
+                                        msg.No)
+            if button_reply == msg.Yes:
+                database.db.delete_medicine(product['code'])
+                self.update_product_table()
+                self.clear_product_inputs()
+                toaster_Notify.QToaster.show_message(parent=self, message=f"حذف مادة\nتم حذف المادة{product['name']} بنجاح")
+        else:
+            QtWidgets.QMessageBox.warning(
+                None, 'خطأ', 'الرقم غير موجود\n أعد الضغط على اسم الدواء الذي تريد من الجدول')
 
     def search_product_save(self):
         fil = {}
@@ -227,6 +258,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.p_table.item(row_idx, 6).setTextAlignment(QtCore.Qt.AlignCenter)
             self.p_table.setItem(row_idx, 7, QtWidgets.QTableWidgetItem(row['sell_price']))
             self.p_table.item(row_idx, 7).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.p_table.setItem(row_idx, 8, QtWidgets.QTableWidgetItem(row['source']))
+            self.p_table.item(row_idx, 8).setTextAlignment(QtCore.Qt.AlignCenter)
         self.p_table.resizeColumnsToContents()
 
     def clear_product_inputs(self):
