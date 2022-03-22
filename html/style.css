@@ -1,0 +1,45 @@
+@media print {
+  body,
+  page {
+      margin: 5;
+      box-shadow: 0;
+  }
+}
+
+table,tbody,tfoot,thead,tr,th,td {
+  background: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 16px;
+  font: inherit;
+  vertical-align: middle;
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: #333;
+  font-family: Helvetica, Arial, sans-serif;
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+td,th {
+  border: 1px solid ;
+  height: 40px;
+  transition: all 0.3s;
+}
+th {
+  background: #DFDFDF;
+  font-weight: bold;
+}
+td {
+  background: #FAFAFA;
+  text-align: center;
+}
+tr: nth-child(even) td {
+  background: #F1F1F1;
+}
+tr: nth-child(odd) td {
+  background: #FEFEFE;
+}

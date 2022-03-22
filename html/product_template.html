@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="utf-8">
+  <!-- <title>Example 1</title> -->
+  <link rel="stylesheet" href="style.css" media="all" />
+</head>
+
+<body>
+  <header class="clearfix">
+    <dev style="display: flex">
+      <dev style="flex: 20%; padding: 10px">
+        <h4>{{ date }}</h4>
+      </dev>
+      <dev style="flex: 60%; padding: 10px; text-align: center;">
+        <h1 style="font-family:'Noto Kufi Arabic'">المنتجات</h1>
+      </dev>
+    </dev>
+  </header>
+  <main>
+    <table>
+      <thead>
+        <tr>
+          <th>الرقم</th>
+          <th>الكود</th>
+          <th>اسم المنتج</th>
+          <th>الصنف</th>
+          <th>النوع</th>
+          <th>الكمية</th>
+          <th>سعر الشراء</th>
+          <th>سعر البيع</th>
+          <th>المنشأ</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for product in products %}
+        <tr>
+          <td>{{ product.idx }}</td>
+          <td>{{ product.code }}</td>
+          <td>{{ product.name }}</td>
+          <td>{{ product.class }}</td>
+          <td>{{ product.type }}</td>
+          <td>{{ product.quantity }}</td>
+          <td>{{ product.buy_price }}</td>
+          <td>{{ product.sell_price }}</td>
+          <td>{{ product.source }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  </main>
+  <!-- <footer>
+    Invoice was created on a computer and is valid without the signature and seal.
+  </footer> -->
+</body>
+
+</html>

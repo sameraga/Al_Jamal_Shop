@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="utf-8">
+  <!-- <title>Example 1</title> -->
+  <link rel="stylesheet" href="style.css" media="all" />
+</head>
+
+<body>
+  <header class="clearfix">
+    <dev style="display: flex">
+      <dev style="flex: 20%; padding: 10px">
+        <h4>{{ date }}</h4>
+      </dev>
+      <dev style="flex: 60%; padding: 10px; text-align: center;">
+        <h1 style="font-family:'Noto Kufi Arabic'">الزبائن</h1>
+      </dev>
+    </dev>
+  </header>
+  <main>
+    <table>
+      <thead>
+        <tr>
+          <th>الرقم</th>
+          <th>الكود</th>
+          <th>اسم الزبون</th>
+          <th>رقم التواصل</th>
+          <th>الحالة الصحية</th>
+          <th>العمر</th>
+          <th>الرصيد</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for customer in customers %}
+        <tr>
+          <td>{{ customer.idx }}</td>
+          <td>{{ customer.code }}</td>
+          <td>{{ customer.name }}</td>
+          <td>{{ customer.phone }}</td>
+          <td>{{ customer.health_status }}</td>
+          <td>{{ customer.age }}</td>
+          <td>{{ customer.balance }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  </main>
+  <!-- <footer>
+    Invoice was created on a computer and is valid without the signature and seal.
+  </footer> -->
+</body>
+
+</html>

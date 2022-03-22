@@ -32,8 +32,30 @@ class Database:
     def is_user(self, username):
         return self.connection.execute('select pass from users where name = ?', (username,)).fetchone()
 
-    def query_all_medicine(self, filter: dict, limit1, limit2):
-        sql_cmd = "SELECT id, code, name, type, unit, amount, factory, production_date, expiry_date from medicine"
+    def count_row(self, table, r):
+        if r == 1:
+            return self.connection.execute(f'select count(*) as count from {table}').fetchone()['count']
+        else:
+            return self.connection.execute(f'select count(*) as count from {table} where code = ?', (r,)).fetchone()['count']
+
+    def get_next_id(self, table):
+        return self.connection.execute(f"select max(id)+1 as seq from {table}").fetchone()['seq']
+
+    def query_row(self, table, id):
+        return self.connection.execute(f"select * from {table} where id = {id}").fetchone()
+
+    def insert_row(self, table, row):
+        cursor = self.connection.cursor()
+
+        columns = ', '.join(row.keys())
+        placeholders = ':' + ', :'.join(row.keys())
+
+        query = f'INSERT INTO {table} ({columns}) VALUES ({placeholders})'
+        cursor.execute(query, row)
+        self.connection.commit()
+
+    def query_all_product(self, filter: dict, limit1, limit2):
+        sql_cmd = "SELECT id, code, name, class, type, source, quantity, buy_price, sell_price from product"
 
         if filter:
             sql_cmd += " where "
@@ -44,18 +66,10 @@ class Database:
             if 'name' in filter:
                 filter['name'] = f'%{filter["name"]}%'
                 filter_cmd.append(f'name like :name')
-            if 'factory' in filter:
-                filter['factory'] = f'%{filter["factory"]}%'
-                filter_cmd.append(f'factory like :factory')
+            if 'class' in filter:
+                filter_cmd.append(f'class =:class')
             if 'type' in filter:
-                filter['type'] = f'%{filter["type"]}%'
-                filter_cmd.append(f'type like :type')
-
-            if 'expiry_date_f' in filter:
-                if 'expiry_date_t' in filter:
-                    filter_cmd.append(f'expiry_date between :expiry_date_f and :expiry_date_t')
-                else:
-                    filter_cmd.append(f'expiry_date = :expiry_date_f')
+                filter_cmd.append(f'type =:type')
 
             sql_cmd += ' and '.join(filter_cmd)
             sql_cmd += f' limit {limit1}, {limit2}'
@@ -64,15 +78,12 @@ class Database:
             sql_cmd += f' limit {limit1}, {limit2}'
             return self.connection.execute(sql_cmd).fetchall()
 
-    def insert_medicine(self, medicine):
-        cursor = self.connection.cursor()
+    def query_product_by_code(self, codes):
+        sql_cmd = f"SELECT * from product WHERE code IN ({','.join(['?'] * len(codes))})"
+        return self.connection.execute(sql_cmd, codes).fetchall()
 
-        columns = ', '.join(medicine.keys())
-        placeholders = ':' + ', :'.join(medicine.keys())
 
-        query = f'INSERT INTO medicine ({columns}) VALUES ({placeholders})'
-        cursor.execute(query, medicine)
-        self.connection.commit()
+
 
     def delete_medicine(self, code):
         self.connection.execute('delete from medicine where code = ?', (code,))
@@ -84,24 +95,13 @@ class Database:
         self.connection.execute(query, medicine)
         self.connection.commit()
 
-    def count_medicine(self, r):
-        if r == 1:
-            return self.connection.execute('select count(*) as count from medicine').fetchone()['count']
-        else:
-            return self.connection.execute('select count(*) as count from medicine where code = ?', (r,)).fetchone()['count']
 
-    def query_medicine(self, id):
-        return self.connection.execute('select * from medicine where id = ?', (id,)).fetchone()
 
-    def get_medicine_next_id(self):
-        return self.connection.execute("select seq+1 as seq from sqlite_sequence where name = 'medicine'").fetchone()['seq']
 
     def get_medicine_by_code(self, code):
         return self.connection.execute('SELECT * from medicine WHERE code = ?', (code,)).fetchone()
 
-    def query_medicines_by_rd(self, rds):
-        sql_cmd = f"SELECT * from medicine WHERE code IN ({','.join(['?'] * len(rds))})"
-        return self.connection.execute(sql_cmd, rds).fetchall()
+
 
     def query_medicine_by_ids(self, ids, simple=False):
         if simple:

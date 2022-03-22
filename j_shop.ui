@@ -179,7 +179,7 @@
             </item>
             <item>
              <property name="text">
-              <string>الدواء</string>
+              <string>المنتجات</string>
              </property>
             </item>
             <item>
@@ -214,7 +214,7 @@
              <enum>QTabWidget::Rounded</enum>
             </property>
             <property name="currentIndex">
-             <number>6</number>
+             <number>4</number>
             </property>
             <widget class="QWidget" name="tab_1">
              <attribute name="title">
@@ -222,14 +222,14 @@
              </attribute>
              <layout class="QVBoxLayout" name="verticalLayout_9">
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_4">
+               <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="7,1">
                 <property name="spacing">
                  <number>0</number>
                 </property>
                 <item>
                  <widget class="QLabel" name="label_8">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
@@ -1841,7 +1841,7 @@
                  <number>0</number>
                 </property>
                 <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="0,5">
+                 <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="2,5">
                   <property name="spacing">
                    <number>0</number>
                   </property>
@@ -1893,21 +1893,21 @@
                      </widget>
                     </item>
                     <item row="7" column="1">
-                     <widget class="QLineEdit" name="m_amount">
+                     <widget class="QLineEdit" name="p_buy_price">
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
                       </property>
                      </widget>
                     </item>
                     <item row="5" column="1">
-                     <widget class="QLineEdit" name="m_buy_price">
+                     <widget class="QLineEdit" name="p_quantity">
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
                       </property>
                      </widget>
                     </item>
                     <item row="4" column="1">
-                     <widget class="QLineEdit" name="m_unit">
+                     <widget class="QLineEdit" name="p_source">
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
                       </property>
@@ -1924,7 +1924,7 @@
                      </widget>
                     </item>
                     <item row="0" column="1">
-                     <widget class="QLineEdit" name="m_code">
+                     <widget class="QLineEdit" name="p_code">
                       <property name="maxLength">
                        <number>11</number>
                       </property>
@@ -1944,7 +1944,7 @@
                      </widget>
                     </item>
                     <item row="9" column="1">
-                     <widget class="QLineEdit" name="m_factory">
+                     <widget class="QLineEdit" name="p_sell_price_wh">
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
                       </property>
@@ -1970,7 +1970,7 @@
                      </widget>
                     </item>
                     <item row="1" column="1">
-                     <widget class="QLineEdit" name="m_name">
+                     <widget class="QLineEdit" name="p_name">
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
                       </property>
@@ -1997,7 +1997,7 @@
                      </widget>
                     </item>
                     <item row="3" column="1">
-                     <widget class="QComboBox" name="exit_reason">
+                     <widget class="QComboBox" name="p_type">
                       <property name="layoutDirection">
                        <enum>Qt::LeftToRight</enum>
                       </property>
@@ -2024,7 +2024,7 @@
                      </widget>
                     </item>
                     <item row="8" column="1">
-                     <widget class="QLineEdit" name="m_less_amount">
+                     <widget class="QLineEdit" name="p_sell_price">
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
                       </property>
@@ -2051,7 +2051,7 @@
                      </widget>
                     </item>
                     <item row="10" column="1">
-                     <widget class="QLineEdit" name="txt_arrestee_number">
+                     <widget class="QLineEdit" name="p_price_range">
                       <property name="layoutDirection">
                        <enum>Qt::RightToLeft</enum>
                       </property>
@@ -2080,14 +2080,14 @@
                      </widget>
                     </item>
                     <item row="6" column="1">
-                     <widget class="QLineEdit" name="m_sell_price">
+                     <widget class="QLineEdit" name="p_less_quantity">
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
                       </property>
                      </widget>
                     </item>
                     <item row="2" column="1">
-                     <widget class="QComboBox" name="comboBox">
+                     <widget class="QComboBox" name="p_class">
                       <property name="layoutDirection">
                        <enum>Qt::LeftToRight</enum>
                       </property>
@@ -2152,7 +2152,7 @@
                     <item>
                      <layout class="QGridLayout" name="gridLayout" columnstretch="2,1,2">
                       <item row="1" column="0">
-                       <widget class="QLineEdit" name="s_m_name">
+                       <widget class="QLineEdit" name="p_name_search">
                         <property name="alignment">
                          <set>Qt::AlignCenter</set>
                         </property>
@@ -2162,7 +2162,7 @@
                        </widget>
                       </item>
                       <item row="0" column="0">
-                       <widget class="QLineEdit" name="s_m_code_2">
+                       <widget class="QLineEdit" name="p_code_search">
                         <property name="toolTip">
                          <string/>
                         </property>
@@ -2213,7 +2213,7 @@
                        </widget>
                       </item>
                       <item row="0" column="2">
-                       <widget class="QComboBox" name="comboBox_2">
+                       <widget class="QComboBox" name="p_class_search">
                         <property name="layoutDirection">
                          <enum>Qt::LeftToRight</enum>
                         </property>
@@ -2250,7 +2250,7 @@
                        </widget>
                       </item>
                       <item row="1" column="2">
-                       <widget class="QComboBox" name="comboBox_3">
+                       <widget class="QComboBox" name="p_type_search">
                         <property name="layoutDirection">
                          <enum>Qt::LeftToRight</enum>
                         </property>
@@ -2279,7 +2279,7 @@
                      </layout>
                     </item>
                     <item>
-                     <widget class="QTableWidget" name="m_table">
+                     <widget class="QTableWidget" name="p_table">
                       <property name="editTriggers">
                        <set>QAbstractItemView::NoEditTriggers</set>
                       </property>
@@ -2366,7 +2366,7 @@
                        </widget>
                       </item>
                       <item>
-                       <widget class="QSpinBox" name="s_page_size">
+                       <widget class="QSpinBox" name="p_page_size">
                         <property name="font">
                          <font>
                           <pointsize>12</pointsize>
@@ -2400,7 +2400,7 @@
                        </spacer>
                       </item>
                       <item>
-                       <widget class="QPushButton" name="last">
+                       <widget class="QPushButton" name="p_last">
                         <property name="text">
                          <string/>
                         </property>
@@ -2417,7 +2417,7 @@
                        </widget>
                       </item>
                       <item>
-                       <widget class="QPushButton" name="post">
+                       <widget class="QPushButton" name="p_post">
                         <property name="text">
                          <string/>
                         </property>
@@ -2434,7 +2434,7 @@
                        </widget>
                       </item>
                       <item>
-                       <widget class="QSpinBox" name="page_num">
+                       <widget class="QSpinBox" name="p_page_num">
                         <property name="font">
                          <font>
                           <pointsize>12</pointsize>
@@ -2455,7 +2455,7 @@
                        </widget>
                       </item>
                       <item>
-                       <widget class="QPushButton" name="previous">
+                       <widget class="QPushButton" name="p_previous">
                         <property name="text">
                          <string/>
                         </property>
@@ -2472,7 +2472,7 @@
                        </widget>
                       </item>
                       <item>
-                       <widget class="QPushButton" name="first">
+                       <widget class="QPushButton" name="p_first">
                         <property name="text">
                          <string/>
                         </property>
@@ -2497,42 +2497,42 @@
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_6">
                   <item>
-                   <widget class="QPushButton" name="btn_add_medicine">
+                   <widget class="QPushButton" name="btn_add_product">
                     <property name="text">
                      <string>اضافة</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btn_edit_medicine">
+                   <widget class="QPushButton" name="btn_edit_product">
                     <property name="text">
                      <string>تعديل</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btn_delete_medicine">
+                   <widget class="QPushButton" name="btn_delete_product">
                     <property name="text">
                      <string>حذف</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btn_clear">
+                   <widget class="QPushButton" name="btn_clear_product">
                     <property name="text">
                      <string>مسح المدخلات</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btn_print_m_table">
+                   <widget class="QPushButton" name="btn_print_table_p">
                     <property name="text">
                      <string>طباعة الجدول</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btn_m_to_exel">
+                   <widget class="QPushButton" name="btn_to_exel_p">
                     <property name="text">
                      <string>تصدير الجدول</string>
                     </property>
@@ -3879,7 +3879,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="old">
+             <widget class="QLineEdit" name="old_pass">
               <property name="maxLength">
                <number>12</number>
               </property>
@@ -4037,5 +4037,22 @@
  <resources>
   <include location="icons.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>listWidget</sender>
+   <signal>currentRowChanged(int)</signal>
+   <receiver>tabWidget</receiver>
+   <slot>setCurrentIndex(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1089</x>
+     <y>206</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1066</x>
+     <y>207</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
