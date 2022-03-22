@@ -144,19 +144,6 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.p_page_num.setRange(1, math.ceil(int(database.db.count_row("product", 1)) / self.page_size_product))
             self._typing_timer_p.start(1000)
 
-        # elif x == 'bell_sell':
-        #     self.page_size_bs = self.bs_page_size.value()
-        #     self.page_num_bs.setRange(1, math.ceil(int(database.db.count_bill(1)) / self.page_size_bs))
-        #     self._typing_timer_bs.start(1000)
-        # elif x == 'customer':
-        #     self.page_size_c = self.s_page_size_c.value()
-        #     self.page_num_c.setRange(1, math.ceil(int(database.db.count_customer(1)) / self.page_size_c))
-        #     self._typing_timer_c.start(1000)
-        # elif x == 'supplier':
-        #     self.page_size_s = self.s_page_size_s.value()
-        #     self.page_num_s.setRange(1, math.ceil(int(database.db.count_supplier(1)) / self.page_size_s))
-        #     self._typing_timer_s.start(1000)
-
     def save_product_info(self):
         product = dict()
         product['code'] = self.p_code.text()
