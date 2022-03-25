@@ -214,7 +214,7 @@
              <enum>QTabWidget::Rounded</enum>
             </property>
             <property name="currentIndex">
-             <number>4</number>
+             <number>6</number>
             </property>
             <widget class="QWidget" name="tab_1">
              <attribute name="title">
@@ -4036,6 +4036,7 @@
  </widget>
  <resources>
   <include location="icons.qrc"/>
+  <include location="../../.designer/backup/icons.qrc"/>
  </resources>
  <connections>
   <connection>

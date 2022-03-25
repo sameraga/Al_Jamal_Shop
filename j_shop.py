@@ -11,12 +11,10 @@ import PyQt5.QtGui as QtGui
 import PyQt5.QtWidgets as QtWidgets
 from jinja2 import Template
 import xlwt
-import notify2
 import PyQt5.uic as uic
 import hashlib
 
 import toaster_Notify
-from QDate import QDate
 import database
 
 Form_Main, _ = uic.loadUiType('j_shop.ui')
@@ -31,12 +29,18 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         Form_Main.__init__(self)
         self.setupUi(self)
 
-        self._typing_timer_p = QtCore.QTimer()
-        self.validator = QtGui.QRegExpValidator(QtCore.QRegExp('[0-9]*'))
+        self.validator_code = QtGui.QRegExpValidator(QtCore.QRegExp('[0-9]*'))
+        self.validator_money = QtGui.QRegExpValidator(QtCore.QRegExp('^(\$)?(([1-9]\d{0,2}(\,\d{3})*)|([1-9]\d*)|(0))(\.\d{2})?$'))
 
+        self._typing_timer_p = QtCore.QTimer()
         self.product_id = 0
         self.product_co = 0
         self.page_size_product = PAGE_SIZE
+
+        self._typing_timer_s = QtCore.QTimer()
+        self.supplier_id = 0
+        self.supplier_co = 0
+        self.page_size_supplier = PAGE_SIZE
 
         self.setup_login()
 
@@ -98,10 +102,22 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.exit.triggered.connect(lambda: sys.exit(1))
 
         self.setup_controls_product()
+        self.setup_controls_customer()
+
+    def setup_controls_customer(self):
+        pass
+        # self.p_code.setValidator(self.validator_code)
+        # self.p_code_search.setValidator(self.validator_code)
+        # self._typing_timer_p.timeout.connect(self.update_product_table)
+        #
+        # # table
+        # self.p_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        # self.p_table.doubleClicked.connect(lambda mi: self.fill_product_info(self.p_table.item(mi.row(), 0).id))
+        # self.p_page_num.setRange(1, math.ceil(int(database.db.count_row("product", 1)) / self.page_size_product))
 
     def setup_controls_product(self):
-        self.p_code.setValidator(self.validator)
-        self.p_code_search.setValidator(self.validator)
+        self.p_code.setValidator(self.validator_code)
+        self.p_code_search.setValidator(self.validator_code)
         self._typing_timer_p.timeout.connect(self.update_product_table)
 
         # table
@@ -114,7 +130,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.p_name_search.textChanged.connect(lambda text: self._typing_timer_p.start(1000))
         self.p_class_search.currentTextChanged.connect(lambda text: self._typing_timer_p.start(1000))
         self.p_type_search.currentTextChanged.connect(lambda text: self._typing_timer_p.start(1000))
-        self.p_page_num.valueChanged.connect(lambda text: self._typing_timer_m.start(1000))
+
+        self.p_page_num.valueChanged.connect(lambda text: self._typing_timer_p.start(1000))
         self.p_page_size.valueChanged.connect(lambda: self.change_page_size('product'))
 
         # btn
@@ -122,6 +139,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.btn_edit_product.clicked.connect(self.update_product)
         self.btn_delete_product.clicked.connect(self.delete_product)
         self.btn_clear_product.clicked.connect(self.clear_product_inputs)
+
         # print and to exel
         self.btn_print_table_p.clicked.connect(self.print_table_product)
         self.btn_to_exel_p.clicked.connect(lambda: self.to_excel(self.p_table))
@@ -138,11 +156,65 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.update_product_table()
         self.clear_product_inputs()
 
+    def setup_controls_supplier(self):
+        self.s_code.setValidator(self.validator_code)
+        self.s_code_search.setValidator(self.validator_code)
+        self.s_balance.setValidator(self.validator_money)
+
+        self._typing_timer_s.timeout.connect(self.update_supplier_table)
+
+        # table
+        self.s_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.s_table.doubleClicked.connect(lambda mi: self.fill_supplier_info(self.s_table.item(mi.row(), 0).id))
+        self.s_page_num.setRange(1, math.ceil(int(database.db.count_row("supplier", 1)) / self.page_size_supplier))
+
+        # search
+        self.s_code_search.textChanged.connect(lambda text: self._typing_timer_s.start(1000))
+        self.s_name_search.textChanged.connect(lambda text: self._typing_timer_s.start(1000))
+
+        self.s_page_num.valueChanged.connect(lambda text: self._typing_timer_s.start(1000))
+        self.s_page_size.valueChanged.connect(lambda: self.change_page_size('supplier'))
+
+        # btn
+        self.btn_add_supplier.clicked.connect(self.create_new_supplier)
+        self.btn_edit_supplier.clicked.connect(self.update_supplier)
+        self.btn_delete_supplier.clicked.connect(self.delete_supplier)
+        self.btn_clear_supplier.clicked.connect(self.clear_supplier_inputs)
+
+        # print and to exel
+        self.btn_print_table_s.clicked.connect(self.print_table_supplier)
+        self.btn_to_exel_s.clicked.connect(lambda: self.to_excel(self.s_table))
+
+        # pages
+        self.s_post.clicked.connect(lambda: self.s_page_num.setValue(self.s_page_num.value() + 1))
+        self.s_previous.clicked.connect(lambda: self.s_page_num.setValue(self.s_page_num.value() - 1))
+        self.s_last.clicked.connect(lambda: self.s_page_num.setValue(
+            math.ceil(int(database.db.count_row("supplier", 1)) / self.page_size_supplier)))
+        self.s_first.clicked.connect(lambda: self.s_page_num.setValue(1))
+
+        self.btn_edit_supplier.setEnabled(False)
+        self.btn_delete_supplier.setEnabled(False)
+
+        self.update_supplier_table()
+        self.clear_supplier_inputs()
+
     def change_page_size(self, table):
         if table == 'product':
             self.page_size_product = self.p_page_size.value()
             self.p_page_num.setRange(1, math.ceil(int(database.db.count_row("product", 1)) / self.page_size_product))
             self._typing_timer_p.start(1000)
+        # elif x == 'customer':
+        #     self.page_size_bs = self.bs_page_size.value()
+        #     self.page_num_bs.setRange(1, math.ceil(int(database.db.count_bill(1)) / self.page_size_bs))
+        #     self._typing_timer_bs.start(1000)
+        # elif x == 'customer':
+        #     self.page_size_c = self.s_page_size_c.value()
+        #     self.page_num_c.setRange(1, math.ceil(int(database.db.count_customer(1)) / self.page_size_c))
+        #     self._typing_timer_c.start(1000)
+        elif table == 'supplier':
+            self.page_size_supplier = self.s_page_size.value()
+            self.s_page_num.setRange(1, math.ceil(int(database.db.count_row("supplier", 1)) / self.page_size_s))
+            self._typing_timer_s.start(1000)
 
     def save_product_info(self):
         product = dict()
@@ -176,21 +248,20 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     def update_product(self):
         product = self.save_product_info()
         if product['code'] and product['name']:
-            if len(product['code']) < 6:
-                QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن رقم الكود غير كامل')
+            if product['code'] == self.product_co:
+                database.db.update_row("product", product, self.product_id)
+                self.update_product_table()
+                self.clear_product_inputs()
+                toaster_Notify.QToaster.show_message(parent=self,
+                                                     message=f"تعديل مادة\nتم تعديل المادة{product['name']} بنجاح")
+            elif int(database.db.count_row("product", product['code'])) == 0:
+                database.db.update_row("product", product, self.product_id)
+                self.update_product_table()
+                self.clear_product_inputs()
+                toaster_Notify.QToaster.show_message(parent=self,
+                                                     message=f"تعديل مادة\nتم تعديل المادة{product['name']} بنجاح")
             else:
-                if product['code'] == self.m_c:
-                    database.db.update_row("product", product, self.m_id)
-                    self.update_product_table()
-                    self.clear_product_inputs()
-                    toaster_Notify.QToaster.show_message(parent=self, message=f"تعديل مادة\nتم تعديل المادة{product['name']} بنجاح")
-                elif int(database.db.count_row("product", product['code'])) == 0:
-                    database.db.update_row("product", product, self.m_id)
-                    self.update_product_table()
-                    self.clear_product_inputs()
-                    toaster_Notify.QToaster.show_message(parent=self, message=f"تعديل مادة\nتم تعديل المادة{product['name']} بنجاح")
-                else:
-                    QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن الكود مكرر')
+                QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن الكود مكرر')
         else:
             QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب أن تدخل الكود واسم المادة')
 
@@ -202,13 +273,13 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                                         msg.Yes | msg.No,
                                         msg.No)
             if button_reply == msg.Yes:
-                database.db.delete_medicine(product['code'])
+                database.db.delete_row("product", self.product_id)
                 self.update_product_table()
                 self.clear_product_inputs()
                 toaster_Notify.QToaster.show_message(parent=self, message=f"حذف مادة\nتم حذف المادة{product['name']} بنجاح")
         else:
             QtWidgets.QMessageBox.warning(
-                None, 'خطأ', 'الرقم غير موجود\n أعد الضغط على اسم الدواء الذي تريد من الجدول')
+                None, 'خطأ', 'الرقم غير موجود\n أعد الضغط على اسم المادة التي تريد من الجدول')
 
     def search_product_save(self):
         fil = {}
@@ -250,7 +321,9 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.p_table.resizeColumnsToContents()
 
     def clear_product_inputs(self):
-        self.product_id = int(database.db.get_next_id("product"))
+        self.product_id = 0
+        self.product_co = 0
+
         self.p_code.clear()
         self.p_code.setFocus()
         self.p_name.clear()
@@ -267,6 +340,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     def fill_product_info(self, id):
         self.btn_edit_product.setEnabled(True)
         self.btn_delete_product.setEnabled(True)
+        self.btn_add_product.setEnabled(False)
         self.product_id = id
         product = database.db.query_row("product", id)
         if product:
@@ -285,7 +359,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def print_table_product(self):
         fil = self.search_product_save()
-        c = database.db.query_all_medicine(fil, 0, database.db.count_row("product", 1))
+        c = database.db.query_all_product(fil, 0, database.db.count_row("product", 1))
         cs = [row['code'] for row_idx, row in enumerate(c)]
         products = database.db.query_product_by_code(cs)
         with open('./html/product_template.html', 'r') as f:
@@ -300,6 +374,157 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             fp.close()
             os.system('setsid firefox ' + fp.name + ' &')
 
+    # supplier methods
+    def save_supplier_info(self):
+        supplier = dict()
+        supplier['code'] = self.s_code.text()
+        supplier['name'] = self.s_name.text()
+        supplier['phone'] = self.s_phone.text()
+        supplier['address'] = self.s_address.text()
+        supplier['balance'] = self.s_balance.text()
+        supplier['note'] = self.s_note.toPlainText()
+
+        return supplier
+
+    def create_new_supplier(self):
+        supplier = self.save_supplier_info()
+        if supplier['code'] and supplier['name']:
+            if int(database.db.count_row("supplier", supplier['code'])) == 0:
+                database.db.insert_row("supplier", supplier)
+                toaster_Notify.QToaster.show_message(parent=self, message=f"إضافة مورد\nتم إضافة المورد{supplier['name']} بنجاح")
+                self.update_supplier_table()
+                self.clear_supplier_inputs()
+            else:
+                QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن الكود مكرر')
+        else:
+            QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب أن تدخل الكود واسم المورد')
+
+    def update_supplier(self):
+        supplier = self.save_supplier_info()
+        if supplier['code'] and supplier['name']:
+            if supplier['code'] == self.supplier_co:
+                database.db.update_row("supplier", supplier, self.supplier_id)
+                self.update_supplier_table()
+                self.clear_supplier_inputs()
+                toaster_Notify.QToaster.show_message(parent=self,
+                                                     message=f"تعديل مورد\nتم تعديل المورد{supplier['name']} بنجاح")
+            elif int(database.db.count_row("supplier", supplier['code'])) == 0:
+                database.db.update_row("supplier", supplier, self.supplier_id)
+                self.update_supplier_table()
+                self.clear_supplier_inputs()
+                toaster_Notify.QToaster.show_message(parent=self,
+                                                     message=f"تعديل مورد\nتم تعديل المورد{supplier['name']} بنجاح")
+            else:
+                QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن الكود مكرر')
+        else:
+            QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب أن تدخل الكود واسم المورد')
+
+    def delete_supplier(self):
+        supplier = self.save_supplier_info()
+        msg = QtWidgets.QMessageBox()
+        if supplier['code']:
+            button_reply = msg.question(self, 'تأكيد', f"هل أنت متأكد من حذف {supplier['name']} ؟ ",
+                                        msg.Yes | msg.No,
+                                        msg.No)
+            if button_reply == msg.Yes:
+                database.db.delete_row("supplier", self.supplier_id)
+                self.update_supplier_table()
+                self.clear_supplier_inputs()
+                toaster_Notify.QToaster.show_message(parent=self, message=f"حذف مورد\nتم حذف المورد{supplier['name']} بنجاح")
+        else:
+            QtWidgets.QMessageBox.warning(
+                None, 'خطأ', 'الرقم غير موجود\n أعد الضغط على اسم المورد الذي تريد من الجدول')
+
+    def search_supplier_save(self):
+        fil = {}
+        if self.s_code_search.text():
+            fil['code'] = self.s_code_search.text()
+        if self.s_name_search.text():
+            fil['name'] = self.s_name_search.text()
+
+        return fil
+
+    def update_supplier_table(self):
+        fil = self.search_supplier_save()
+        rows = database.db.query_all_supplier(fil, self.page_size_supplier * (self.p_page_num.value() - 1), self.page_size_supplier)
+        self.p_table.setRowCount(len(rows))
+        for row_idx, row in enumerate(rows):
+            self.p_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(str(row_idx + 1 + (self.page_size_supplier * (self.p_page_num.value() - 1)))))
+            self.p_table.item(row_idx, 0).id = row['id']
+            self.p_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.p_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(row['code'])))
+            self.p_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.p_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row['name']))
+            self.p_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.p_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(row['class']))
+            self.p_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.p_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(row['type']))
+            self.p_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.p_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(row['quantity']))
+            self.p_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.p_table.setItem(row_idx, 6, QtWidgets.QTableWidgetItem(row['buy_price']))
+            self.p_table.item(row_idx, 6).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.p_table.setItem(row_idx, 7, QtWidgets.QTableWidgetItem(row['sell_price']))
+            self.p_table.item(row_idx, 7).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.p_table.setItem(row_idx, 8, QtWidgets.QTableWidgetItem(row['source']))
+            self.p_table.item(row_idx, 8).setTextAlignment(QtCore.Qt.AlignCenter)
+        self.p_table.resizeColumnsToContents()
+
+    def clear_supplier_inputs(self):
+        self.supplier_id = 0
+        self.supplier_co = 0
+
+        self.p_code.clear()
+        self.p_code.setFocus()
+        self.p_name.clear()
+        self.p_class.setCurrentIndex(0)
+        self.p_type.setCurrentIndex(0)
+        self.p_source.clear()
+        self.p_quantity.clear()
+        self.p_less_quantity.clear()
+        self.p_buy_price.clear()
+        self.p_sell_price.clear()
+        self.p_sell_price_wh.clear()
+        self.p_price_range.clear()
+
+    def fill_supplier_info(self, id):
+        self.btn_edit_supplier.setEnabled(True)
+        self.btn_delete_supplier.setEnabled(True)
+        self.btn_add_supplier.setEnabled(False)
+        self.supplier_id = id
+        supplier = database.db.query_row("supplier", id)
+        if supplier:
+            self.supplier_co = supplier['code']
+            self.p_code.setText(supplier['code'])
+            self.p_name.setText(supplier['name'])
+            self.p_class.setCurrentText(supplier['class'])
+            self.p_type.setCurrentText(supplier['type'])
+            self.p_source.setText(supplier['source'])
+            self.p_quantity.setText(supplier['quantity'])
+            self.p_less_quantity.setText(supplier['less_quantity'])
+            self.p_buy_price.setText(supplier['buy_price'])
+            self.p_sell_price.setText(supplier['sell_price'])
+            self.p_sell_price_wh.setText(supplier['sell_price_wh'])
+            self.p_price_range.setText(supplier['price_range'])
+
+    def print_table_supplier(self):
+        fil = self.search_supplier_save()
+        c = database.db.query_all_supplier(fil, 0, database.db.count_row("supplier", 1))
+        cs = [row['code'] for row_idx, row in enumerate(c)]
+        suppliers = database.db.query_supplier_by_code(cs)
+        with open('./html/supplier_template.html', 'r') as f:
+            template = Template(f.read())
+            fp = tempfile.NamedTemporaryFile(mode='w', delete=False, dir='./html/tmp/', suffix='.html')
+            for idx, supplier in enumerate(suppliers):
+                supplier['idx'] = idx + 1
+
+            html = template.render(suppliers=suppliers, date=time.strftime("%A, %d %B %Y %I:%M %p"))
+            html = html.replace('style.css', '../style.css').replace('ph1.png', '../ph1.png')
+            fp.write(html)
+            fp.close()
+            os.system('setsid firefox ' + fp.name + ' &')
+
+    # export tables to exel
     def to_excel(self, table):
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File', '', ".dot(*.exel)")
         wbk = xlwt.Workbook()
