@@ -207,29 +207,6 @@ class Database:
     def query_supplier(self, id):
         return self.connection.execute('select * from supplier where id = ?', (id,)).fetchone()
 
-    def query_all_supplier(self, filter: dict, limit1, limit2):
-        sql_cmd = "SELECT id, name, phone, name_delegate, phone_delegate, address, balance from supplier"
-
-        if filter:
-            sql_cmd += " where "
-            filter_cmd = []
-            if 'code' in filter:
-                filter['code'] = f'%{filter["code"]}%'
-                filter_cmd.append(f'code like :code')
-            if 'name' in filter:
-                filter['name'] = f'%{filter["name"]}%'
-                filter_cmd.append(f'name like :name')
-            if 'phone' in filter:
-                filter['phone'] = f'%{filter["phone"]}%'
-                filter_cmd.append(f'phone_delegate like :phone')
-
-            sql_cmd += ' and '.join(filter_cmd)
-            sql_cmd += f' limit {limit1}, {limit2}'
-            return self.connection.execute(sql_cmd, filter).fetchall()
-        else:
-            sql_cmd += f' limit {limit1}, {limit2}'
-            return self.connection.execute(sql_cmd).fetchall()
-
     def get_supplier_next_id(self):
         return self.connection.execute("select seq+1 as seq from sqlite_sequence where name = 'supplier'").fetchone()['seq']
 
