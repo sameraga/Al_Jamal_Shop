@@ -94,7 +94,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
         # update tables
         self._typing_timer_p.setSingleShot(True)
-        # self._typing_timer_c.setSingleShot(True)
+        self._typing_timer_c.setSingleShot(True)
         # self._typing_timer_s.setSingleShot(True)
         # self._typing_timer_bs.setSingleShot(True)
 
@@ -373,6 +373,176 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             fp.write(html)
             fp.close()
             os.system('setsid firefox ' + fp.name + ' &')
+
+
+    # customer methods
+
+    def setup_controls_customer(self):
+        self.c_code.setvalidator(self.validator)
+        self.c_code_search.setvalidator(self.validator)
+        self._typing_timer_c.timeout.connect(self.update_customer_table)
+
+        # table
+        self.c_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.c_table.doubleClicked.connect(lambda mi: self.fill_customer_info(self.c_table.item(mi.row(), 0).id))
+        self.c_page_num.setRange(1, math.ceil(int(database.db.count_row("customer", 1)) / self.page_size_customer))
+
+        # search
+        self.c_code_search.textChanged.connect(lambda text: self._typing_timer_c.start(1000))
+        self.c_name_search.textChanged.connect(lambda text: self._typing_timer_c.start(1000))
+        self.c_page_num.valueChanged.connect(lambda text: self._typing_timer_m.start(1000))
+        self.c_page_size.valueChanged.connect(lambda: self.change_page_size('customer'))
+
+        # btn
+        self.btn_add_customer.clicked.connect(self.create_new_customer)
+        self.btn_edit_customer.clicked.connect(self.update_customer)
+        self.btn_delete_customer.clicked.connect(self.delete_customer)
+        self.btn_clear_customer.clicked.connect(self.clear_customer_inputs)
+
+        # print and to exel
+        self.btn_print_table_c.clicked.connect(self.print_table_customer)
+        self.btn_to_exel_c.clicked.connect(lambda: self.to_excel(self.c_table))
+
+        # pages
+        self.c_post.clicked.connect(lambda: self.p_page_num.setValue(self.p_page_num.value() + 1))
+        self.c_previous.clicked.connect(lambda: self.p_page_num.setValue(self.p_page_num.value() - 1))
+        self.c_last.clicked.connect(lambda: self.p_page_num.setValue(
+            math.ceil(int(database.db.count_row("product", 1)) / self.page_size_product)))
+        self.c_first.clicked.connect(lambda: self.p_page_num.setValue(1))
+
+        self.btn_edit_customer.setEnabled(False)
+        self.btn_delete_customer.setEnabled(False)
+
+        self.update_customer_table()
+        self.clear_customer_inputs()
+
+    def save_customer_info(self):
+        customer = dict()
+        customer['code'] = self.c_code.text()
+        customer['name'] = self.c_name.text()
+        customer['phone'] = self.c_phone.text()
+        customer['balance'] = self.c_balance.text()
+        customer['note'] = self.c_note.text()
+
+        return customer
+
+    def create_new_customer(self):
+        customer = self.save_customer_info()
+        if customer['code'] and customer['name']:
+            if int(database.db.count_row("customer", customer['code'])) == 0:
+                database.db.insert_row("customer", customer)
+                toaster_Notify.QToaster.show_message(parent=self, message=f"إضافة زبون\nتم إضافة الزبون{customer['name']} بنجاح")
+                self.update_customer_table()
+                self.clear_customer_inputs()
+            else:
+                QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن الكود مكرر')
+        else:
+            QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب أن تدخل الكود واسم الزبون')
+
+    def update_customer(self):
+        customer = self.save_customer_info()
+        if customer['code'] and customer['name']:
+            if len(customer['code']) < 6:
+                QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن رقم الكود غير كامل')
+            else:
+                if customer['code'] == self.m_c:
+                    database.db.update_row("customer", customer, self.m_id)
+                    self.update_customer_table()
+                    self.clear_customer_inputs()
+                    toaster_Notify.QToaster.show_message(parent=self, message=f"تعديل زبون\nتم تعديل الزبون{customer['name']} بنجاح")
+                elif int(database.db.count_row("customer", customer['code'])) == 0:
+                    database.db.update_row("customer", customer, self.m_id)
+                    self.update_customer_table()
+                    self.clear_customer_inputs()
+                    toaster_Notify.QToaster.show_message(parent=self, message=f"تعديل زبون\nتم تعديل الزبون{customer['name']} بنجاح")
+                else:
+                    QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن الكود مكرر')
+        else:
+            QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب أن تدخل الكود واسم الزبون')
+
+    def delete_customer(self):
+        customer = self.save_customer_info()
+        msg = QtWidgets.QMessageBox()
+        if customer['code']:
+            button_reply = msg.question(self, 'تأكيد', f"هل أنت متأكد من حذف {customer['name']} ؟ ",
+                                        msg.Yes | msg.No,
+                                        msg.No)
+            if button_reply == msg.Yes:
+                database.db.delete_medicine(customer['code'])
+                self.update_customer_table()
+                self.clear_customer_inputs()
+                toaster_Notify.QToaster.show_message(parent=self, message=f"حذف زبون\nتم حذف الزبون{customer['name']} بنجاح")
+        else:
+            QtWidgets.QMessageBox.warning(
+                None, 'خطأ', 'الرقم غير موجود\n أعد الضغط على اسم الزبون الذي تريد من الجدول')
+
+    def search_customer_save(self):
+        fil = {}
+        if self.c_code_search.text():
+            fil['code'] = self.c_code_search.text()
+        if self.c_name_search.text():
+            fil['name'] = self.c_name_search.text()
+
+        return fil
+
+    def update_customer_table(self):
+        fil = self.search_customer_save()
+        rows = database.db.query_all_customer(fil, self.page_size_customer * (self.c_page_num.value() - 1), self.page_size_customer)
+        self.c_table.setRowCount(len(rows))
+        for row_idx, row in enumerate(rows):
+            self.c_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(str(row_idx + 1 + (self.page_size_customer * (self.c_page_num.value() - 1)))))
+            self.c_table.item(row_idx, 0).id = row['id']
+            self.c_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.c_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(row['code'])))
+            self.c_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.c_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row['name']))
+            self.c_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.c_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(row['phone']))
+            self.c_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.c_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(row['balance']))
+            self.c_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.c_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(row['note']))
+        self.p_table.resizeColumnsToContents()
+
+    def clear_customer_inputs(self):
+        self.customer_id = int(database.db.get_next_id("customer"))
+        self.c_code.clear()
+        self.c_code.setFocus()
+        self.c_name.clear()
+        self.c_phone.clear()
+        self.c_balance.setText('0')
+        self.c_note.clear()
+
+    def fill_customer_info(self, id):
+        self.btn_edit_customer.setEnabled(True)
+        self.btn_delete_customer.setEnabled(True)
+        self.customer_id = id
+        customer = database.db.query_row("customer", id)
+        if customer:
+            self.customer_co = customer['code']
+            self.c_code.setText(customer['code'])
+            self.c_name.setText(customer['name'])
+            self.c_phone.setText(customer['phone'])
+            self.c_balance.setText(customer['balance'])
+            self.c_note.setText(customer['note'])
+
+    def print_table_customer(self):
+        fil = self.search_customer_save()
+        c = database.db.query_all_medicine(fil, 0, database.db.count_row("customer", 1))
+        cs = [row['code'] for row_idx, row in enumerate(c)]
+        customer = database.db.query_customer_by_code(cs)
+        with open('./html/customer_template.html', 'r') as f:
+            template = Template(f.read())
+            fp = tempfile.NamedTemporaryFile(mode='w', delete=False, dir='./html/tmp/', suffix='.html')
+            for idx, customer in enumerate(customer):
+                customer['idx'] = idx + 1
+
+            html = template.render(customer=customer, date=time.strftime("%A, %d %B %Y %I:%M %p"))
+            html = html.replace('style.css', '../style.css').replace('ph1.png', '../ph1.png')
+            fp.write(html)
+            fp.close()
+            os.system('setsid firefox ' + fp.name + ' &')
+
 
     # supplier methods
     def save_supplier_info(self):
