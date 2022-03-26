@@ -88,10 +88,6 @@ class Database:
             sql_cmd += f' limit {limit1}, {limit2}'
             return self.connection.execute(sql_cmd).fetchall()
 
-    def query_product_by_code(self, codes):
-        sql_cmd = f"SELECT * from product WHERE code IN ({','.join(['?'] * len(codes))})"
-        return self.connection.execute(sql_cmd, codes).fetchall()
-
     def query_all_supplier(self, filter: dict, limit1, limit2):
         sql_cmd = "SELECT id, code, name, phone, balance from supplier"
 
@@ -112,7 +108,25 @@ class Database:
             sql_cmd += f' limit {limit1}, {limit2}'
             return self.connection.execute(sql_cmd).fetchall()
 
+    def query_all_customer(self, filter: dict, limit1, limit2):
+        sql_cmd = "SELECT id, code, name, phone, balance from customer"
 
+        if filter:
+            sql_cmd += " where "
+            filter_cmd = []
+            if 'code' in filter:
+                filter['code'] = f'%{filter["code"]}%'
+                filter_cmd.append(f'code like :code')
+            if 'name' in filter:
+                filter['name'] = f'%{filter["name"]}%'
+                filter_cmd.append(f'name like :name')
+
+            sql_cmd += ' and '.join(filter_cmd)
+            sql_cmd += f' limit {limit1}, {limit2}'
+            return self.connection.execute(sql_cmd, filter).fetchall()
+        else:
+            sql_cmd += f' limit {limit1}, {limit2}'
+            return self.connection.execute(sql_cmd).fetchall()
 
 
 
@@ -132,128 +146,6 @@ class Database:
             sql_cmd = f"SELECT * from medicine WHERE id IN ({','.join(['?'] * len(ids))})"
         return self.connection.execute(sql_cmd, ids).fetchall()
 
-    # customer methods database #
-    def query_customer(self, id):
-        return self.connection.execute('select * from customer where id = ?', (id,)).fetchone()
-
-    def query_all_customer(self, filter: dict, limit1, limit2):
-        sql_cmd = "SELECT id, name, phone, health_status, age, balance from customer"
-
-        if filter:
-            sql_cmd += " where "
-            filter_cmd = []
-            if 'code' in filter:
-                filter['code'] = f'%{filter["code"]}%'
-                filter_cmd.append(f'code like :code')
-            if 'name' in filter:
-                filter['name'] = f'%{filter["name"]}%'
-                filter_cmd.append(f'name like :name')
-            if 'phone' in filter:
-                filter['phone'] = f'%{filter["phone"]}%'
-                filter_cmd.append(f'phone like :phone')
-
-            sql_cmd += ' and '.join(filter_cmd)
-            sql_cmd += f' limit {limit1}, {limit2}'
-            return self.connection.execute(sql_cmd, filter).fetchall()
-        else:
-            sql_cmd += f' limit {limit1}, {limit2}'
-            return self.connection.execute(sql_cmd).fetchall()
-
-    def get_customer_next_id(self):
-        return self.connection.execute("select seq+1 as seq from sqlite_sequence where name = 'customer'").fetchone()['seq']
-
-    def get_customer_by_code(self, code):
-        return self.connection.execute('SELECT * from customer WHERE code = ?', (code,)).fetchone()
-
-    def count_customer(self, r):
-        if r == 1:
-            return self.connection.execute('select count(*) as count from customer').fetchone()['count']
-        else:
-            return self.connection.execute('select count(*) as count from customer where code = ?', (r,)).fetchone()['count']
-
-    def insert_customer(self, customer):
-        cursor = self.connection.cursor()
-
-        columns = ', '.join(customer.keys())
-        placeholders = ':' + ', :'.join(customer.keys())
-
-        query = f'INSERT INTO customer ({columns}) VALUES ({placeholders})'
-        cursor.execute(query, customer)
-        self.connection.commit()
-
-    def delete_customer(self, code):
-        self.connection.execute('delete from customer where code = ?', (code,))
-        self.connection.commit()
-
-    def update_customer(self, customer, id):
-        placeholders = ', '.join([f'{key}=:{key}' for key in customer.keys()])
-        query = f'UPDATE customer SET {placeholders} WHERE id={id}'
-        self.connection.execute(query, customer)
-        self.connection.commit()
-
-    def query_customer_by_ids(self, ids, simple=False):
-        if simple:
-            sql_cmd = (
-                "SELECT id, name from customer"
-                f"WHERE id IN ({','.join(['?'] * len(ids))})"
-            )
-        else:
-            sql_cmd = f"SELECT * from customer WHERE id IN ({','.join(['?'] * len(ids))})"
-        return self.connection.execute(sql_cmd, ids).fetchall()
-
-    def query_customers_by_rd(self, rds):
-        sql_cmd = f"SELECT * from customer WHERE code IN ({','.join(['?'] * len(rds))})"
-        return self.connection.execute(sql_cmd, rds).fetchall()
-
-    # supplier methods database #
-    def query_supplier(self, id):
-        return self.connection.execute('select * from supplier where id = ?', (id,)).fetchone()
-
-    def get_supplier_next_id(self):
-        return self.connection.execute("select seq+1 as seq from sqlite_sequence where name = 'supplier'").fetchone()['seq']
-
-    def get_supplier_by_code(self, code):
-        return self.connection.execute('SELECT * from supplier WHERE code = ?', (code,)).fetchone()
-
-    def count_supplier(self, r):
-        if r == 1:
-            return self.connection.execute('select count(*) as count from supplier').fetchone()['count']
-        else:
-            return self.connection.execute('select count(*) as count from supplier where code = ?', (r,)).fetchone()['count']
-
-    def insert_supplier(self, supplier):
-        cursor = self.connection.cursor()
-
-        columns = ', '.join(supplier.keys())
-        placeholders = ':' + ', :'.join(supplier.keys())
-
-        query = f'INSERT INTO supplier ({columns}) VALUES ({placeholders})'
-        cursor.execute(query, supplier)
-        self.connection.commit()
-
-    def delete_supplier(self, code):
-        self.connection.execute('delete from supplier where code = ?', (code,))
-        self.connection.commit()
-
-    def update_supplier(self, supplier, id):
-        placeholders = ', '.join([f'{key}=:{key}' for key in supplier.keys()])
-        query = f'UPDATE supplier SET {placeholders} WHERE id={id}'
-        self.connection.execute(query, supplier)
-        self.connection.commit()
-
-    def query_supplier_by_ids(self, ids, simple=False):
-        if simple:
-            sql_cmd = (
-                "SELECT id, name from supplier"
-                f"WHERE id IN ({','.join(['?'] * len(ids))})"
-            )
-        else:
-            sql_cmd = f"SELECT * from supplier WHERE id IN ({','.join(['?'] * len(ids))})"
-        return self.connection.execute(sql_cmd, ids).fetchall()
-
-    def query_suppliers_by_rd(self, rds):
-        sql_cmd = f"SELECT * from supplier WHERE code IN ({','.join(['?'] * len(rds))})"
-        return self.connection.execute(sql_cmd, rds).fetchall()
 
     # bill sell methods
     def get_bills_next_id(self):

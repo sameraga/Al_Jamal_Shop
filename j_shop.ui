@@ -25,7 +25,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="page">
        <layout class="QVBoxLayout" name="verticalLayout_18">
@@ -214,11 +214,7 @@
              <enum>QTabWidget::Rounded</enum>
             </property>
             <property name="currentIndex">
-<<<<<<< HEAD
-             <number>5</number>
-=======
              <number>0</number>
->>>>>>> 5554ee79c0fe0a3a9e4649892e6674a32550a57b
             </property>
             <widget class="QWidget" name="tab_1">
              <attribute name="title">
@@ -2948,7 +2944,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btn_edite_customer">
+                   <widget class="QPushButton" name="btn_edit_customer">
                     <property name="text">
                      <string>تعديل</string>
                     </property>
@@ -3104,9 +3100,6 @@
                     </item>
                     <item row="4" column="1">
                      <widget class="QLineEdit" name="s_balance">
-                      <property name="inputMethodHints">
-                       <set>Qt::ImhNone</set>
-                      </property>
                       <property name="text">
                        <string>0</string>
                       </property>
@@ -4024,11 +4017,7 @@
      <x>0</x>
      <y>0</y>
      <width>1276</width>
-<<<<<<< HEAD
-     <height>30</height>
-=======
      <height>46</height>
->>>>>>> 5554ee79c0fe0a3a9e4649892e6674a32550a57b
     </rect>
    </property>
    <widget class="QMenu" name="menu">
@@ -4053,11 +4042,6 @@
  </widget>
  <resources>
   <include location="icons.qrc"/>
-<<<<<<< HEAD
-=======
-  <include location="icons.qrc"/>
-  <include location="../../.designer/backup/icons.qrc"/>
->>>>>>> 5554ee79c0fe0a3a9e4649892e6674a32550a57b
  </resources>
  <connections>
   <connection>

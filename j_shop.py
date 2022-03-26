@@ -359,8 +359,6 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     def print_table_product(self):
         fil = self.search_product_save()
         products = database.db.query_all_product(fil, 0, database.db.count_row("product", 1))
-        # cs = [row['code'] for row_idx, row in enumerate(c)]
-        # products = database.db.query_product_by_code(cs)
         with open('./html/product_template.html', 'r') as f:
             template = Template(f.read())
             fp = tempfile.NamedTemporaryFile(mode='w', delete=False, dir='./html/tmp/', suffix='.html')
@@ -375,8 +373,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     # customer methods
     def setup_controls_customer(self):
-        self.c_code.setvalidator(self.validator_code)
-        self.c_code_search.setvalidator(self.validator_code)
+        self.c_code.setValidator(self.validator_code)
+        self.c_code_search.setValidator(self.validator_code)
         self.c_balance.setValidator(self.validator_money)
 
         self._typing_timer_c.timeout.connect(self.update_customer_table)
@@ -441,14 +439,14 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     def update_customer(self):
         customer = self.save_customer_info()
         if customer['code'] and customer['name']:
-            if customer['code'] == self.m_c:
-                database.db.update_row("customer", customer, self.m_id)
+            if customer['code'] == self.customer_co:
+                database.db.update_row("customer", customer, self.customer_id)
                 self.update_customer_table()
                 self.clear_customer_inputs()
                 toaster_Notify.QToaster.show_message(parent=self,
                                                      message=f"تعديل زبون\nتم تعديل الزبون{customer['name']} بنجاح")
             elif int(database.db.count_row("customer", customer['code'])) == 0:
-                database.db.update_row("customer", customer, self.m_id)
+                database.db.update_row("customer", customer, self.customer_id)
                 self.update_customer_table()
                 self.clear_customer_inputs()
                 toaster_Notify.QToaster.show_message(parent=self,
@@ -499,8 +497,6 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.c_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
             self.c_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(str(row['balance'])))
             self.c_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignCenter)
-            self.c_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(row['note']))
-            self.c_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignCenter)
         self.p_table.resizeColumnsToContents()
 
     def clear_customer_inputs(self):
