@@ -25,7 +25,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="page">
        <layout class="QVBoxLayout" name="verticalLayout_18">
@@ -214,7 +214,11 @@
              <enum>QTabWidget::Rounded</enum>
             </property>
             <property name="currentIndex">
+<<<<<<< HEAD
+             <number>5</number>
+=======
              <number>0</number>
+>>>>>>> 5554ee79c0fe0a3a9e4649892e6674a32550a57b
             </property>
             <widget class="QWidget" name="tab_1">
              <attribute name="title">
@@ -2599,7 +2603,7 @@
                      </widget>
                     </item>
                     <item row="0" column="1">
-                     <widget class="QLineEdit" name="c_name">
+                     <widget class="QLineEdit" name="c_code">
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
                       </property>
@@ -2659,7 +2663,7 @@
                      </widget>
                     </item>
                     <item row="1" column="1">
-                     <widget class="QLineEdit" name="c_phone">
+                     <widget class="QLineEdit" name="c_name">
                       <property name="maxLength">
                        <number>12</number>
                       </property>
@@ -2679,7 +2683,7 @@
                      </widget>
                     </item>
                     <item row="2" column="1">
-                     <widget class="QLineEdit" name="c_health_status">
+                     <widget class="QLineEdit" name="c_phone">
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
                       </property>
@@ -2717,7 +2721,7 @@
                     <item>
                      <layout class="QHBoxLayout" name="horizontalLayout_15">
                       <item>
-                       <widget class="QLineEdit" name="s_c_name">
+                       <widget class="QLineEdit" name="c_code_search">
                         <property name="alignment">
                          <set>Qt::AlignCenter</set>
                         </property>
@@ -2727,7 +2731,7 @@
                        </widget>
                       </item>
                       <item>
-                       <widget class="QLineEdit" name="s_c_phone">
+                       <widget class="QLineEdit" name="c_name_search">
                         <property name="alignment">
                          <set>Qt::AlignCenter</set>
                         </property>
@@ -2806,7 +2810,7 @@
                        </widget>
                       </item>
                       <item>
-                       <widget class="QSpinBox" name="s_page_size_c">
+                       <widget class="QSpinBox" name="c_page_size">
                         <property name="font">
                          <font>
                           <pointsize>12</pointsize>
@@ -2840,7 +2844,7 @@
                        </spacer>
                       </item>
                       <item>
-                       <widget class="QPushButton" name="last_c">
+                       <widget class="QPushButton" name="c_last">
                         <property name="text">
                          <string/>
                         </property>
@@ -2857,7 +2861,7 @@
                        </widget>
                       </item>
                       <item>
-                       <widget class="QPushButton" name="post_c">
+                       <widget class="QPushButton" name="c_post">
                         <property name="text">
                          <string/>
                         </property>
@@ -2874,7 +2878,7 @@
                        </widget>
                       </item>
                       <item>
-                       <widget class="QSpinBox" name="page_num_c">
+                       <widget class="QSpinBox" name="c_page_num">
                         <property name="font">
                          <font>
                           <pointsize>12</pointsize>
@@ -2895,7 +2899,7 @@
                        </widget>
                       </item>
                       <item>
-                       <widget class="QPushButton" name="previous_c">
+                       <widget class="QPushButton" name="c_previous">
                         <property name="text">
                          <string/>
                         </property>
@@ -2912,7 +2916,7 @@
                        </widget>
                       </item>
                       <item>
-                       <widget class="QPushButton" name="first_c">
+                       <widget class="QPushButton" name="c_first">
                         <property name="text">
                          <string/>
                         </property>
@@ -2937,42 +2941,42 @@
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_13">
                   <item>
-                   <widget class="QPushButton" name="btn_add_c">
+                   <widget class="QPushButton" name="btn_add_customer">
                     <property name="text">
                      <string>اضافة</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btn_edite_c">
+                   <widget class="QPushButton" name="btn_edite_customer">
                     <property name="text">
                      <string>تعديل</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btn_delete_c">
+                   <widget class="QPushButton" name="btn_delete_customer">
                     <property name="text">
                      <string>حذف</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btn_clear_c">
+                   <widget class="QPushButton" name="btn_clear_customer">
                     <property name="text">
                      <string>مسح المدخلات</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btn_print_c_table">
+                   <widget class="QPushButton" name="btn_print_table_c">
                     <property name="text">
                      <string>طباعة الجدول</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btn_c_to_exel">
+                   <widget class="QPushButton" name="btn_to_exel_c">
                     <property name="text">
                      <string>تصدير الجدول</string>
                     </property>
@@ -4020,7 +4024,11 @@
      <x>0</x>
      <y>0</y>
      <width>1276</width>
+<<<<<<< HEAD
+     <height>30</height>
+=======
      <height>46</height>
+>>>>>>> 5554ee79c0fe0a3a9e4649892e6674a32550a57b
     </rect>
    </property>
    <widget class="QMenu" name="menu">
@@ -4045,8 +4053,11 @@
  </widget>
  <resources>
   <include location="icons.qrc"/>
+<<<<<<< HEAD
+=======
   <include location="icons.qrc"/>
   <include location="../../.designer/backup/icons.qrc"/>
+>>>>>>> 5554ee79c0fe0a3a9e4649892e6674a32550a57b
  </resources>
  <connections>
   <connection>
