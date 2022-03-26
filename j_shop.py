@@ -29,13 +29,18 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         Form_Main.__init__(self)
         self.setupUi(self)
 
-        self.validator_code = QtGui.QRegExpValidator(QtCore.QRegExp('[0-9]*'))
+        self.validator_code = QtGui.QRegExpValidator(QtCore.QRegExp('[a-z][0-9]*'))
         self.validator_money = QtGui.QRegExpValidator(QtCore.QRegExp('^(\$)?(([1-9]\d{0,2}(\,\d{3})*)|([1-9]\d*)|(0))(\.\d{2})?$'))
 
         self._typing_timer_p = QtCore.QTimer()
         self.product_id = 0
         self.product_co = 0
         self.page_size_product = PAGE_SIZE
+
+        self._typing_timer_c = QtCore.QTimer()
+        self.customer_id = 0
+        self.customer_co = 0
+        self.page_size_customer = PAGE_SIZE
 
         self._typing_timer_s = QtCore.QTimer()
         self.supplier_id = 0
@@ -104,17 +109,6 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.setup_controls_product()
         self.setup_controls_customer()
         self.setup_controls_supplier()
-
-    def setup_controls_customer(self):
-        pass
-        # self.p_code.setValidator(self.validator_code)
-        # self.p_code_search.setValidator(self.validator_code)
-        # self._typing_timer_p.timeout.connect(self.update_product_table)
-        #
-        # # table
-        # self.p_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        # self.p_table.doubleClicked.connect(lambda mi: self.fill_product_info(self.p_table.item(mi.row(), 0).id))
-        # self.p_page_num.setRange(1, math.ceil(int(database.db.count_row("product", 1)) / self.page_size_product))
 
     def setup_controls_product(self):
         self.p_code.setValidator(self.validator_code)
@@ -208,10 +202,10 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         #     self.page_size_bs = self.bs_page_size.value()
         #     self.page_num_bs.setRange(1, math.ceil(int(database.db.count_bill(1)) / self.page_size_bs))
         #     self._typing_timer_bs.start(1000)
-        # elif x == 'customer':
-        #     self.page_size_c = self.s_page_size_c.value()
-        #     self.page_num_c.setRange(1, math.ceil(int(database.db.count_customer(1)) / self.page_size_c))
-        #     self._typing_timer_c.start(1000)
+        elif table == 'customer':
+            self.page_size_customer = self.s_page_size_c.value()
+            self.page_num_c.setRange(1, math.ceil(int(database.db.count_customer(1)) / self.page_size_c))
+            self._typing_timer_c.start(1000)
         elif table == 'supplier':
             self.page_size_supplier = self.s_page_size.value()
             self.s_page_num.setRange(1, math.ceil(int(database.db.count_row("supplier", 1)) / self.page_size_s))
@@ -379,12 +373,12 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             fp.close()
             os.system('setsid firefox ' + fp.name + ' &')
 
-
     # customer methods
-
     def setup_controls_customer(self):
-        self.c_code.setvalidator(self.validator)
-        self.c_code_search.setvalidator(self.validator)
+        self.c_code.setvalidator(self.validator_code)
+        self.c_code_search.setvalidator(self.validator_code)
+        self.c_balance.setValidator(self.validator_money)
+
         self._typing_timer_c.timeout.connect(self.update_customer_table)
 
         # table
@@ -395,7 +389,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         # search
         self.c_code_search.textChanged.connect(lambda text: self._typing_timer_c.start(1000))
         self.c_name_search.textChanged.connect(lambda text: self._typing_timer_c.start(1000))
-        self.c_page_num.valueChanged.connect(lambda text: self._typing_timer_m.start(1000))
+        self.c_page_num.valueChanged.connect(lambda text: self._typing_timer_c.start(1000))
         self.c_page_size.valueChanged.connect(lambda: self.change_page_size('customer'))
 
         # btn
@@ -409,11 +403,11 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.btn_to_exel_c.clicked.connect(lambda: self.to_excel(self.c_table))
 
         # pages
-        self.c_post.clicked.connect(lambda: self.p_page_num.setValue(self.p_page_num.value() + 1))
-        self.c_previous.clicked.connect(lambda: self.p_page_num.setValue(self.p_page_num.value() - 1))
-        self.c_last.clicked.connect(lambda: self.p_page_num.setValue(
-            math.ceil(int(database.db.count_row("product", 1)) / self.page_size_product)))
-        self.c_first.clicked.connect(lambda: self.p_page_num.setValue(1))
+        self.c_post.clicked.connect(lambda: self.c_page_num.setValue(self.c_page_num.value() + 1))
+        self.c_previous.clicked.connect(lambda: self.c_page_num.setValue(self.c_page_num.value() - 1))
+        self.c_last.clicked.connect(lambda: self.c_page_num.setValue(
+            math.ceil(int(database.db.count_row("customer", 1)) / self.page_size_customer)))
+        self.c_first.clicked.connect(lambda: self.c_page_num.setValue(1))
 
         self.btn_edit_customer.setEnabled(False)
         self.btn_delete_customer.setEnabled(False)
@@ -427,7 +421,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         customer['name'] = self.c_name.text()
         customer['phone'] = self.c_phone.text()
         customer['balance'] = self.c_balance.text()
-        customer['note'] = self.c_note.text()
+        customer['note'] = self.c_note.toPlainText()
 
         return customer
 
@@ -447,21 +441,20 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     def update_customer(self):
         customer = self.save_customer_info()
         if customer['code'] and customer['name']:
-            if len(customer['code']) < 6:
-                QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن رقم الكود غير كامل')
+            if customer['code'] == self.m_c:
+                database.db.update_row("customer", customer, self.m_id)
+                self.update_customer_table()
+                self.clear_customer_inputs()
+                toaster_Notify.QToaster.show_message(parent=self,
+                                                     message=f"تعديل زبون\nتم تعديل الزبون{customer['name']} بنجاح")
+            elif int(database.db.count_row("customer", customer['code'])) == 0:
+                database.db.update_row("customer", customer, self.m_id)
+                self.update_customer_table()
+                self.clear_customer_inputs()
+                toaster_Notify.QToaster.show_message(parent=self,
+                                                     message=f"تعديل زبون\nتم تعديل الزبون{customer['name']} بنجاح")
             else:
-                if customer['code'] == self.m_c:
-                    database.db.update_row("customer", customer, self.m_id)
-                    self.update_customer_table()
-                    self.clear_customer_inputs()
-                    toaster_Notify.QToaster.show_message(parent=self, message=f"تعديل زبون\nتم تعديل الزبون{customer['name']} بنجاح")
-                elif int(database.db.count_row("customer", customer['code'])) == 0:
-                    database.db.update_row("customer", customer, self.m_id)
-                    self.update_customer_table()
-                    self.clear_customer_inputs()
-                    toaster_Notify.QToaster.show_message(parent=self, message=f"تعديل زبون\nتم تعديل الزبون{customer['name']} بنجاح")
-                else:
-                    QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن الكود مكرر')
+                QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن الكود مكرر')
         else:
             QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب أن تدخل الكود واسم الزبون')
 
@@ -504,13 +497,16 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.c_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
             self.c_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(row['phone']))
             self.c_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
-            self.c_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(row['balance']))
+            self.c_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(str(row['balance'])))
             self.c_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignCenter)
             self.c_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(row['note']))
+            self.c_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignCenter)
         self.p_table.resizeColumnsToContents()
 
     def clear_customer_inputs(self):
-        self.customer_id = int(database.db.get_next_id("customer"))
+        self.customer_id = 0
+        self.customer_co = 0
+
         self.c_code.clear()
         self.c_code.setFocus()
         self.c_name.clear()
@@ -518,9 +514,14 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.c_balance.setText('0')
         self.c_note.clear()
 
+        self.btn_edit_customer.setEnabled(False)
+        self.btn_delete_customer.setEnabled(False)
+        self.btn_add_customer.setEnabled(True)
+
     def fill_customer_info(self, id):
         self.btn_edit_customer.setEnabled(True)
         self.btn_delete_customer.setEnabled(True)
+        self.btn_add_customer.setEnabled(False)
         self.customer_id = id
         customer = database.db.query_row("customer", id)
         if customer:
@@ -533,9 +534,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def print_table_customer(self):
         fil = self.search_customer_save()
-        c = database.db.query_all_medicine(fil, 0, database.db.count_row("customer", 1))
-        cs = [row['code'] for row_idx, row in enumerate(c)]
-        customer = database.db.query_customer_by_code(cs)
+        customer = database.db.query_all_medicine(fil, 0, database.db.count_row("customer", 1))
         with open('./html/customer_template.html', 'r') as f:
             template = Template(f.read())
             fp = tempfile.NamedTemporaryFile(mode='w', delete=False, dir='./html/tmp/', suffix='.html')
@@ -547,7 +546,6 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             fp.write(html)
             fp.close()
             os.system('setsid firefox ' + fp.name + ' &')
-
 
     # supplier methods
     def save_supplier_info(self):
