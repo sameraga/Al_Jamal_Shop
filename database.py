@@ -10,8 +10,10 @@ def _dict_factory(cursor, row):
         key = col[0]
         if isinstance(value, int):
             d[key] = str(value)
-        else:
+        elif value:
             d[key] = value
+        else:
+            d[key] = ''
     return d
 
 
