@@ -10,8 +10,10 @@ def _dict_factory(cursor, row):
         key = col[0]
         if isinstance(value, int):
             d[key] = str(value)
-        else:
+        elif value:
             d[key] = value
+        else:
+            d[key] = ''
     return d
 
 
@@ -30,7 +32,7 @@ class Database:
         self.connection.commit()
 
     def is_user(self, username):
-        return self.connection.execute('select pass from users where name = ?', (username,)).fetchone()
+        return self.connection.execute(f"select pass from users where name = '{username}'").fetchone()
 
     def count_row(self, table, r):
         if r == 1:
@@ -46,12 +48,20 @@ class Database:
 
     def insert_row(self, table, row):
         cursor = self.connection.cursor()
-
         columns = ', '.join(row.keys())
         placeholders = ':' + ', :'.join(row.keys())
-
         query = f'INSERT INTO {table} ({columns}) VALUES ({placeholders})'
         cursor.execute(query, row)
+        self.connection.commit()
+
+    def update_row(self, table, row, id):
+        placeholders = ', '.join([f'{key}=:{key}' for key in row.keys()])
+        query = f'UPDATE {table} SET {placeholders} WHERE id={id}'
+        self.connection.execute(query, row)
+        self.connection.commit()
+
+    def delete_row(self, table, id):
+        self.connection.execute(f'delete from {table} where id = {id}')
         self.connection.commit()
 
     def query_all_product(self, filter: dict, limit1, limit2):
@@ -82,26 +92,35 @@ class Database:
         sql_cmd = f"SELECT * from product WHERE code IN ({','.join(['?'] * len(codes))})"
         return self.connection.execute(sql_cmd, codes).fetchall()
 
+    def query_all_supplier(self, filter: dict, limit1, limit2):
+        sql_cmd = "SELECT id, code, name, phone, balance from supplier"
+
+        if filter:
+            sql_cmd += " where "
+            filter_cmd = []
+            if 'code' in filter:
+                filter['code'] = f'%{filter["code"]}%'
+                filter_cmd.append(f'code like :code')
+            if 'name' in filter:
+                filter['name'] = f'%{filter["name"]}%'
+                filter_cmd.append(f'name like :name')
+
+            sql_cmd += ' and '.join(filter_cmd)
+            sql_cmd += f' limit {limit1}, {limit2}'
+            return self.connection.execute(sql_cmd, filter).fetchall()
+        else:
+            sql_cmd += f' limit {limit1}, {limit2}'
+            return self.connection.execute(sql_cmd).fetchall()
 
 
 
-    def delete_medicine(self, code):
-        self.connection.execute('delete from medicine where code = ?', (code,))
-        self.connection.commit()
 
-    def update_medicine(self, medicine, id):
-        placeholders = ', '.join([f'{key}=:{key}' for key in medicine.keys()])
-        query = f'UPDATE medicine SET {placeholders} WHERE id={id}'
-        self.connection.execute(query, medicine)
-        self.connection.commit()
 
 
 
 
     def get_medicine_by_code(self, code):
         return self.connection.execute('SELECT * from medicine WHERE code = ?', (code,)).fetchone()
-
-
 
     def query_medicine_by_ids(self, ids, simple=False):
         if simple:
@@ -189,29 +208,6 @@ class Database:
     # supplier methods database #
     def query_supplier(self, id):
         return self.connection.execute('select * from supplier where id = ?', (id,)).fetchone()
-
-    def query_all_supplier(self, filter: dict, limit1, limit2):
-        sql_cmd = "SELECT id, name, phone, name_delegate, phone_delegate, address, balance from supplier"
-
-        if filter:
-            sql_cmd += " where "
-            filter_cmd = []
-            if 'code' in filter:
-                filter['code'] = f'%{filter["code"]}%'
-                filter_cmd.append(f'code like :code')
-            if 'name' in filter:
-                filter['name'] = f'%{filter["name"]}%'
-                filter_cmd.append(f'name like :name')
-            if 'phone' in filter:
-                filter['phone'] = f'%{filter["phone"]}%'
-                filter_cmd.append(f'phone_delegate like :phone')
-
-            sql_cmd += ' and '.join(filter_cmd)
-            sql_cmd += f' limit {limit1}, {limit2}'
-            return self.connection.execute(sql_cmd, filter).fetchall()
-        else:
-            sql_cmd += f' limit {limit1}, {limit2}'
-            return self.connection.execute(sql_cmd).fetchall()
 
     def get_supplier_next_id(self):
         return self.connection.execute("select seq+1 as seq from sqlite_sequence where name = 'supplier'").fetchone()['seq']

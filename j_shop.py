@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import glob
 import locale
 import math
 import os
@@ -95,7 +95,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         # update tables
         self._typing_timer_p.setSingleShot(True)
         self._typing_timer_c.setSingleShot(True)
-        # self._typing_timer_s.setSingleShot(True)
+        self._typing_timer_s.setSingleShot(True)
         # self._typing_timer_bs.setSingleShot(True)
 
         self.change_pass.triggered.connect(self.change_pass_)
@@ -103,6 +103,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
         self.setup_controls_product()
         self.setup_controls_customer()
+        self.setup_controls_supplier()
 
     def setup_controls_customer(self):
         pass
@@ -337,6 +338,10 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.p_sell_price_wh.clear()
         self.p_price_range.clear()
 
+        self.btn_edit_product.setEnabled(False)
+        self.btn_delete_product.setEnabled(False)
+        self.btn_add_product.setEnabled(True)
+
     def fill_product_info(self, id):
         self.btn_edit_product.setEnabled(True)
         self.btn_delete_product.setEnabled(True)
@@ -359,9 +364,9 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def print_table_product(self):
         fil = self.search_product_save()
-        c = database.db.query_all_product(fil, 0, database.db.count_row("product", 1))
-        cs = [row['code'] for row_idx, row in enumerate(c)]
-        products = database.db.query_product_by_code(cs)
+        products = database.db.query_all_product(fil, 0, database.db.count_row("product", 1))
+        # cs = [row['code'] for row_idx, row in enumerate(c)]
+        # products = database.db.query_product_by_code(cs)
         with open('./html/product_template.html', 'r') as f:
             template = Template(f.read())
             fp = tempfile.NamedTemporaryFile(mode='w', delete=False, dir='./html/tmp/', suffix='.html')
@@ -550,7 +555,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         supplier['code'] = self.s_code.text()
         supplier['name'] = self.s_name.text()
         supplier['phone'] = self.s_phone.text()
-        supplier['address'] = self.s_address.text()
+        supplier['address'] = self.s_address.toPlainText()
         supplier['balance'] = self.s_balance.text()
         supplier['note'] = self.s_note.toPlainText()
 
@@ -616,46 +621,37 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def update_supplier_table(self):
         fil = self.search_supplier_save()
-        rows = database.db.query_all_supplier(fil, self.page_size_supplier * (self.p_page_num.value() - 1), self.page_size_supplier)
-        self.p_table.setRowCount(len(rows))
+        rows = database.db.query_all_supplier(fil, self.page_size_supplier * (self.s_page_num.value() - 1), self.page_size_supplier)
+        self.s_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
-            self.p_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(str(row_idx + 1 + (self.page_size_supplier * (self.p_page_num.value() - 1)))))
-            self.p_table.item(row_idx, 0).id = row['id']
-            self.p_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
-            self.p_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(row['code'])))
-            self.p_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignCenter)
-            self.p_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row['name']))
-            self.p_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
-            self.p_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(row['class']))
-            self.p_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
-            self.p_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(row['type']))
-            self.p_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignCenter)
-            self.p_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(row['quantity']))
-            self.p_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignCenter)
-            self.p_table.setItem(row_idx, 6, QtWidgets.QTableWidgetItem(row['buy_price']))
-            self.p_table.item(row_idx, 6).setTextAlignment(QtCore.Qt.AlignCenter)
-            self.p_table.setItem(row_idx, 7, QtWidgets.QTableWidgetItem(row['sell_price']))
-            self.p_table.item(row_idx, 7).setTextAlignment(QtCore.Qt.AlignCenter)
-            self.p_table.setItem(row_idx, 8, QtWidgets.QTableWidgetItem(row['source']))
-            self.p_table.item(row_idx, 8).setTextAlignment(QtCore.Qt.AlignCenter)
-        self.p_table.resizeColumnsToContents()
+            self.s_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(str(row_idx + 1 + (self.page_size_supplier * (self.s_page_num.value() - 1)))))
+            self.s_table.item(row_idx, 0).id = row['id']
+            self.s_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.s_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(row['code'])))
+            self.s_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.s_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row['name']))
+            self.s_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.s_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(row['phone']))
+            self.s_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.s_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(str(row['balance'])))
+            self.s_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignCenter)
+        self.s_table.resizeColumnsToContents()
 
     def clear_supplier_inputs(self):
         self.supplier_id = 0
         self.supplier_co = 0
 
-        self.p_code.clear()
-        self.p_code.setFocus()
-        self.p_name.clear()
-        self.p_class.setCurrentIndex(0)
-        self.p_type.setCurrentIndex(0)
-        self.p_source.clear()
-        self.p_quantity.clear()
-        self.p_less_quantity.clear()
-        self.p_buy_price.clear()
-        self.p_sell_price.clear()
-        self.p_sell_price_wh.clear()
-        self.p_price_range.clear()
+        self.s_code.clear()
+        self.s_code.setFocus()
+        self.s_name.clear()
+        self.s_phone.clear()
+        self.s_address.clear()
+        self.s_balance.setText('0')
+        self.s_note.clear()
+
+        self.btn_edit_supplier.setEnabled(False)
+        self.btn_delete_supplier.setEnabled(False)
+        self.btn_add_supplier.setEnabled(True)
 
     def fill_supplier_info(self, id):
         self.btn_edit_supplier.setEnabled(True)
@@ -665,23 +661,16 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         supplier = database.db.query_row("supplier", id)
         if supplier:
             self.supplier_co = supplier['code']
-            self.p_code.setText(supplier['code'])
-            self.p_name.setText(supplier['name'])
-            self.p_class.setCurrentText(supplier['class'])
-            self.p_type.setCurrentText(supplier['type'])
-            self.p_source.setText(supplier['source'])
-            self.p_quantity.setText(supplier['quantity'])
-            self.p_less_quantity.setText(supplier['less_quantity'])
-            self.p_buy_price.setText(supplier['buy_price'])
-            self.p_sell_price.setText(supplier['sell_price'])
-            self.p_sell_price_wh.setText(supplier['sell_price_wh'])
-            self.p_price_range.setText(supplier['price_range'])
+            self.s_code.setText(supplier['code'])
+            self.s_name.setText(supplier['name'])
+            self.s_phone.setText(supplier['phone'])
+            self.s_address.setText(supplier['address'])
+            self.s_balance.setText(str(supplier['balance']))
+            self.s_note.setText(supplier['note'])
 
     def print_table_supplier(self):
         fil = self.search_supplier_save()
-        c = database.db.query_all_supplier(fil, 0, database.db.count_row("supplier", 1))
-        cs = [row['code'] for row_idx, row in enumerate(c)]
-        suppliers = database.db.query_supplier_by_code(cs)
+        suppliers = database.db.query_all_supplier(fil, 0, database.db.count_row("supplier", 1))
         with open('./html/supplier_template.html', 'r') as f:
             template = Template(f.read())
             fp = tempfile.NamedTemporaryFile(mode='w', delete=False, dir='./html/tmp/', suffix='.html')
@@ -725,4 +714,6 @@ if __name__ == '__main__':
     mainWindow = AppMainWindow()
     mainWindow.showMaximized()
     mainWindow.setWindowIcon(QtGui.QIcon('icons/ph1.png'))
+    for filename in glob.glob("html/tmp/*"):
+        os.remove(filename)
     exit_code = app.exec_()

@@ -214,7 +214,7 @@
              <enum>QTabWidget::Rounded</enum>
             </property>
             <property name="currentIndex">
-             <number>6</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="tab_1">
              <attribute name="title">
@@ -467,7 +467,7 @@
                    <number>5</number>
                   </property>
                   <property name="topMargin">
-                   <number>8</number>
+                   <number>20</number>
                   </property>
                   <property name="bottomMargin">
                    <number>8</number>
@@ -1158,6 +1158,9 @@
                 </property>
                 <item>
                  <layout class="QGridLayout" name="gridLayout_5">
+                  <property name="topMargin">
+                   <number>20</number>
+                  </property>
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="ch_billsell_date_f">
                     <property name="sizePolicy">
@@ -1500,6 +1503,9 @@
                <layout class="QVBoxLayout" name="verticalLayout_20">
                 <item>
                  <layout class="QGridLayout" name="gridLayout_4">
+                  <property name="topMargin">
+                   <number>20</number>
+                  </property>
                   <item row="0" column="0">
                    <widget class="QLineEdit" name="bill_code_3">
                     <property name="alignment">
@@ -1846,7 +1852,7 @@
                    <number>0</number>
                   </property>
                   <property name="topMargin">
-                   <number>8</number>
+                   <number>20</number>
                   </property>
                   <property name="bottomMargin">
                    <number>8</number>
@@ -2563,7 +2569,7 @@
                    <number>0</number>
                   </property>
                   <property name="topMargin">
-                   <number>8</number>
+                   <number>20</number>
                   </property>
                   <property name="bottomMargin">
                    <number>8</number>
@@ -3003,7 +3009,7 @@
                    <number>0</number>
                   </property>
                   <property name="topMargin">
-                   <number>8</number>
+                   <number>20</number>
                   </property>
                   <property name="bottomMargin">
                    <number>8</number>
@@ -3063,14 +3069,14 @@
                      </widget>
                     </item>
                     <item row="0" column="1">
-                     <widget class="QLineEdit" name="s_name">
+                     <widget class="QLineEdit" name="s_code">
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
                       </property>
                      </widget>
                     </item>
                     <item row="1" column="1">
-                     <widget class="QLineEdit" name="s_phone">
+                     <widget class="QLineEdit" name="s_name">
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
                       </property>
@@ -3094,6 +3100,9 @@
                     </item>
                     <item row="4" column="1">
                      <widget class="QLineEdit" name="s_balance">
+                      <property name="inputMethodHints">
+                       <set>Qt::ImhNone</set>
+                      </property>
                       <property name="text">
                        <string>0</string>
                       </property>
@@ -3126,7 +3135,7 @@
                      </widget>
                     </item>
                     <item row="2" column="1">
-                     <widget class="QLineEdit" name="s_dname">
+                     <widget class="QLineEdit" name="s_phone">
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
                       </property>
@@ -3180,7 +3189,7 @@
                     <item>
                      <layout class="QHBoxLayout" name="horizontalLayout_17">
                       <item>
-                       <widget class="QLineEdit" name="ss_name">
+                       <widget class="QLineEdit" name="s_code_search">
                         <property name="alignment">
                          <set>Qt::AlignCenter</set>
                         </property>
@@ -3190,7 +3199,7 @@
                        </widget>
                       </item>
                       <item>
-                       <widget class="QLineEdit" name="ss_phone">
+                       <widget class="QLineEdit" name="s_name_search">
                         <property name="alignment">
                          <set>Qt::AlignCenter</set>
                         </property>
@@ -3269,7 +3278,7 @@
                        </widget>
                       </item>
                       <item>
-                       <widget class="QSpinBox" name="s_page_size_s">
+                       <widget class="QSpinBox" name="s_page_size">
                         <property name="font">
                          <font>
                           <pointsize>12</pointsize>
@@ -3303,7 +3312,7 @@
                        </spacer>
                       </item>
                       <item>
-                       <widget class="QPushButton" name="last_s">
+                       <widget class="QPushButton" name="s_last">
                         <property name="text">
                          <string/>
                         </property>
@@ -3320,7 +3329,7 @@
                        </widget>
                       </item>
                       <item>
-                       <widget class="QPushButton" name="post_s">
+                       <widget class="QPushButton" name="s_post">
                         <property name="text">
                          <string/>
                         </property>
@@ -3337,7 +3346,7 @@
                        </widget>
                       </item>
                       <item>
-                       <widget class="QSpinBox" name="page_num_s">
+                       <widget class="QSpinBox" name="s_page_num">
                         <property name="font">
                          <font>
                           <pointsize>12</pointsize>
@@ -3358,7 +3367,7 @@
                        </widget>
                       </item>
                       <item>
-                       <widget class="QPushButton" name="previous_s">
+                       <widget class="QPushButton" name="s_previous">
                         <property name="text">
                          <string/>
                         </property>
@@ -3375,7 +3384,7 @@
                        </widget>
                       </item>
                       <item>
-                       <widget class="QPushButton" name="first_s">
+                       <widget class="QPushButton" name="s_first">
                         <property name="text">
                          <string/>
                         </property>
@@ -3400,42 +3409,42 @@
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_18">
                   <item>
-                   <widget class="QPushButton" name="btn_add_s">
+                   <widget class="QPushButton" name="btn_add_supplier">
                     <property name="text">
                      <string>اضافة</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btn_edite_s">
+                   <widget class="QPushButton" name="btn_edit_supplier">
                     <property name="text">
                      <string>تعديل</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btn_delete_s">
+                   <widget class="QPushButton" name="btn_delete_supplier">
                     <property name="text">
                      <string>حذف</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btn_clear_s">
+                   <widget class="QPushButton" name="btn_clear_supplier">
                     <property name="text">
                      <string>مسح المدخلات</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btn_print_s_table">
+                   <widget class="QPushButton" name="btn_print_table_s">
                     <property name="text">
                      <string>طباعة الجدول</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btn_s_to_exel">
+                   <widget class="QPushButton" name="btn_to_exel_s">
                     <property name="text">
                      <string>تصدير الجدول</string>
                     </property>
@@ -4011,7 +4020,7 @@
      <x>0</x>
      <y>0</y>
      <width>1276</width>
-     <height>45</height>
+     <height>46</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
@@ -4035,6 +4044,7 @@
   </action>
  </widget>
  <resources>
+  <include location="icons.qrc"/>
   <include location="icons.qrc"/>
   <include location="../../.designer/backup/icons.qrc"/>
  </resources>
