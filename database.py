@@ -64,6 +64,18 @@ class Database:
         self.connection.execute(f'delete from {table} where id = {id}')
         self.connection.commit()
 
+    def query_customer(self):
+        return {e['id']: e['name'] for e in self.connection.execute('select id, name from customer').fetchall()}
+
+    def get_customer_id_by_name(self, name):
+        return self.connection.execute(f"select id from customer where name = '{name}'").fetchone()['id']
+
+    def get_customer_name_by_id(self, id):
+        return self.connection.execute(f"select name from customer where id = {id}").fetchone()['name']
+
+    def get_customer_phone_by_name(self, name):
+        return self.connection.execute(f"select phone from customer where name = '{name}'").fetchone()['phone']
+
     def query_all_product(self, filter: dict, limit1, limit2):
         sql_cmd = "SELECT id, code, name, class, type, source, quantity, buy_price, sell_price from product"
 
@@ -128,32 +140,30 @@ class Database:
             sql_cmd += f' limit {limit1}, {limit2}'
             return self.connection.execute(sql_cmd).fetchall()
 
+    def query_all_bill_sell(self, filter: dict, limit1, limit2):
+        sql_cmd = "SELECT id, code, c_id, date, total, ispaid from bill_sell"
 
+        if filter:
+            sql_cmd += " where "
+            filter_cmd = []
+            if 'code' in filter:
+                filter['code'] = f'%{filter["code"]}%'
+                filter_cmd.append(f'code like :code')
+            if 'c_id' in filter:
+                filter_cmd.append(f'c_id =:c_id')
 
+            if 'date_from' in filter:
+                if 'date_to' in filter:
+                    filter_cmd.append(f'date between :date_from and :date_to')
+                else:
+                    filter_cmd.append(f'date = :date_from')
 
-
-
-    def get_medicine_by_code(self, code):
-        return self.connection.execute('SELECT * from medicine WHERE code = ?', (code,)).fetchone()
-
-    def query_medicine_by_ids(self, ids, simple=False):
-        if simple:
-            sql_cmd = (
-                "SELECT id, name from medicine"
-                f"WHERE id IN ({','.join(['?'] * len(ids))})"
-            )
+            sql_cmd += ' and '.join(filter_cmd)
+            sql_cmd += f' limit {limit1}, {limit2}'
+            return self.connection.execute(sql_cmd, filter).fetchall()
         else:
-            sql_cmd = f"SELECT * from medicine WHERE id IN ({','.join(['?'] * len(ids))})"
-        return self.connection.execute(sql_cmd, ids).fetchall()
+            sql_cmd += f' limit {limit1}, {limit2}'
+            return self.connection.execute(sql_cmd).fetchall()
 
-
-    # bill sell methods
     def get_bills_next_id(self):
         return self.connection.execute("select seq+1 as seq from sqlite_sequence where name = 'bill_sell'").fetchone()['seq']
-
-    def get_cname(self):
-        return {e['id']: e['name'] for e in self.connection.execute('select id, name from customer').fetchall()}
-
-    def get_cphone(self, name):
-        return self.connection.execute('select phone from customer where name = ?', (name,)).fetchone()
-    # CREATE VIEW order_bill as SELECT order.m_id, medicine.name, medicine.unit, order.amount, medicine.sell_price, order.amount * medicine.sell_price as total, order.discount, total - order.discount as final FROM medicine, order

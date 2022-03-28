@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import glob
 import locale
 import math
@@ -15,12 +16,53 @@ import PyQt5.uic as uic
 import hashlib
 
 import toaster_Notify
+from QDate import QDate
 import database
 
 Form_Main, _ = uic.loadUiType('j_shop.ui')
+Form_BillSell, _ = uic.loadUiType('bill_sell.ui')
 PAGE_SIZE = 10
 USER = ''
 PASS = ''
+
+
+class BillSell(QtWidgets.QDialog, Form_BillSell):
+    def __init__(self, id):
+        QtWidgets.QDialog.__init__(self)
+        Form_BillSell.__init__(self)
+        self.setupUi(self)
+
+        self.setup_control()
+
+    def setup_control(self):
+        if id == 0:
+            self.bill_code.setText(str(int(database.db.get_bills_next_id()) + 10000))
+        else:
+            self.bill_code.setText(str(id))
+        self.b_date.setDate(QDate.currentDate())
+
+        self.c_name.clear()
+        self.c_name.addItem('')
+        self.c_name.addItems(database.db.query_customer().values())
+        self.c_name.currentTextChanged.connect(lambda: self.c_phone.setText(database.db.get_customer_phone_by_name(self.c_name.currentText())))
+
+        self.bs_table: QtWidgets.QTableWidget
+        self.bs_table.setRowCount(1)
+        self.bs_table.setItem(0, 0, QtWidgets.QTableWidgetItem(str(1)))
+        self.bs_table.keyPressEvent = self.table_key_press_event
+
+    def table_key_press_event(self, event: QtGui.QKeyEvent):
+        if event.key() == QtCore.Qt.Key_Return:
+            if self.bs_table.currentColumn() == 1:
+                num = self.bs_table.rowCount() + 1
+                self.bs_table.setRowCount(num)
+                self.bs_table.setItem(self.bs_table.currentRow() + 1, 0, QtWidgets.QTableWidgetItem(str(num)))
+
+
+def open_bill_sell(id):
+    sb = BillSell(id)
+    sb.setWindowIcon(QtGui.QIcon('emp.png'))
+    sb.exec()
 
 
 class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
@@ -29,7 +71,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         Form_Main.__init__(self)
         self.setupUi(self)
 
-        self.validator_code = QtGui.QRegExpValidator(QtCore.QRegExp('[a-z][0-9]*'))
+        self.validator_code = QtGui.QRegExpValidator(QtCore.QRegExp('[0-9]*'))
         self.validator_money = QtGui.QRegExpValidator(QtCore.QRegExp('^(\$)?(([1-9]\d{0,2}(\,\d{3})*)|([1-9]\d*)|(0))(\.\d{2})?$'))
 
         self._typing_timer_p = QtCore.QTimer()
@@ -42,10 +84,17 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.customer_co = 0
         self.page_size_customer = PAGE_SIZE
 
+        self.customers = None
+
         self._typing_timer_s = QtCore.QTimer()
         self.supplier_id = 0
         self.supplier_co = 0
         self.page_size_supplier = PAGE_SIZE
+
+        self._typing_timer_bs = QtCore.QTimer()
+        self.bill_sell_id = 0
+        self.bill_sell_co = 0
+        self.page_size_bill_sell = PAGE_SIZE
 
         self.setup_login()
 
@@ -93,15 +142,18 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         else:
             self.lbl_wrong_e.setText('* كلمة المرور القديمة غير صحيحة !!!')
 
+    # setup controls
     def setup_controls(self):
         self.menubar.setVisible(True)
         self.tabWidget.tabBar().setVisible(False)
+
+        self.customers = database.db.query_customer()
 
         # update tables
         self._typing_timer_p.setSingleShot(True)
         self._typing_timer_c.setSingleShot(True)
         self._typing_timer_s.setSingleShot(True)
-        # self._typing_timer_bs.setSingleShot(True)
+        self._typing_timer_bs.setSingleShot(True)
 
         self.change_pass.triggered.connect(self.change_pass_)
         self.exit.triggered.connect(lambda: sys.exit(1))
@@ -109,7 +161,51 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.setup_controls_product()
         self.setup_controls_customer()
         self.setup_controls_supplier()
+        self.setup_controls_bill_sell()
 
+    def change_page_size(self, table):
+        if table == 'product':
+            self.page_size_product = self.p_page_size.value()
+            self.p_page_num.setRange(1, math.ceil(int(database.db.count_row("product", 1)) / self.page_size_product))
+            self._typing_timer_p.start(1000)
+        elif table == 'customer':
+            self.page_size_customer = self.s_page_size_c.value()
+            self.page_num_c.setRange(1, math.ceil(int(database.db.count_customer(1)) / self.page_size_c))
+            self._typing_timer_c.start(1000)
+        elif table == 'supplier':
+            self.page_size_supplier = self.s_page_size.value()
+            self.s_page_num.setRange(1, math.ceil(int(database.db.count_row("supplier", 1)) / self.page_size_s))
+            self._typing_timer_s.start(1000)
+        elif table == 'bill_sell':
+            self.page_size_bill_sell = self.bs_page_size.value()
+            self.bs_page_num.setRange(1, math.ceil(int(database.db.count_row("bill_sell", 1)) / self.page_size_bill_sell))
+            self._typing_timer_bs.start(1000)
+
+    def check_date_from(self, x):
+        if x == 'bell_sell':
+            self._typing_timer_bs.start(1000)
+            if self.ch_billsell_date_from.isChecked():
+                self.billsell_date_from.setEnabled(True)
+                self.billsell_date_from.dateChanged.connect(lambda: self._typing_timer_bs.start(1000))
+                self.ch_billsell_date_to.setEnabled(True)
+            else:
+                self.billsell_date_from.setEnabled(False)
+                self.ch_billsell_date_to.setEnabled(False)
+                self.billsell_date_to.setEnabled(False)
+                self.ch_billsell_date_to.setChecked(False)
+
+    def check_date_to(self, x):
+        if x == 'bell_sell':
+            self._typing_timer_bs.start(1000)
+            if self.ch_billsell_date_to.isChecked():
+                self.billsell_date_to.setEnabled(True)
+                self.billsell_date_to.dateChanged.connect(lambda: self._typing_timer_bs.start(1000))
+            else:
+                self.billsell_date_to.setEnabled(False)
+
+    ####################################################################
+
+    # product methods
     def setup_controls_product(self):
         self.p_code.setValidator(self.validator_code)
         self.p_code_search.setValidator(self.validator_code)
@@ -151,57 +247,11 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.update_product_table()
         self.clear_product_inputs()
 
-    def setup_controls_supplier(self):
-        self.s_code.setValidator(self.validator_code)
-        self.s_code_search.setValidator(self.validator_code)
-        self.s_balance.setValidator(self.validator_money)
-
-        self._typing_timer_s.timeout.connect(self.update_supplier_table)
-
-        # table
-        self.s_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self.s_table.doubleClicked.connect(lambda mi: self.fill_supplier_info(self.s_table.item(mi.row(), 0).id))
-        self.s_page_num.setRange(1, math.ceil(int(database.db.count_row("supplier", 1)) / self.page_size_supplier))
-
-        # search
-        self.s_code_search.textChanged.connect(lambda text: self._typing_timer_s.start(1000))
-        self.s_name_search.textChanged.connect(lambda text: self._typing_timer_s.start(1000))
-
-        self.s_page_num.valueChanged.connect(lambda text: self._typing_timer_s.start(1000))
-        self.s_page_size.valueChanged.connect(lambda: self.change_page_size('supplier'))
-
-        # btn
-        self.btn_add_supplier.clicked.connect(self.create_new_supplier)
-        self.btn_edit_supplier.clicked.connect(self.update_supplier)
-        self.btn_delete_supplier.clicked.connect(self.delete_supplier)
-        self.btn_clear_supplier.clicked.connect(self.clear_supplier_inputs)
-
-        # print and to exel
-        self.btn_print_table_s.clicked.connect(self.print_table_supplier)
-        self.btn_to_exel_s.clicked.connect(lambda: self.to_excel(self.s_table))
-
-        # pages
-        self.s_post.clicked.connect(lambda: self.s_page_num.setValue(self.s_page_num.value() + 1))
-        self.s_previous.clicked.connect(lambda: self.s_page_num.setValue(self.s_page_num.value() - 1))
-        self.s_last.clicked.connect(lambda: self.s_page_num.setValue(
-            math.ceil(int(database.db.count_row("supplier", 1)) / self.page_size_supplier)))
-        self.s_first.clicked.connect(lambda: self.s_page_num.setValue(1))
-
-        self.btn_edit_supplier.setEnabled(False)
-        self.btn_delete_supplier.setEnabled(False)
-
-        self.update_supplier_table()
-        self.clear_supplier_inputs()
-
     def change_page_size(self, table):
         if table == 'product':
             self.page_size_product = self.p_page_size.value()
             self.p_page_num.setRange(1, math.ceil(int(database.db.count_row("product", 1)) / self.page_size_product))
             self._typing_timer_p.start(1000)
-        # elif x == 'customer':
-        #     self.page_size_bs = self.bs_page_size.value()
-        #     self.page_num_bs.setRange(1, math.ceil(int(database.db.count_bill(1)) / self.page_size_bs))
-        #     self._typing_timer_bs.start(1000)
         elif table == 'customer':
             self.page_size_customer = self.s_page_size_c.value()
             self.page_num_c.setRange(1, math.ceil(int(database.db.count_customer(1)) / self.page_size_c))
@@ -210,6 +260,10 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.page_size_supplier = self.s_page_size.value()
             self.s_page_num.setRange(1, math.ceil(int(database.db.count_row("supplier", 1)) / self.page_size_s))
             self._typing_timer_s.start(1000)
+        elif table == 'bill_sell':
+            self.page_size_bill_sell = self.bs_page_size.value()
+            self.bs_page_num.setRange(1, math.ceil(int(database.db.count_row("bill_sell", 1)) / self.page_size_bill_sell))
+            self._typing_timer_bs.start(1000)
 
     def save_product_info(self):
         product = dict()
@@ -370,6 +424,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             fp.write(html)
             fp.close()
             os.system('setsid firefox ' + fp.name + ' &')
+
+    ####################################################################
 
     # customer methods
     def setup_controls_customer(self):
@@ -543,7 +599,51 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             fp.close()
             os.system('setsid firefox ' + fp.name + ' &')
 
+    ####################################################################
+
     # supplier methods
+    def setup_controls_supplier(self):
+        self.s_code.setValidator(self.validator_code)
+        self.s_code_search.setValidator(self.validator_code)
+        self.s_balance.setValidator(self.validator_money)
+
+        self._typing_timer_s.timeout.connect(self.update_supplier_table)
+
+        # table
+        self.s_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.s_table.doubleClicked.connect(lambda mi: self.fill_supplier_info(self.s_table.item(mi.row(), 0).id))
+        self.s_page_num.setRange(1, math.ceil(int(database.db.count_row("supplier", 1)) / self.page_size_supplier))
+
+        # search
+        self.s_code_search.textChanged.connect(lambda text: self._typing_timer_s.start(1000))
+        self.s_name_search.textChanged.connect(lambda text: self._typing_timer_s.start(1000))
+
+        self.s_page_num.valueChanged.connect(lambda text: self._typing_timer_s.start(1000))
+        self.s_page_size.valueChanged.connect(lambda: self.change_page_size('supplier'))
+
+        # btn
+        self.btn_add_supplier.clicked.connect(self.create_new_supplier)
+        self.btn_edit_supplier.clicked.connect(self.update_supplier)
+        self.btn_delete_supplier.clicked.connect(self.delete_supplier)
+        self.btn_clear_supplier.clicked.connect(self.clear_supplier_inputs)
+
+        # print and to exel
+        self.btn_print_table_s.clicked.connect(self.print_table_supplier)
+        self.btn_to_exel_s.clicked.connect(lambda: self.to_excel(self.s_table))
+
+        # pages
+        self.s_post.clicked.connect(lambda: self.s_page_num.setValue(self.s_page_num.value() + 1))
+        self.s_previous.clicked.connect(lambda: self.s_page_num.setValue(self.s_page_num.value() - 1))
+        self.s_last.clicked.connect(lambda: self.s_page_num.setValue(
+            math.ceil(int(database.db.count_row("supplier", 1)) / self.page_size_supplier)))
+        self.s_first.clicked.connect(lambda: self.s_page_num.setValue(1))
+
+        self.btn_edit_supplier.setEnabled(False)
+        self.btn_delete_supplier.setEnabled(False)
+
+        self.update_supplier_table()
+        self.clear_supplier_inputs()
+
     def save_supplier_info(self):
         supplier = dict()
         supplier['code'] = self.s_code.text()
@@ -677,9 +777,109 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             fp.close()
             os.system('setsid firefox ' + fp.name + ' &')
 
+    ####################################################################
+
+    # bill sell methods
+    def setup_controls_bill_sell(self):
+        self.billsell_code.setValidator(self.validator_code)
+        self._typing_timer_bs.timeout.connect(self.update_bill_sell_table)
+
+        self.billsell_cname.addItem('')
+        self.billsell_cname.addItems(self.customers.values())
+
+        self.bs_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.bs_table.doubleClicked.connect(lambda mi: self.double_click(self.bs_table.item(mi.row(), 0).id))
+        self.bs_table.clicked.connect(lambda mi: self.one_click(self.bs_table.item(mi.row(), 0).id))
+        self.bs_page_num.setRange(1, math.ceil(int(database.db.count_row("bill_sell", 1)) / self.page_size_bill_sell))
+
+        self.billsell_code.textChanged.connect(lambda text: self._typing_timer_bs.start(1000))
+        self.billsell_cname.currentTextChanged.connect(lambda text: self._typing_timer_bs.start(1000))
+
+        self.ch_billsell_date_from.toggled.connect(lambda: self.check_date_from('bell_sell'))
+        self.ch_billsell_date_to.toggled.connect(lambda: self.check_date_to('bell_sell'))
+
+        self.bs_page_num.valueChanged.connect(lambda text: self._typing_timer_bs.start(1000))
+        self.bs_page_size.valueChanged.connect(lambda: self.change_page_size('bell_sell'))
+
+        # print and to exel
+        self.btn_print_table_bs.clicked.connect(self.print_table_bell_sell)
+        self.btn_to_exel_bs.clicked.connect(lambda: self.to_excel(self.bs_table))
+
+        # pages
+        self.bs_post.clicked.connect(lambda: self.bs_page_num.setValue(self.bs_page_num.value() + 1))
+        self.bs_previous.clicked.connect(lambda: self.bs_page_num.setValue(self.bs_page_num.value() - 1))
+        self.bs_last.clicked.connect(lambda: self.bs_page_num.setValue(
+            math.ceil(int(database.db.count_row("bell_sell", 1)) / self.page_size_bell_sell)))
+        self.bs_first.clicked.connect(lambda: self.bs_page_num.setValue(1))
+
+        self.btn_add_billsell.clicked.connect(lambda: open_bill_sell(0))
+        self.btn_edit_billsell.clicked.connect(lambda: open_bill_sell(self.bill_sell_id))
+
+        self.billsell_date_from.setSpecialValueText(' ')
+        self.billsell_date_to.setSpecialValueText(' ')
+
+        self.btn_edit_billsell.setEnabled(False)
+
+        self.billsell_date_from.setEnabled(False)
+        self.ch_billsell_date_to.setEnabled(False)
+        self.billsell_date_to.setEnabled(False)
+
+        self.update_bill_sell_table()
+
+    def one_click(self, id):
+        self.bill_sell_id = id
+        self.btn_edit_billsell.setEnabled(True)
+
+    def double_click(self, id):
+        self.bill_sell_id = id
+        open_bill_sell(id)
+
+    def search_bill_sell_save(self):
+        fil = {}
+        if self.billsell_code.text():
+            fil['code'] = self.billsell_code.text()
+        if self.billsell_cname.currentText() != '':
+            fil['c_id'] = [k for k, v in self.customers.items() if v == self.billsell_cname.currentText()][0]
+        if self.ch_billsell_date_from.isChecked():
+            fil['date_from'] = QDate.toString(self.billsell_date_from.date())
+            if self.ch_billsell_date_to.isChecked():
+                fil['date_to'] = QDate.toString(self.billsell_date_to.date())
+
+        return fil
+
+    def update_bill_sell_table(self):
+        fil = self.search_bill_sell_save()
+        rows = database.db.query_all_bill_sell(fil, self.page_size_bill_sell * (self.bs_page_num.value() - 1), self.page_size_bill_sell)
+        self.bs_table.setRowCount(len(rows))
+        for row_idx, row in enumerate(rows):
+            self.bs_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
+                str(row_idx + 1 + (self.page_size_bill_sell * (self.bs_page_num.value() - 1)))))
+            self.bs_table.item(row_idx, 0).id = row['id']
+            self.bs_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.bs_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(row['code'])))
+            self.bs_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignCenter)
+            row['c_id'] = self.customers[row['c_id']]
+            self.bs_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row['c_id']))
+            self.bs_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.bs_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(str(row['total'])))
+            self.bs_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
+            if row['ispaid'] == 1:
+                row['ispaid'] = 'مدفوعة'
+            else:
+                row['ispaid'] = 'غير مدفوعة'
+            self.bs_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(row['ispaid']))
+            self.bs_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.bs_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(row['date']))
+            self.bs_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignCenter)
+        self.bs_table.resizeColumnsToContents()
+
+    def print_table_bell_sell(self):
+        pass
+    ####################################################################
+
     # export tables to exel
     def to_excel(self, table):
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File', '', ".dot(*.exel)")
+        file_name, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File', '', ".dot(*.exel)")
         wbk = xlwt.Workbook()
         sheet = wbk.add_sheet("sheet", cell_overwrite_ok=True)
         style = xlwt.XFStyle()
@@ -696,7 +896,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                 text = model.data(model.index(r, c))
                 sheet.write(r + 1, c - 1, text)
         try:
-            wbk.save(filename)
+            wbk.save(file_name)
         except IOError:
             QtWidgets.QMessageBox.warning(None, 'خطأ', 'يوجد خطأ في حفظ الملف')
 
