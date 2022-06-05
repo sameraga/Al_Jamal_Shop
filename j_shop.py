@@ -930,6 +930,9 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def print_table_bell_sell(self):
         pass
+
+    def print_table_bell_sell2(self):
+        pass
     ####################################################################
 
     # export tables to exel
