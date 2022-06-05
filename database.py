@@ -64,11 +64,8 @@ class Database:
         self.connection.execute(f'delete from {table} where id = {id}')
         self.connection.commit()
 
-    def query_customer(self):
-        return {e['id']: e['name'] for e in self.connection.execute('select id, name from customer').fetchall()}
-
-    def get_customer_id_by_name(self, name):
-        return self.connection.execute(f"select id from customer where name = '{name}'").fetchone()['id']
+    def get_product_by_code(self, code):
+        return self.connection.execute(f"select id, name, sell_price, price_range from product where code = '{code}'").fetchone()
 
     def get_customer_name_by_id(self, id):
         return self.connection.execute(f"select name from customer where id = {id}").fetchone()['name']
@@ -119,6 +116,19 @@ class Database:
         else:
             sql_cmd += f' limit {limit1}, {limit2}'
             return self.connection.execute(sql_cmd).fetchall()
+
+    # customer
+    def query_customer(self):
+        return {e['id']: e['name'] for e in self.connection.execute('select id, name from customer').fetchall()}
+
+    def get_customer_id_by_name(self, name):
+        return self.connection.execute(f"select id from customer where name = '{name}'").fetchone()['id']
+
+    def get_customer_name_by_id(self, id):
+        return self.connection.execute(f"select name from customer where id = {id}").fetchone()['name']
+
+    def get_customer_phone_by_name(self, name):
+        return self.connection.execute(f"select phone from customer where name = '{name}'").fetchone()['phone']
 
     def query_all_customer(self, filter: dict, limit1, limit2):
         sql_cmd = "SELECT id, code, name, phone, balance from customer"

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1100</width>
+    <width>959</width>
     <height>784</height>
    </rect>
   </property>
@@ -24,10 +24,16 @@
        <item row="0" column="0">
         <widget class="QLabel" name="label_20">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>0</height>
+          </size>
          </property>
          <property name="text">
           <string>رقم الفاتورة</string>
@@ -89,10 +95,16 @@
        <item row="1" column="0">
         <widget class="QLabel" name="label_22">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>0</height>
+          </size>
          </property>
          <property name="text">
           <string>اسم الزبون</string>
@@ -155,13 +167,13 @@
         <enum>QAbstractItemView::SelectItems</enum>
        </property>
        <attribute name="verticalHeaderVisible">
-        <bool>false</bool>
+        <bool>true</bool>
        </attribute>
-       <column>
+       <row>
         <property name="text">
-         <string>الرقم</string>
+         <string>1</string>
         </property>
-       </column>
+       </row>
        <column>
         <property name="text">
          <string>الكود</string>
@@ -203,6 +215,9 @@
       <layout class="QGridLayout" name="gridLayout_5">
        <item row="0" column="1">
         <widget class="QLineEdit" name="total">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
          </property>
@@ -231,6 +246,9 @@
        </item>
        <item row="0" column="3">
         <widget class="QLineEdit" name="last_total">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
          </property>

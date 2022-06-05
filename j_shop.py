@@ -26,37 +26,91 @@ USER = ''
 PASS = ''
 
 
+class ReadOnlyDelegate(QtWidgets.QStyledItemDelegate):
+    def createEditor(self, parent, option, index):
+        # print('createEditor event fired')
+        return
+
+
 class BillSell(QtWidgets.QDialog, Form_BillSell):
     def __init__(self, id):
         QtWidgets.QDialog.__init__(self)
         Form_BillSell.__init__(self)
         self.setupUi(self)
 
-        self.setup_control()
+        self.validator_money = QtGui.QRegExpValidator(
+            QtCore.QRegExp('^(\$)?(([1-9]\d{0,2}(\,\d{3})*)|([1-9]\d*)|(0))(\.\d{2})?$'))
 
-    def setup_control(self):
         if id == 0:
             self.bill_code.setText(str(int(database.db.get_bills_next_id()) + 10000))
         else:
             self.bill_code.setText(str(id))
+
+        self.setup_control()
+
+    def setup_control(self):
         self.b_date.setDate(QDate.currentDate())
+        self.discount.setValidator(self.validator_money)
 
         self.c_name.clear()
         self.c_name.addItem('')
         self.c_name.addItems(database.db.query_customer().values())
         self.c_name.currentTextChanged.connect(lambda: self.c_phone.setText(database.db.get_customer_phone_by_name(self.c_name.currentText())))
 
+        self.total.setReadOnly(True)
+        self.last_total.setReadOnly(True)
         self.bs_table: QtWidgets.QTableWidget
+        delegate = ReadOnlyDelegate(self.bs_table)
+        self.bs_table.setItemDelegateForColumn(3, delegate)
+        self.bs_table.setItemDelegateForColumn(5, delegate)
         self.bs_table.setRowCount(1)
-        self.bs_table.setItem(0, 0, QtWidgets.QTableWidgetItem(str(1)))
-        self.bs_table.keyPressEvent = self.table_key_press_event
+        self.bs_table.keyReleaseEvent = self.table_key_press_event
 
     def table_key_press_event(self, event: QtGui.QKeyEvent):
+        self.bs_table: QtWidgets.QTableWidget
         if event.key() == QtCore.Qt.Key_Return:
-            if self.bs_table.currentColumn() == 1:
-                num = self.bs_table.rowCount() + 1
-                self.bs_table.setRowCount(num)
-                self.bs_table.setItem(self.bs_table.currentRow() + 1, 0, QtWidgets.QTableWidgetItem(str(num)))
+            if self.bs_table.currentColumn() == 0 and self.bs_table.currentRow() + 1 == self.bs_table.rowCount():
+                self.update_table(self.bs_table.currentRow())
+            else:
+                self.enter_event(self.bs_table.currentRow())
+
+    def update_table(self, current_row):
+        code = self.bs_table.item(current_row, 0).text()
+        product = database.db.get_product_by_code(code)
+        if product:
+            self.bs_table.item(current_row, 0).id = product['id']
+            self.bs_table.setItem(current_row, 1, QtWidgets.QTableWidgetItem(product['name']))
+            self.bs_table.setItem(current_row, 2, QtWidgets.QTableWidgetItem('1'))
+            self.bs_table.setItem(current_row, 3, QtWidgets.QTableWidgetItem(str(product['sell_price'])))
+            self.bs_table.setItem(current_row, 4, QtWidgets.QTableWidgetItem('0'))
+            self.bs_table.setItem(current_row, 5, QtWidgets.QTableWidgetItem(str(product['sell_price'])))
+            self.bs_table.setRowCount(self.bs_table.rowCount() + 1)
+            btn_delete = QtWidgets.QPushButton(QtGui.QIcon.fromTheme('delete'), '')
+            btn_delete.clicked.connect(lambda: self.bs_table.removeRow(current_row))
+            self.bs_table.setCellWidget(current_row, 6, btn_delete)
+            self.calculate_total()
+        else:
+            QtWidgets.QMessageBox.warning(None, 'خطأ', 'الرقم غير موجود\n أعد ادخال رقم صحيح')
+
+    def enter_event(self, current_row):
+        code = self.bs_table.item(current_row, 0).text()
+        product = database.db.get_product_by_code(code)
+        discount = float(self.bs_table.item(current_row, 4).text())
+        quantity = int(self.bs_table.item(current_row, 2).text())
+        if discount > (float(product['price_range']) * quantity):
+            discount = float(product['price_range']) * quantity
+            self.bs_table.setItem(current_row, 4, QtWidgets.QTableWidgetItem(str(discount)))
+        total = quantity * float(product['sell_price']) - discount
+        self.bs_table.setItem(current_row, 5, QtWidgets.QTableWidgetItem(str(total)))
+        self.calculate_total()
+
+    def calculate_total(self):
+        total = 0
+        for i in range(0, self.bs_table.rowCount()):
+            if self.bs_table.item(i, 5) is not None:
+                total += float(self.bs_table.item(i, 5).text())
+        self.total.setText(str(total))
+        self.last_total.setText(str(total - float(self.discount.text())))
 
 
 def open_bill_sell(id):
@@ -71,7 +125,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         Form_Main.__init__(self)
         self.setupUi(self)
 
-        self.validator_code = QtGui.QRegExpValidator(QtCore.QRegExp('[0-9]*'))
+        self.validator_code = QtGui.QRegExpValidator(QtCore.QRegExp('[a-z][0-9]*'))
         self.validator_money = QtGui.QRegExpValidator(QtCore.QRegExp('^(\$)?(([1-9]\d{0,2}(\,\d{3})*)|([1-9]\d*)|(0))(\.\d{2})?$'))
 
         self._typing_timer_p = QtCore.QTimer()
@@ -107,7 +161,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     def enter_app(self):
         global PASS
         global USER
-
+        s = '1'
+        PASS = hashlib.sha256(s.encode()).digest()
         PASS = hashlib.sha256(self.txt_password.text().encode()).digest()
         USER = self.txt_username.text()
 
