@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1100</width>
-    <height>777</height>
+    <width>955</width>
+    <height>790</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -127,9 +127,13 @@
        <property name="selectionBehavior">
         <enum>QAbstractItemView::SelectRows</enum>
        </property>
+       <property name="rowCount">
+        <number>1</number>
+       </property>
        <attribute name="verticalHeaderVisible">
-        <bool>false</bool>
+        <bool>true</bool>
        </attribute>
+       <row/>
        <column>
         <property name="text">
          <string>الرقم</string>
