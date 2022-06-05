@@ -929,7 +929,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.bs_table.resizeColumnsToContents()
 
     def print_table_bell_sell(self):
-        pass
+        print("222")
 
     def print_table_bell_sell2(self):
         print("111")
