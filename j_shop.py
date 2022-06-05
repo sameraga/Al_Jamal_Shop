@@ -49,6 +49,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         self.setup_control()
 
     def setup_control(self):
+        print("a")
         self.b_date.setDate(QDate.currentDate())
         self.discount.setValidator(self.validator_money)
 
