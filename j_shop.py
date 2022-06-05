@@ -932,7 +932,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         pass
 
     def print_table_bell_sell2(self):
-        pass
+        print("111")
     ####################################################################
 
     # export tables to exel
