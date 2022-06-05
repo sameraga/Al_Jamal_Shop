@@ -222,7 +222,7 @@
              </attribute>
              <layout class="QVBoxLayout" name="verticalLayout_9">
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="7,1">
+               <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,1">
                 <property name="spacing">
                  <number>0</number>
                 </property>
@@ -240,11 +240,11 @@
                     <height>500</height>
                    </size>
                   </property>
-                  <property name="styleSheet">
-                   <string notr="true">image: url(:/icons/icons/ph2.png);</string>
-                  </property>
                   <property name="text">
                    <string/>
+                  </property>
+                  <property name="pixmap">
+                   <pixmap resource="icons.qrc">:/icons/icons/ph2.png</pixmap>
                   </property>
                   <property name="scaledContents">
                    <bool>true</bool>
@@ -1540,6 +1540,39 @@
                     </property>
                    </widget>
                   </item>
+                  <item row="0" column="3">
+                   <widget class="QDateEdit" name="birth_date_2">
+                    <property name="layoutDirection">
+                     <enum>Qt::LeftToRight</enum>
+                    </property>
+                    <property name="locale">
+                     <locale language="English" country="Kenya"/>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="specialValueText">
+                     <string/>
+                    </property>
+                    <property name="minimumDate">
+                     <date>
+                      <year>1900</year>
+                      <month>1</month>
+                      <day>1</day>
+                     </date>
+                    </property>
+                    <property name="displayFormat">
+                     <string>yyyy-M-d</string>
+                    </property>
+                    <property name="date">
+                     <date>
+                      <year>1900</year>
+                      <month>1</month>
+                      <day>1</day>
+                     </date>
+                    </property>
+                   </widget>
+                  </item>
                   <item row="1" column="2">
                    <widget class="QCheckBox" name="ch_bill_date_t_3">
                     <property name="sizePolicy">
@@ -1550,29 +1583,6 @@
                     </property>
                     <property name="text">
                      <string>تاريخ الفاتورة إلى</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="QLineEdit" name="cs_name_3">
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                    <property name="placeholderText">
-                     <string>اسم المورد</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="2">
-                   <widget class="QCheckBox" name="ch_bill_date_f_3">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>تاريخ الفاتورة من</string>
                     </property>
                    </widget>
                   </item>
@@ -1615,36 +1625,36 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="3">
-                   <widget class="QDateEdit" name="birth_date_2">
-                    <property name="layoutDirection">
-                     <enum>Qt::LeftToRight</enum>
+                  <item row="0" column="2">
+                   <widget class="QCheckBox" name="ch_bill_date_f_3">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
                     </property>
-                    <property name="locale">
-                     <locale language="English" country="Kenya"/>
+                    <property name="text">
+                     <string>تاريخ الفاتورة من</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QLabel" name="label_50">
+                    <property name="text">
+                     <string>اسم المورد</string>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignCenter</set>
                     </property>
-                    <property name="specialValueText">
-                     <string/>
-                    </property>
-                    <property name="minimumDate">
-                     <date>
-                      <year>1900</year>
-                      <month>1</month>
-                      <day>1</day>
-                     </date>
-                    </property>
-                    <property name="displayFormat">
-                     <string>yyyy-M-d</string>
-                    </property>
-                    <property name="date">
-                     <date>
-                      <year>1900</year>
-                      <month>1</month>
-                      <day>1</day>
-                     </date>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QComboBox" name="comboBox">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
                     </property>
                    </widget>
                   </item>
@@ -1848,6 +1858,20 @@
                    <widget class="QPushButton" name="btn_bill_buy_2">
                     <property name="text">
                      <string>تعديل</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btn_bill_buy_3">
+                    <property name="text">
+                     <string>طباعة الجدول</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btn_bill_buy_4">
+                    <property name="text">
+                     <string>تصدير الجدول</string>
                     </property>
                    </widget>
                   </item>
@@ -4041,7 +4065,7 @@
      <x>0</x>
      <y>0</y>
      <width>1276</width>
-     <height>46</height>
+     <height>45</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
@@ -4081,22 +4105,6 @@
     <hint type="destinationlabel">
      <x>1066</x>
      <y>207</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>billsell_code</sender>
-   <signal>returnPressed()</signal>
-   <receiver>btn_add_billsell</receiver>
-   <slot>click()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>936</x>
-     <y>253</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>936</x>
-     <y>704</y>
     </hint>
    </hints>
   </connection>
