@@ -33,7 +33,7 @@ class ReadOnlyDelegate(QtWidgets.QStyledItemDelegate):
 
 
 class BillSell(QtWidgets.QDialog, Form_BillSell):
-    def __init__(self, id):
+    def __init__(self, code):
         QtWidgets.QDialog.__init__(self)
         Form_BillSell.__init__(self)
         self.setupUi(self)
@@ -41,21 +41,20 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         self.validator_money = QtGui.QRegExpValidator(
             QtCore.QRegExp('^(\$)?(([1-9]\d{0,2}(\,\d{3})*)|([1-9]\d*)|(0))(\.\d{2})?$'))
 
-        if id == 0:
+        if code == 0:
             self.bill_code.setText(str(int(database.db.get_bills_next_id()) + 10000))
         else:
-            self.bill_code.setText(str(id))
+            self.bill_code.setText(str(code))
 
         self.setup_control()
 
     def setup_control(self):
-        print("a")
         self.b_date.setDate(QDate.currentDate())
         self.discount.setValidator(self.validator_money)
 
         self.c_name.clear()
         self.c_name.addItem('')
-        self.c_name.addItems(database.db.query_customer().values())
+        self.c_name.addItems(database.db.query_csp("customer").values())
         self.c_name.currentTextChanged.connect(lambda: self.c_phone.setText(database.db.get_customer_phone_by_name(self.c_name.currentText())))
 
         self.bs_table: QtWidgets.QTableWidget
@@ -66,6 +65,9 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         self.bs_table.keyReleaseEvent = self.table_key_press_event
 
         self.discount.returnPressed.connect(self.discount_on_press)
+
+        self.btn_save.clicked.connect(self.save_bill)
+        self.btn_cancel.clicked.connect(self.reject)
 
     def table_key_press_event(self, event: QtGui.QKeyEvent):
         self.bs_table: QtWidgets.QTableWidget
@@ -115,9 +117,25 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
     def discount_on_press(self):
         self.last_total.setText(str(float(self.total.text()) - float(self.discount.text())))
 
+    def save_bill(self):
+        bill = dict()
+        bill['code'] = self.bill_code.text()
+        bill['date'] = QDate.toString(self.b_date.date())
+        bill['total'] = self.total.text()
+        bill['discount'] = self.discount.text()
+        bill['c_id'] = database.db.get_customer_id_by_name(self.c_name.currentText())
+        if self.ch_ispaid.isChecked():
+            bill['ispaid'] = 1
 
-def open_bill_sell(id):
-    sb = BillSell(id)
+        if int(database.db.count_row("bill_sell", bill['code'])) == 0:
+            database.db.insert_row("bill_sell", bill)
+        else:
+            bill_id = database.db.get_id_by_code("bill_sell", bill['code'])
+            database.db.update_row("bill_sell", bill, bill_id)
+
+
+def open_bill_sell(code):
+    sb = BillSell(code)
     sb.setWindowIcon(QtGui.QIcon('emp.png'))
     sb.exec()
 
@@ -164,8 +182,6 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     def enter_app(self):
         global PASS
         global USER
-        s = '1'
-        PASS = hashlib.sha256(s.encode()).digest()
         PASS = hashlib.sha256(self.txt_password.text().encode()).digest()
         USER = self.txt_username.text()
 
@@ -205,7 +221,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.menubar.setVisible(True)
         self.tabWidget.tabBar().setVisible(False)
 
-        self.customers = database.db.query_customer()
+        self.customers = database.db.query_csp("customer")
 
         # update tables
         self._typing_timer_p.setSingleShot(True)
@@ -578,7 +594,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                                         msg.Yes | msg.No,
                                         msg.No)
             if button_reply == msg.Yes:
-                database.db.delete_medicine(customer['code'])
+                database.db.delete_row("customer", self.customer_id)
                 self.update_customer_table()
                 self.clear_customer_inputs()
                 toaster_Notify.QToaster.show_message(parent=self, message=f"حذف زبون\nتم حذف الزبون{customer['name']} بنجاح")
@@ -639,7 +655,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.c_code.setText(customer['code'])
             self.c_name.setText(customer['name'])
             self.c_phone.setText(customer['phone'])
-            self.c_balance.setText(customer['balance'])
+            self.c_balance.setText(str(customer['balance']))
             self.c_note.setText(customer['note'])
 
     def print_table_customer(self):
@@ -934,8 +950,6 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     def print_table_bell_sell(self):
         print("222")
 
-    def print_table_bell_sell2(self):
-        print("111")
     ####################################################################
 
     # export tables to exel

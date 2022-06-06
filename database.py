@@ -46,6 +46,12 @@ class Database:
     def query_row(self, table, id):
         return self.connection.execute(f"select * from {table} where id = {id}").fetchone()
 
+    def query_csp(self, table):
+        return {e['id']: e['name'] for e in self.connection.execute(f'select id, name from {table}').fetchall()}
+
+    def get_id_by_code(self, table, code):
+        return self.connection.execute(f'select id from {table} where code = {code}').fetchone()['id']
+
     def insert_row(self, table, row):
         cursor = self.connection.cursor()
         columns = ', '.join(row.keys())
@@ -64,14 +70,10 @@ class Database:
         self.connection.execute(f'delete from {table} where id = {id}')
         self.connection.commit()
 
+    # product
+    # ################################################################
     def get_product_by_code(self, code):
         return self.connection.execute(f"select id, name, sell_price, price_range from product where code = '{code}'").fetchone()
-
-    def get_customer_name_by_id(self, id):
-        return self.connection.execute(f"select name from customer where id = {id}").fetchone()['name']
-
-    def get_customer_phone_by_name(self, name):
-        return self.connection.execute(f"select phone from customer where name = '{name}'").fetchone()['phone']
 
     def query_all_product(self, filter: dict, limit1, limit2):
         sql_cmd = "SELECT id, code, name, class, type, source, quantity, buy_price, sell_price from product"
@@ -117,9 +119,10 @@ class Database:
             sql_cmd += f' limit {limit1}, {limit2}'
             return self.connection.execute(sql_cmd).fetchall()
 
+    # ################################################################
+
     # customer
-    def query_customer(self):
-        return {e['id']: e['name'] for e in self.connection.execute('select id, name from customer').fetchall()}
+    # ################################################################
 
     def get_customer_id_by_name(self, name):
         return self.connection.execute(f"select id from customer where name = '{name}'").fetchone()['id']
@@ -149,6 +152,8 @@ class Database:
         else:
             sql_cmd += f' limit {limit1}, {limit2}'
             return self.connection.execute(sql_cmd).fetchall()
+
+    # ################################################################
 
     def query_all_bill_sell(self, filter: dict, limit1, limit2):
         sql_cmd = "SELECT id, code, c_id, date, total, ispaid from bill_sell"
