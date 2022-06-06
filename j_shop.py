@@ -49,6 +49,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         self.setup_control()
 
     def setup_control(self):
+        print("a")
         self.b_date.setDate(QDate.currentDate())
         self.discount.setValidator(self.validator_money)
 
@@ -57,14 +58,14 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         self.c_name.addItems(database.db.query_customer().values())
         self.c_name.currentTextChanged.connect(lambda: self.c_phone.setText(database.db.get_customer_phone_by_name(self.c_name.currentText())))
 
-        self.total.setReadOnly(True)
-        self.last_total.setReadOnly(True)
         self.bs_table: QtWidgets.QTableWidget
         delegate = ReadOnlyDelegate(self.bs_table)
         self.bs_table.setItemDelegateForColumn(3, delegate)
         self.bs_table.setItemDelegateForColumn(5, delegate)
         self.bs_table.setRowCount(1)
         self.bs_table.keyReleaseEvent = self.table_key_press_event
+
+        self.discount.returnPressed.connect(self.discount_on_press)
 
     def table_key_press_event(self, event: QtGui.QKeyEvent):
         self.bs_table: QtWidgets.QTableWidget
@@ -110,7 +111,9 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
             if self.bs_table.item(i, 5) is not None:
                 total += float(self.bs_table.item(i, 5).text())
         self.total.setText(str(total))
-        self.last_total.setText(str(total - float(self.discount.text())))
+
+    def discount_on_press(self):
+        self.last_total.setText(str(float(self.total.text()) - float(self.discount.text())))
 
 
 def open_bill_sell(id):
@@ -964,7 +967,7 @@ if __name__ == '__main__':
     locale.setlocale(locale.LC_ALL, "en_US.utf8")
 
     mainWindow = AppMainWindow()
-    mainWindow.showMaximized()
+    mainWindow.show()
     mainWindow.setWindowIcon(QtGui.QIcon('icons/ph1.png'))
     for filename in glob.glob("html/tmp/*"):
         os.remove(filename)
