@@ -214,7 +214,7 @@
              <enum>QTabWidget::Rounded</enum>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>2</number>
             </property>
             <widget class="QWidget" name="tab_1">
              <attribute name="title">
@@ -1299,6 +1299,9 @@
                 </item>
                 <item>
                  <widget class="QTableWidget" name="bs_table">
+                  <property name="editTriggers">
+                   <set>QAbstractItemView::NoEditTriggers</set>
+                  </property>
                   <column>
                    <property name="text">
                     <string>تسلسلي</string>

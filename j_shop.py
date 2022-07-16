@@ -33,7 +33,7 @@ class ReadOnlyDelegate(QtWidgets.QStyledItemDelegate):
 
 
 class BillSell(QtWidgets.QDialog, Form_BillSell):
-    def __init__(self, code):
+    def __init__(self, id):
         QtWidgets.QDialog.__init__(self)
         Form_BillSell.__init__(self)
         self.setupUi(self)
@@ -41,11 +41,8 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         self.validator_money = QtGui.QRegExpValidator(
             QtCore.QRegExp('^(\$)?(([1-9]\d{0,2}(\,\d{3})*)|([1-9]\d*)|(0))(\.\d{2})?$'))
 
-        if code == 0:
-            self.bill_code.setText(str(int(database.db.get_bills_next_id()) + 10000))
-        else:
-            self.bill_code.setText(str(code))
-
+        self.b_id = id
+        self.code = None
         self.setup_control()
 
     def setup_control(self):
@@ -65,9 +62,37 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         self.bs_table.keyReleaseEvent = self.table_key_press_event
 
         self.discount.returnPressed.connect(self.discount_on_press)
-
+        self.fill_bill(self.b_id)
         self.btn_save.clicked.connect(self.save_bill)
         self.btn_cancel.clicked.connect(self.reject)
+
+    def fill_bill(self, id):
+        if id == 0:
+            self.b_id = database.db.get_next_id('bill_sell')
+            self.code = int(self.b_id) + 10000
+        else:
+            bill = database.db.query_row('bill_sell', id)
+            self.b_id = bill['id']
+            self.code = bill['code']
+            self.b_date.setDate(QDate(bill['date']))
+            self.c_name.setCurrentText(database.db.get_customer_name_by_id(bill['c_id']))
+            self.total.setText(str(bill['total']))
+            self.discount.setText(str(bill['discount']))
+            self.last_total.setText(str(float(bill['total']) - float(bill['discount'])))
+            if bill['ispaid'] == 1:
+                self.ch_ispaid.setChecked(False)
+        self.bill_code.setText(str(self.code))
+        orders = database.db.get_order_bill('sell_order_v', self.b_id)
+        self.bs_table.setRowCount(len(orders) + 1)
+        for row_idx, row in enumerate(orders):
+            self.bs_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(str(row['code'])))
+            self.bs_table.item(row_idx, 0).id = row['id']
+            self.bs_table.item(row_idx, 0).pid = row['p_id']
+            self.bs_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(row['name'])))
+            self.bs_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(str(row['quantity'])))
+            self.bs_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(str(row['sell_price'])))
+            self.bs_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(str(row['discount'])))
+            self.bs_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(str(row['total'])))
 
     def table_key_press_event(self, event: QtGui.QKeyEvent):
         self.bs_table: QtWidgets.QTableWidget
@@ -81,7 +106,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         code = self.bs_table.item(current_row, 0).text()
         product = database.db.get_product_by_code(code)
         if product:
-            self.bs_table.item(current_row, 0).id = product['id']
+            self.bs_table.item(current_row, 0).pid = product['id']
             self.bs_table.setItem(current_row, 1, QtWidgets.QTableWidgetItem(product['name']))
             self.bs_table.setItem(current_row, 2, QtWidgets.QTableWidgetItem('1'))
             self.bs_table.setItem(current_row, 3, QtWidgets.QTableWidgetItem(str(product['sell_price'])))
@@ -119,6 +144,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
 
     def save_bill(self):
         bill = dict()
+        bill['id'] = self.b_id
         bill['code'] = self.bill_code.text()
         bill['date'] = QDate.toString(self.b_date.date())
         bill['total'] = self.total.text()
@@ -127,15 +153,41 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         if self.ch_ispaid.isChecked():
             bill['ispaid'] = 1
 
+        orders = []
+        for idx in range(self.bs_table.rowCount()):
+            order = dict()
+            order['b_id'] = self.b_id
+            if self.bs_table.item(idx, 0) and self.bs_table.item(idx, 0).text():
+                if hasattr(self.bs_table.item(idx, 0), 'id'):
+                    order['id'] = self.bs_table.item(idx, 0).id
+                    order['p_id'] = self.bs_table.item(idx, 0).pid
+                else:
+                    order['id'] = int(database.db.get_next_id('sell_order')) + idx
+                    order['p_id'] = database.db.get_id_by_code('product', self.bs_table.item(idx, 0).text())
+                if self.bs_table.item(idx, 2) and self.bs_table.item(idx, 2).text():
+                    order['quantity'] = self.bs_table.item(idx, 2).text()
+                else:
+                    order['quantity'] = ''
+                if self.bs_table.item(idx, 4) and self.bs_table.item(idx, 4).text():
+                    order['discount'] = self.bs_table.item(idx, 4).text()
+                else:
+                    order['discount'] = ''
+                if self.bs_table.item(idx, 5) and self.bs_table.item(idx, 5).text():
+                    order['total'] = self.bs_table.item(idx, 5).text()
+                else:
+                    order['total'] = ''
+                orders.append(order)
+
         if int(database.db.count_row("bill_sell", bill['code'])) == 0:
             database.db.insert_row("bill_sell", bill)
         else:
-            bill_id = database.db.get_id_by_code("bill_sell", bill['code'])
-            database.db.update_row("bill_sell", bill, bill_id)
+            database.db.update_row("bill_sell", bill)
+
+        database.db.insert_table('sell_order', orders)
 
 
-def open_bill_sell(code):
-    sb = BillSell(code)
+def open_bill_sell(id):
+    sb = BillSell(id)
     sb.setWindowIcon(QtGui.QIcon('emp.png'))
     sb.exec()
 
@@ -954,7 +1006,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     # export tables to exel
     def to_excel(self, table):
-        file_name, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File', '', ".dot(*.exel)")
+        file_name, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File', '', ".dot(*.dot)")
         wbk = xlwt.Workbook()
         sheet = wbk.add_sheet("sheet", cell_overwrite_ok=True)
         style = xlwt.XFStyle()

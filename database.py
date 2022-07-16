@@ -41,6 +41,8 @@ class Database:
             return self.connection.execute(f'select count(*) as count from {table} where code = ?', (r,)).fetchone()['count']
 
     def get_next_id(self, table):
+        if self.connection.execute(f"select max(id)+1 as seq from {table}").fetchone()['seq'] == '':
+            return 1
         return self.connection.execute(f"select max(id)+1 as seq from {table}").fetchone()['seq']
 
     def query_row(self, table, id):
@@ -52,19 +54,43 @@ class Database:
     def get_id_by_code(self, table, code):
         return self.connection.execute(f'select id from {table} where code = {code}').fetchone()['id']
 
-    def insert_row(self, table, row):
-        cursor = self.connection.cursor()
-        columns = ', '.join(row.keys())
-        placeholders = ':' + ', :'.join(row.keys())
-        query = f'INSERT INTO {table} ({columns}) VALUES ({placeholders})'
-        cursor.execute(query, row)
-        self.connection.commit()
+    def get_code_by_id(self, table, id):
+        return self.connection.execute(f'select code from {table} where id = {id}').fetchone()['code']
 
-    def update_row(self, table, row, id):
-        placeholders = ', '.join([f'{key}=:{key}' for key in row.keys()])
-        query = f'UPDATE {table} SET {placeholders} WHERE id={id}'
-        self.connection.execute(query, row)
-        self.connection.commit()
+    def count_table(self, table, id):
+        return self.connection.execute(f"SELECT count(*) as count FROM {table} where id = '{id}'").fetchone()['count']
+
+    def insert_table(self, table, dic):
+        for d in dic:
+            if self.count_table(table, d['id']) == '1':
+                self.update_row(table, d)
+            else:
+                self.insert_row(table, d)
+
+    def insert_row(self, table, row):
+        def _insert(obj):
+            columns = ', '.join(obj.keys())
+            placeholders = ':' + ', :'.join(obj.keys())
+            query = f'INSERT INTO {table} ({columns}) VALUES ({placeholders})'
+            self.connection.execute(query, obj)
+            self.connection.commit()
+        if isinstance(row, dict):
+            _insert(row)
+        elif isinstance(row, list):
+            for d in row:
+                _insert(d)
+
+    def update_row(self, table, row):
+        def _update(obj):
+            placeholders = ', '.join([f'{key}=:{key}' for key in obj.keys()])
+            query = f"UPDATE {table} SET {placeholders} WHERE id = '{obj['id']}'"
+            self.connection.execute(query, obj)
+            self.connection.commit()
+        if isinstance(row, dict):
+            _update(row)
+        elif isinstance(row, list):
+            for d in row:
+                _update(d)
 
     def delete_row(self, table, id):
         self.connection.execute(f'delete from {table} where id = {id}')
@@ -180,5 +206,5 @@ class Database:
             sql_cmd += f' limit {limit1}, {limit2}'
             return self.connection.execute(sql_cmd).fetchall()
 
-    def get_bills_next_id(self):
-        return self.connection.execute("select seq+1 as seq from sqlite_sequence where name = 'bill_sell'").fetchone()['seq']
+    def get_order_bill(self, table, b_id):
+        return self.connection.execute(f"select * FROM {table} WHERE b_id = {b_id}").fetchall()
