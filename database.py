@@ -10,6 +10,8 @@ def _dict_factory(cursor, row):
         key = col[0]
         if isinstance(value, int):
             d[key] = str(value)
+        elif isinstance(value, float):
+            d[key] = str(value)
         elif value:
             d[key] = value
         else:
@@ -52,7 +54,7 @@ class Database:
         return {e['id']: e['name'] for e in self.connection.execute(f'select id, name from {table}').fetchall()}
 
     def get_id_by_code(self, table, code):
-        return self.connection.execute(f'select id from {table} where code = {code}').fetchone()['id']
+        return self.connection.execute(f"select id from {table} where code = '{code}'").fetchone()['id']
 
     def get_code_by_id(self, table, id):
         return self.connection.execute(f'select code from {table} where id = {id}').fetchone()['code']

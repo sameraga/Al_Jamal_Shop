@@ -80,7 +80,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
             self.discount.setText(str(bill['discount']))
             self.last_total.setText(str(float(bill['total']) - float(bill['discount'])))
             if bill['ispaid'] == 1:
-                self.ch_ispaid.setChecked(False)
+                self.ch_ispaid.setChecked(True)
         self.bill_code.setText(str(self.code))
         orders = database.db.get_order_bill('sell_order_v', self.b_id)
         self.bs_table.setRowCount(len(orders) + 1)
@@ -166,16 +166,13 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
                     order['p_id'] = database.db.get_id_by_code('product', self.bs_table.item(idx, 0).text())
                 if self.bs_table.item(idx, 2) and self.bs_table.item(idx, 2).text():
                     order['quantity'] = self.bs_table.item(idx, 2).text()
-                else:
-                    order['quantity'] = ''
+
                 if self.bs_table.item(idx, 4) and self.bs_table.item(idx, 4).text():
                     order['discount'] = self.bs_table.item(idx, 4).text()
-                else:
-                    order['discount'] = ''
+
                 if self.bs_table.item(idx, 5) and self.bs_table.item(idx, 5).text():
                     order['total'] = self.bs_table.item(idx, 5).text()
-                else:
-                    order['total'] = ''
+
                 orders.append(order)
 
         if int(database.db.count_row("bill_sell", bill['code'])) == 0:
@@ -184,12 +181,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
             database.db.update_row("bill_sell", bill)
 
         database.db.insert_table('sell_order', orders)
-
-
-def open_bill_sell(id):
-    sb = BillSell(id)
-    sb.setWindowIcon(QtGui.QIcon('emp.png'))
-    sb.exec()
+        self.accept()
 
 
 class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
@@ -938,8 +930,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             math.ceil(int(database.db.count_row("bell_sell", 1)) / self.page_size_bell_sell)))
         self.bs_first.clicked.connect(lambda: self.bs_page_num.setValue(1))
 
-        self.btn_add_billsell.clicked.connect(lambda: open_bill_sell(0))
-        self.btn_edit_billsell.clicked.connect(lambda: open_bill_sell(self.bill_sell_id))
+        self.btn_add_billsell.clicked.connect(lambda: self.open_bill_sell(0))
+        self.btn_edit_billsell.clicked.connect(lambda: self.open_bill_sell(self.bill_sell_id))
 
         self.billsell_date_from.setSpecialValueText(' ')
         self.billsell_date_to.setSpecialValueText(' ')
@@ -958,7 +950,13 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def double_click(self, id):
         self.bill_sell_id = id
-        open_bill_sell(id)
+        self.open_bill_sell(id)
+
+    def open_bill_sell(self, id):
+        sb = BillSell(id)
+        sb.setWindowIcon(QtGui.QIcon('emp.png'))
+        sb.exec()
+        self.update_bill_sell_table()
 
     def search_bill_sell_save(self):
         fil = {}
