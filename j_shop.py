@@ -39,7 +39,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         self.setupUi(self)
 
         self.validator_money = QtGui.QRegExpValidator(
-            QtCore.QRegExp('^(\$)?(([1-9]\d{0,2}(\,\d{3})*)|([1-9]\d*)|(0))(\.\d{2})?$'))
+            QtCore.QRegExp('^(\$)?(([1-9]\d{0,2}(\,\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$'))
 
         self.b_id = id
         self.code = None
@@ -65,6 +65,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         self.fill_bill(self.b_id)
         self.btn_save.clicked.connect(self.save_bill)
         self.btn_cancel.clicked.connect(self.reject)
+        self.btn_print_bill.clicked.connect(self.print_bill)
 
     def fill_bill(self, id):
         if id == 0:
@@ -93,6 +94,9 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
             self.bs_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(str(row['sell_price'])))
             self.bs_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(str(row['discount'])))
             self.bs_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(str(row['total'])))
+            btn_delete = QtWidgets.QPushButton(QtGui.QIcon.fromTheme('delete'), '')
+            btn_delete.clicked.connect(lambda: self.bs_table.removeRow(row_idx))
+            self.bs_table.setCellWidget(row_idx, 6, btn_delete)
 
     def table_key_press_event(self, event: QtGui.QKeyEvent):
         self.bs_table: QtWidgets.QTableWidget
@@ -104,6 +108,12 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
 
     def update_table(self, current_row):
         code = self.bs_table.item(current_row, 0).text()
+        for idx in range(self.bs_table.rowCount() - 1):
+            if self.bs_table.item(idx, 0).text() == code:
+                new = int(self.bs_table.item(idx, 2).text()) + 1
+                self.bs_table.setItem(idx, 2, QtWidgets.QTableWidgetItem(str(new)))
+                self.bs_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(''))
+                return
         product = database.db.get_product_by_code(code)
         if product:
             self.bs_table.item(current_row, 0).pid = product['id']
@@ -123,7 +133,11 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
     def enter_event(self, current_row):
         code = self.bs_table.item(current_row, 0).text()
         product = database.db.get_product_by_code(code)
+        if self.bs_table.item(current_row, 4).text() == '':
+            self.bs_table.setItem(current_row, 4, QtWidgets.QTableWidgetItem('0'))
         discount = float(self.bs_table.item(current_row, 4).text())
+        if self.bs_table.item(current_row, 2).text() == '':
+            self.bs_table.setItem(current_row, 2, QtWidgets.QTableWidgetItem('1'))
         quantity = int(self.bs_table.item(current_row, 2).text())
         if discount > (float(product['price_range']) * quantity):
             discount = float(product['price_range']) * quantity
@@ -182,6 +196,9 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
 
         database.db.insert_table('sell_order', orders)
         self.accept()
+
+    def print_bill(self):
+        pass
 
 
 class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
@@ -956,6 +973,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         sb = BillSell(id)
         sb.setWindowIcon(QtGui.QIcon('emp.png'))
         sb.exec()
+        self.btn_edit_billsell.setEnabled(False)
         self.update_bill_sell_table()
 
     def search_bill_sell_save(self):
@@ -987,7 +1005,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.bs_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
             self.bs_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(str(row['total'])))
             self.bs_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
-            if row['ispaid'] == 1:
+            if row['ispaid'] == '1':
                 row['ispaid'] = 'مدفوعة'
             else:
                 row['ispaid'] = 'غير مدفوعة'
