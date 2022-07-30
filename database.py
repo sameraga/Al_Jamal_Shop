@@ -101,7 +101,7 @@ class Database:
     # product
     # ################################################################
     def get_product_by_code(self, code):
-        return self.connection.execute(f"select id, name, sell_price, price_range from product where code = '{code}'").fetchone()
+        return self.connection.execute(f"select id, name, sell_price, price_range, buy_price from product where code = '{code}'").fetchone()
 
     def query_all_product(self, filter: dict, limit1, limit2):
         sql_cmd = "SELECT id, code, name, class, type, source, quantity, buy_price, sell_price from product"
@@ -127,25 +127,6 @@ class Database:
             sql_cmd += f' limit {limit1}, {limit2}'
             return self.connection.execute(sql_cmd).fetchall()
 
-    def query_all_supplier(self, filter: dict, limit1, limit2):
-        sql_cmd = "SELECT id, code, name, phone, balance from supplier"
-
-        if filter:
-            sql_cmd += " where "
-            filter_cmd = []
-            if 'code' in filter:
-                filter['code'] = f'%{filter["code"]}%'
-                filter_cmd.append(f'code like :code')
-            if 'name' in filter:
-                filter['name'] = f'%{filter["name"]}%'
-                filter_cmd.append(f'name like :name')
-
-            sql_cmd += ' and '.join(filter_cmd)
-            sql_cmd += f' limit {limit1}, {limit2}'
-            return self.connection.execute(sql_cmd, filter).fetchall()
-        else:
-            sql_cmd += f' limit {limit1}, {limit2}'
-            return self.connection.execute(sql_cmd).fetchall()
 
     # ################################################################
 
@@ -183,6 +164,40 @@ class Database:
 
     # ################################################################
 
+    #supplier
+    # #################################################################
+    def get_supplier_phone_by_name(self, name):
+        return self.connection.execute(f"select phone from supplier where name = '{name}'").fetchone()['phone']
+
+    def get_supplier_name_by_id(self, id):
+        return self.connection.execute(f"select name from supplier where id = {id}").fetchone()['name']
+
+    def get_supplier_id_by_name(self, name):
+        return self.connection.execute(f"select id from supplier where name = '{name}'").fetchone()['id']
+
+    def query_all_supplier(self, filter: dict, limit1, limit2):
+        sql_cmd = "SELECT id, code, name, phone, balance from supplier"
+
+        if filter:
+            sql_cmd += " where "
+            filter_cmd = []
+            if 'code' in filter:
+                filter['code'] = f'%{filter["code"]}%'
+                filter_cmd.append(f'code like :code')
+            if 'name' in filter:
+                filter['name'] = f'%{filter["name"]}%'
+                filter_cmd.append(f'name like :name')
+
+            sql_cmd += ' and '.join(filter_cmd)
+            sql_cmd += f' limit {limit1}, {limit2}'
+            return self.connection.execute(sql_cmd, filter).fetchall()
+        else:
+            sql_cmd += f' limit {limit1}, {limit2}'
+            return self.connection.execute(sql_cmd).fetchall()
+
+    # ######################################################################
+
+
     def query_all_bill_sell(self, filter: dict, limit1, limit2):
         sql_cmd = "SELECT id, code, c_id, date, total, ispaid from bill_sell"
 
@@ -194,6 +209,32 @@ class Database:
                 filter_cmd.append(f'code like :code')
             if 'c_id' in filter:
                 filter_cmd.append(f'c_id =:c_id')
+
+            if 'date_from' in filter:
+                if 'date_to' in filter:
+                    filter_cmd.append(f'date between :date_from and :date_to')
+                else:
+                    filter_cmd.append(f'date = :date_from')
+
+            sql_cmd += ' and '.join(filter_cmd)
+            sql_cmd += f' limit {limit1}, {limit2}'
+            return self.connection.execute(sql_cmd, filter).fetchall()
+        else:
+            sql_cmd += f' limit {limit1}, {limit2}'
+            return self.connection.execute(sql_cmd).fetchall()
+
+
+    def query_all_bill_buy(self, filter: dict, limit1, limit2):
+        sql_cmd = "SELECT id, code, s_id, date, total, ispaid from bill_buy"
+
+        if filter:
+            sql_cmd += " where "
+            filter_cmd = []
+            if 'code' in filter:
+                filter['code'] = f'%{filter["code"]}%'
+                filter_cmd.append(f'code like :code')
+            if 's_id' in filter:
+                filter_cmd.append(f's_id =:s_id')
 
             if 'date_from' in filter:
                 if 'date_to' in filter:

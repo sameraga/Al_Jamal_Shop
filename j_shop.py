@@ -21,6 +21,7 @@ import database
 
 Form_Main, _ = uic.loadUiType('j_shop.ui')
 Form_BillSell, _ = uic.loadUiType('bill_sell.ui')
+Form_BillBuy, _ = uic.loadUiType('bill_buy.ui')
 PAGE_SIZE = 10
 USER = ''
 PASS = ''
@@ -201,6 +202,175 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         pass
 
 
+class BillBuy(QtWidgets.QDialog, Form_BillBuy):
+    def __init__(self, id):
+        QtWidgets.QDialog.__init__(self)
+        Form_BillBuy.__init__(self)
+        self.setupUi(self)
+
+        self.validator_money = QtGui.QRegExpValidator(
+            QtCore.QRegExp('^(\$)?(([1-9]\d{0,2}(\,\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$'))
+
+        self.b_id = id
+        self.code = None
+        self.setup_control()
+
+    def setup_control(self):
+        self.b_date.setDate(QDate.currentDate())
+        self.discount.setValidator(self.validator_money)
+
+        self.s_name.clear()
+        self.s_name.addItem('')
+        self.s_name.addItems(database.db.query_csp("supplier").values())
+        self.s_name.currentTextChanged.connect(lambda: self.s_phone.setText(database.db.get_supplier_phone_by_name(self.s_name.currentText())))
+
+        self.bb_table: QtWidgets.QTableWidget
+        delegate = ReadOnlyDelegate(self.bb_table)
+        self.bb_table.setItemDelegateForColumn(3, delegate)
+        self.bb_table.setItemDelegateForColumn(5, delegate)
+        self.bb_table.setRowCount(1)
+        self.bb_table.keyReleaseEvent = self.table_key_press_event
+
+        self.discount.returnPressed.connect(self.discount_on_press)
+        self.fill_bill(self.b_id)
+        self.btn_save.clicked.connect(self.save_bill)
+        self.btn_cancel.clicked.connect(self.reject)
+        self.btn_print_bill.clicked.connect(self.print_bill)
+
+    def fill_bill(self, id):
+        if id == 0:
+            self.b_id = database.db.get_next_id('bill_buy')
+            self.code = int(self.b_id) + 10000
+        else:
+            bill = database.db.query_row('bill_buy', id)
+            self.b_id = bill['id']
+            self.code = bill['code']
+            self.b_date.setDate(QDate(bill['date']))
+            self.s_name.setCurrentText(database.db.get_supplier_name_by_id(bill['s_id']))
+            self.total.setText(str(bill['total']))
+            self.discount.setText(str(bill['discount']))
+            self.last_total.setText(str(float(bill['total']) - float(bill['discount'])))
+            if bill['ispaid'] == 1:
+                self.ch_ispaid.setChecked(True)
+        self.bill_code.setText(str(self.code))
+        orders = database.db.get_order_bill('buy_order_v', self.b_id)
+        self.bb_table.setRowCount(len(orders) + 1)
+        for row_idx, row in enumerate(orders):
+            self.bb_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(str(row['code'])))
+            self.bb_table.item(row_idx, 0).id = row['id']
+            self.bb_table.item(row_idx, 0).pid = row['p_id']
+            self.bb_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(row['name'])))
+            self.bb_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(str(row['quantity'])))
+            self.bb_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(str(row['buy_price'])))
+            self.bb_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(str(row['discount'])))
+            self.bb_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(str(row['total'])))
+            btn_delete = QtWidgets.QPushButton(QtGui.QIcon.fromTheme('delete'), '')
+            btn_delete.clicked.connect(lambda: self.bb_table.removeRow(row_idx))
+            self.bb_table.setCellWidget(row_idx, 6, btn_delete)
+
+    def table_key_press_event(self, event: QtGui.QKeyEvent):
+        self.bb_table: QtWidgets.QTableWidget
+        if event.key() == QtCore.Qt.Key_Return:
+            if self.bb_table.currentColumn() == 0 and self.bb_table.currentRow() + 1 == self.bb_table.rowCount():
+                self.update_table(self.bb_table.currentRow())
+            else:
+                self.enter_event(self.bb_table.currentRow())
+
+    def update_table(self, current_row):
+        code = self.bb_table.item(current_row, 0).text()
+        for idx in range(self.bb_table.rowCount() - 1):
+            if self.bb_table.item(idx, 0).text() == code:
+                new = int(self.bb_table.item(idx, 2).text()) + 1
+                self.bb_table.setItem(idx, 2, QtWidgets.QTableWidgetItem(str(new)))
+                self.bb_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(''))
+                return
+        product = database.db.get_product_by_code(code)
+        if product:
+            self.bb_table.item(current_row, 0).pid = product['id']
+            self.bb_table.setItem(current_row, 1, QtWidgets.QTableWidgetItem(product['name']))
+            self.bb_table.setItem(current_row, 2, QtWidgets.QTableWidgetItem('1'))
+            self.bb_table.setItem(current_row, 3, QtWidgets.QTableWidgetItem(str(product['buy_price'])))
+            self.bb_table.setItem(current_row, 4, QtWidgets.QTableWidgetItem('0'))
+            self.bb_table.setItem(current_row, 5, QtWidgets.QTableWidgetItem(str(product['buy_price'])))
+            self.bb_table.setRowCount(self.bb_table.rowCount() + 1)
+            btn_delete = QtWidgets.QPushButton(QtGui.QIcon.fromTheme('delete'), '')
+            btn_delete.clicked.connect(lambda: self.bb_table.removeRow(current_row))
+            self.bb_table.setCellWidget(current_row, 6, btn_delete)
+            self.calculate_total()
+        else:
+            QtWidgets.QMessageBox.warning(None, 'خطأ', 'الرقم غير موجود\n أعد ادخال رقم صحيح')
+
+    def enter_event(self, current_row):
+        code = self.bb_table.item(current_row, 0).text()
+        product = database.db.get_product_by_code(code)
+        if self.bb_table.item(current_row, 4).text() == '':
+            self.bb_table.setItem(current_row, 4, QtWidgets.QTableWidgetItem('0'))
+        discount = float(self.bb_table.item(current_row, 4).text())
+        if self.bb_table.item(current_row, 2).text() == '':
+            self.bb_table.setItem(current_row, 2, QtWidgets.QTableWidgetItem('1'))
+        quantity = int(self.bb_table.item(current_row, 2).text())
+        # if discount > (float(product['price_range']) * quantity):
+        discount = discount * quantity
+        self.bb_table.setItem(current_row, 4, QtWidgets.QTableWidgetItem(str(discount)))
+        total = quantity * float(product['buy_price']) - discount
+        self.bb_table.setItem(current_row, 5, QtWidgets.QTableWidgetItem(str(total)))
+        self.calculate_total()
+
+    def calculate_total(self):
+        total = 0
+        for i in range(0, self.bb_table.rowCount()):
+            if self.bb_table.item(i, 5) is not None:
+                total += float(self.bb_table.item(i, 5).text())
+        self.total.setText(str(total))
+
+    def discount_on_press(self):
+        self.last_total.setText(str(float(self.total.text()) - float(self.discount.text())))
+
+    def save_bill(self):
+        bill = dict()
+        bill['id'] = self.b_id
+        bill['code'] = self.bill_code.text()
+        bill['date'] = QDate.toString(self.b_date.date())
+        bill['total'] = self.total.text()
+        bill['discount'] = self.discount.text()
+        bill['s_id'] = database.db.get_supplier_id_by_name(self.s_name.currentText())
+        if self.ch_ispaid.isChecked():
+            bill['ispaid'] = 1
+
+        orders = []
+        for idx in range(self.bb_table.rowCount()):
+            order = dict()
+            order['b_id'] = self.b_id
+            if self.bb_table.item(idx, 0) and self.bb_table.item(idx, 0).text():
+                if hasattr(self.bb_table.item(idx, 0), 'id'):
+                    order['id'] = self.bb_table.item(idx, 0).id
+                    order['p_id'] = self.bb_table.item(idx, 0).pid
+                else:
+                    order['id'] = int(database.db.get_next_id('buy_order')) + idx
+                    order['p_id'] = database.db.get_id_by_code('product', self.bb_table.item(idx, 0).text())
+                if self.bb_table.item(idx, 2) and self.bb_table.item(idx, 2).text():
+                    order['quantity'] = self.bb_table.item(idx, 2).text()
+
+                if self.bb_table.item(idx, 4) and self.bb_table.item(idx, 4).text():
+                    order['discount'] = self.bb_table.item(idx, 4).text()
+
+                if self.bb_table.item(idx, 5) and self.bb_table.item(idx, 5).text():
+                    order['total'] = self.bb_table.item(idx, 5).text()
+
+                orders.append(order)
+
+        if int(database.db.count_row("bill_buy", bill['code'])) == 0:
+            database.db.insert_row("bill_buy", bill)
+        else:
+            database.db.update_row("bill_buy", bill)
+
+        database.db.insert_table('buy_order', orders)
+        self.accept()
+
+    def print_bill(self):
+        pass
+
+
 class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
@@ -231,6 +401,11 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.bill_sell_id = 0
         self.bill_sell_co = 0
         self.page_size_bill_sell = PAGE_SIZE
+
+        self._typing_timer_bb = QtCore.QTimer()
+        self.bill_buy_id = 0
+        self.bill_buy_co = 0
+        self.page_size_bill_buy = PAGE_SIZE
 
         self.setup_login()
 
@@ -283,12 +458,14 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.tabWidget.tabBar().setVisible(False)
 
         self.customers = database.db.query_csp("customer")
+        self.supplier = database.db.query_csp("supplier")
 
         # update tables
         self._typing_timer_p.setSingleShot(True)
         self._typing_timer_c.setSingleShot(True)
         self._typing_timer_s.setSingleShot(True)
         self._typing_timer_bs.setSingleShot(True)
+        self._typing_timer_bb.setSingleShot(True)
 
         self.change_pass.triggered.connect(self.change_pass_)
         self.exit.triggered.connect(lambda: sys.exit(1))
@@ -297,6 +474,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.setup_controls_customer()
         self.setup_controls_supplier()
         self.setup_controls_bill_sell()
+        self.setup_controls_bill_buy()
 
     def change_page_size(self, table):
         if table == 'product':
@@ -315,6 +493,10 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.page_size_bill_sell = self.bs_page_size.value()
             self.bs_page_num.setRange(1, math.ceil(int(database.db.count_row("bill_sell", 1)) / self.page_size_bill_sell))
             self._typing_timer_bs.start(1000)
+        elif table == 'bill_buy':
+            self.page_size_bill_buy = self.bb_page_size.value()
+            self.bb_page_num.setRange(1, math.ceil(int(database.db.count_row("bill_buy", 1)) / self.page_size_bill_buy))
+            self._typing_timer_bb.start(1000)
 
     def check_date_from(self, x):
         if x == 'bell_sell':
@@ -337,6 +519,28 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                 self.billsell_date_to.dateChanged.connect(lambda: self._typing_timer_bs.start(1000))
             else:
                 self.billsell_date_to.setEnabled(False)
+
+    def check_date_from(self, x):
+        if x == 'bell_buy':
+            self._typing_timer_bb.start(1000)
+            if self.ch_billbuy_date_from.isChecked():
+                self.billbuy_date_from.setEnabled(True)
+                self.billbuy_date_from.dateChanged.connect(lambda: self._typing_timer_bb.start(1000))
+                self.ch_billbuy_date_to.setEnabled(True)
+            else:
+                self.billbuy_date_from.setEnabled(False)
+                self.ch_billbuy_date_to.setEnabled(False)
+                self.billbuy_date_to.setEnabled(False)
+                self.ch_billbuy_date_to.setChecked(False)
+
+    def check_date_to(self, x):
+        if x == 'bell_buy':
+            self._typing_timer_bb.start(1000)
+            if self.ch_billbuy_date_to.isChecked():
+                self.billbuy_date_to.setEnabled(True)
+                self.billbuy_date_to.dateChanged.connect(lambda: self._typing_timer_bb.start(1000))
+            else:
+                self.billbuy_date_to.setEnabled(False)
 
     ####################################################################
 
@@ -1019,6 +1223,112 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         print("222")
 
     ####################################################################
+
+    # bill buy methods
+    def setup_controls_bill_buy(self):
+        self.billbuy_code.setValidator(self.validator_code)
+        self._typing_timer_bb.timeout.connect(self.update_bill_buy_table)
+
+        self.billbuy_sname.addItem('')
+        self.billbuy_sname.addItems(self.supplier.values())
+
+        self.bb_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.bb_table.doubleClicked.connect(lambda mi: self.double_click(self.bb_table.item(mi.row(), 0).id))
+        self.bb_table.clicked.connect(lambda mi: self.one_click(self.bb_table.item(mi.row(), 0).id))
+        self.bb_page_num.setRange(1, math.ceil(int(database.db.count_row("bill_buy", 1)) / self.page_size_bill_buy))
+
+        self.billbuy_code.textChanged.connect(lambda text: self._typing_timer_bb.start(1000))
+        self.billbuy_sname.currentTextChanged.connect(lambda text: self._typing_timer_bb.start(1000))
+
+        self.ch_billbuy_date_from.toggled.connect(lambda: self.check_date_from('bell_buy'))
+        self.ch_billbuy_date_to.toggled.connect(lambda: self.check_date_to('bell_buy'))
+
+        self.bb_page_num.valueChanged.connect(lambda text: self._typing_timer_bb.start(1000))
+        self.bb_page_size.valueChanged.connect(lambda: self.change_page_size('bell_buy'))
+
+        # print and to exel bill
+        self.btn_print_table_bb.clicked.connect(self.print_table_bell_buy)
+        self.btn_to_exel_bb.clicked.connect(lambda: self.to_excel(self.bb_table))
+
+        # pages
+        self.bb_post.clicked.connect(lambda: self.bb_page_num.setValue(self.bb_page_num.value() + 1))
+        self.bb_previous.clicked.connect(lambda: self.bb_page_num.setValue(self.bb_page_num.value() - 1))
+        self.bb_last.clicked.connect(lambda: self.bb_page_num.setValue(
+            math.ceil(int(database.db.count_row("bell_buy", 1)) / self.page_size_bell_buy)))
+        self.bb_first.clicked.connect(lambda: self.bb_page_num.setValue(1))
+
+        self.btn_add_billbuy.clicked.connect(lambda: self.open_bill_buy(0))
+        self.btn_edit_billbuy.clicked.connect(lambda: self.open_bill_buy(self.bill_buy_id))
+
+        self.billbuy_date_from.setSpecialValueText(' ')
+        self.billbuy_date_to.setSpecialValueText(' ')
+
+        self.btn_edit_billbuy.setEnabled(False)
+
+        self.billbuy_date_from.setEnabled(False)
+        self.ch_billbuy_date_to.setEnabled(False)
+        self.billbuy_date_to.setEnabled(False)
+
+        self.update_bill_buy_table()
+
+    def one_click(self, id):
+        self.bill_buy_id = id
+        self.btn_edit_billbuy.setEnabled(True)
+
+    def double_click(self, id):
+        self.bill_buy_id = id
+        self.open_bill_buy(id)
+
+    def open_bill_buy(self, id):
+        bb = BillBuy(id)
+        bb.setWindowIcon(QtGui.QIcon('emp.png'))
+        bb.exec()
+        self.btn_edit_billbuy.setEnabled(False)
+        self.update_bill_buy_table()
+
+    def search_bill_buy_save(self):
+        fil = {}
+        if self.billbuy_code.text():
+            fil['code'] = self.billbuy_code.text()
+        if self.billbuy_sname.currentText() != '':
+            fil['s_id'] = [k for k, v in self.supplier.items() if v == self.billbuy_sname.currentText()][0]
+        if self.ch_billbuy_date_from.isChecked():
+            fil['date_from'] = QDate.toString(self.billbuy_date_from.date())
+            if self.ch_billbuy_date_to.isChecked():
+                fil['date_to'] = QDate.toString(self.billbuy_date_to.date())
+
+        return fil
+
+    def update_bill_buy_table(self):
+        fil = self.search_bill_buy_save()
+        rows = database.db.query_all_bill_buy(fil, self.page_size_bill_buy * (self.bb_page_num.value() - 1),
+                                               self.page_size_bill_sell)
+        self.bb_table.setRowCount(len(rows))
+        for row_idx, row in enumerate(rows):
+            self.bb_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
+                str(row_idx + 1 + (self.page_size_bill_buy * (self.bb_page_num.value() - 1)))))
+            self.bb_table.item(row_idx, 0).id = row['id']
+            self.bb_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.bb_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(row['code'])))
+            self.bb_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignCenter)
+            row['s_id'] = self.customers[row['s_id']]
+            self.bb_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row['s_id']))
+            self.bb_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.bb_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(str(row['total'])))
+            self.bb_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
+            if row['ispaid'] == '1':
+                row['ispaid'] = 'مدفوعة'
+            else:
+                row['ispaid'] = 'غير مدفوعة'
+            self.bb_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(row['ispaid']))
+            self.bb_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.bb_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(row['date']))
+            self.bb_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignCenter)
+        self.bs_table.resizeColumnsToContents()
+
+    def print_table_bell_buy(self):
+        print("222")
+# #################################################################
 
     # export tables to exel
     def to_excel(self, table):

@@ -43,7 +43,7 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QComboBox" name="c_name"/>
+        <widget class="QComboBox" name="s_name"/>
        </item>
        <item row="1" column="2">
         <widget class="QLabel" name="label_23">
@@ -53,7 +53,7 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QLabel" name="bill_id">
+        <widget class="QLabel" name="bill_code">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
            <horstretch>0</horstretch>
@@ -99,7 +99,7 @@
         </widget>
        </item>
        <item row="1" column="3">
-        <widget class="QLabel" name="c_phone">
+        <widget class="QLabel" name="s_phone">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
            <horstretch>0</horstretch>
@@ -117,9 +117,9 @@
       </layout>
      </item>
      <item>
-      <widget class="QTableWidget" name="m_table">
+      <widget class="QTableWidget" name="bb_table">
        <property name="editTriggers">
-        <set>QAbstractItemView::NoEditTriggers</set>
+        <set>QAbstractItemView::AllEditTriggers</set>
        </property>
        <property name="selectionMode">
         <enum>QAbstractItemView::SingleSelection</enum>
@@ -134,11 +134,6 @@
         <bool>true</bool>
        </attribute>
        <row/>
-       <column>
-        <property name="text">
-         <string>الرقم</string>
-        </property>
-       </column>
        <column>
         <property name="text">
          <string>الكود</string>
@@ -169,12 +164,20 @@
          <string>الاجمالي</string>
         </property>
        </column>
+       <column>
+        <property name="text">
+         <string>حذف</string>
+        </property>
+       </column>
       </widget>
      </item>
      <item>
       <layout class="QGridLayout" name="gridLayout_5">
        <item row="0" column="1">
-        <widget class="QLineEdit" name="lineEdit_16">
+        <widget class="QLineEdit" name="total">
+         <property name="text">
+          <string>0</string>
+         </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
          </property>
@@ -188,7 +191,10 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QLineEdit" name="lineEdit_17">
+        <widget class="QLineEdit" name="discount">
+         <property name="text">
+          <string>0</string>
+         </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
          </property>
@@ -202,14 +208,17 @@
         </widget>
        </item>
        <item row="0" column="3">
-        <widget class="QLineEdit" name="lineEdit_18">
+        <widget class="QLineEdit" name="last_total">
+         <property name="text">
+          <string>0</string>
+         </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
          </property>
         </widget>
        </item>
        <item row="1" column="3">
-        <widget class="QCheckBox" name="checkBox_3">
+        <widget class="QCheckBox" name="ch_ispaid">
          <property name="text">
           <string>مدفوع</string>
          </property>
@@ -230,21 +239,21 @@
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_9">
        <item>
-        <widget class="QPushButton" name="pushButton_6">
+        <widget class="QPushButton" name="btn_save">
          <property name="text">
           <string>حفظ</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_4">
+        <widget class="QPushButton" name="btn_cancel">
          <property name="text">
           <string>إلغاء</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_16">
+        <widget class="QPushButton" name="btn_print_bill">
          <property name="text">
           <string>طباعة الفاتورة</string>
          </property>
