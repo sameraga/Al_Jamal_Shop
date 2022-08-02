@@ -327,9 +327,9 @@
   <tabstop>total</tabstop>
   <tabstop>discount</tabstop>
   <tabstop>ch_ispaid</tabstop>
-  <tabstop>btn_print_bill</tabstop>
   <tabstop>btn_save</tabstop>
   <tabstop>btn_cancel</tabstop>
+  <tabstop>btn_print_bill</tabstop>
   <tabstop>last_total</tabstop>
  </tabstops>
  <resources/>

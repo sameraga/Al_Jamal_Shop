@@ -214,7 +214,7 @@
              <enum>QTabWidget::Rounded</enum>
             </property>
             <property name="currentIndex">
-             <number>2</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="tab_1">
              <attribute name="title">
@@ -1505,7 +1505,7 @@
                    </widget>
                   </item>
                   <item row="0" column="3">
-                   <widget class="QDateEdit" name="billbuy_date_from">
+                   <widget class="QDateEdit" name="ch_billbuy_date_from">
                     <property name="layoutDirection">
                      <enum>Qt::LeftToRight</enum>
                     </property>
@@ -1538,7 +1538,7 @@
                    </widget>
                   </item>
                   <item row="1" column="2">
-                   <widget class="QCheckBox" name="ch_billbuy_date_to">
+                   <widget class="QCheckBox" name="ch_bill_date_t_3">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -1551,7 +1551,7 @@
                    </widget>
                   </item>
                   <item row="1" column="3">
-                   <widget class="QDateEdit" name="billbuy_date_to">
+                   <widget class="QDateEdit" name="ch_billbuy_date_to">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -1590,7 +1590,7 @@
                    </widget>
                   </item>
                   <item row="0" column="2">
-                   <widget class="QCheckBox" name="ch_billbuy_date_from">
+                   <widget class="QCheckBox" name="ch_bill_date_f_3">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -1685,7 +1685,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QSpinBox" name="bb_page_size">
+                   <widget class="QSpinBox" name="b_page_size_2">
                     <property name="font">
                      <font>
                       <pointsize>12</pointsize>
@@ -1719,7 +1719,7 @@
                    </spacer>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="bb_last">
+                   <widget class="QPushButton" name="last_b_2">
                     <property name="text">
                      <string/>
                     </property>
@@ -1736,7 +1736,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="bb_post">
+                   <widget class="QPushButton" name="post_b_2">
                     <property name="text">
                      <string/>
                     </property>
@@ -1774,7 +1774,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="bb_previous">
+                   <widget class="QPushButton" name="previous_b_2">
                     <property name="text">
                      <string/>
                     </property>
@@ -1791,7 +1791,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="bb_first">
+                   <widget class="QPushButton" name="first_b_2">
                     <property name="text">
                      <string/>
                     </property>
@@ -1812,28 +1812,28 @@
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_26">
                   <item>
-                   <widget class="QPushButton" name="btn_add_billbuy">
+                   <widget class="QPushButton" name="btn_bill_sell_2">
                     <property name="text">
                      <string>اضافة فاتورة</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btn_edit_billbuy">
+                   <widget class="QPushButton" name="btn_bill_buy_2">
                     <property name="text">
                      <string>تعديل</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btn_print_table_bb">
+                   <widget class="QPushButton" name="btn_bill_buy_3">
                     <property name="text">
                      <string>طباعة الجدول</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btn_to_exel_bb">
+                   <widget class="QPushButton" name="btn_bill_buy_4">
                     <property name="text">
                      <string>تصدير الجدول</string>
                     </property>
@@ -4029,7 +4029,7 @@
      <x>0</x>
      <y>0</y>
      <width>1276</width>
-     <height>30</height>
+     <height>46</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
