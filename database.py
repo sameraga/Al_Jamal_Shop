@@ -78,10 +78,14 @@ class Database:
                 if not obj['ispaid']:
                     b = float(obj['total']) - float(obj['discount'])
                     self.connection.execute(f"UPDATE customer set balance = balance + {b} WHERE customer.id = {obj['c_id']}")
-            if table == "bill_buy":
+            elif table == "bill_buy":
                 if not obj['ispaid']:
                     b = float(obj['total']) - float(obj['discount'])
                     self.connection.execute(f"UPDATE supplier set balance = balance + {b} WHERE supplier.id = {obj['s_id']}")
+            elif table == "buy_order":
+                self.connection.execute(f"UPDATE product SET quantity = quantity + {obj['quantity']} WHERE id = {obj['p_id']}")
+            elif table == "sell_order":
+                self.connection.execute(f"UPDATE product SET quantity = quantity - {obj['quantity']} WHERE id = {obj['p_id']}")
             self.connection.execute(query, obj)
             self.connection.commit()
         if isinstance(row, dict):
@@ -98,10 +102,16 @@ class Database:
                 if not obj['ispaid']:
                     b = float(obj['total']) - float(obj['discount'])
                     self.connection.execute(f"UPDATE customer set balance = balance + {b} WHERE customer.id = {obj['c_id']}")
-            if table == "bill_buy":
+            elif table == "bill_buy":
                 if not obj['ispaid']:
                     b = float(obj['total']) - float(obj['discount'])
                     self.connection.execute(f"UPDATE supplier set balance = balance + {b} WHERE supplier.id = {obj['s_id']}")
+            elif table == "buy_order":
+                qu = self.connection.execute(f"SELECT quantity FROM buy_order WHERE id = {obj['id']}").fetchone()['quantity']
+                self.connection.execute(f"UPDATE product SET quantity = quantity - {qu} + {obj['quantity']} WHERE id = {obj['p_id']}")
+            elif table == "sell_order":
+                qu = self.connection.execute(f"SELECT quantity FROM sell_order WHERE id = {obj['id']}").fetchone()['quantity']
+                self.connection.execute(f"UPDATE product SET quantity = quantity + {qu} - {obj['quantity']} WHERE id = {obj['p_id']}")
             self.connection.execute(query, obj)
             self.connection.commit()
         if isinstance(row, dict):
@@ -143,7 +153,6 @@ class Database:
             sql_cmd += f' limit {limit1}, {limit2}'
             return self.connection.execute(sql_cmd).fetchall()
 
-
     # ################################################################
 
     # customer
@@ -180,7 +189,7 @@ class Database:
 
     # ################################################################
 
-    #supplier
+    # supplier
     # #################################################################
     def get_supplier_phone_by_name(self, name):
         return self.connection.execute(f"select phone from supplier where name = '{name}'").fetchone()['phone']
@@ -213,9 +222,8 @@ class Database:
 
     # ######################################################################
 
-
-    def query_all_bill_sell(self, filter: dict, limit1, limit2):
-        sql_cmd = "SELECT id, code, c_id, date, total, ispaid from bill_sell"
+    def query_all_bill(self, bill_type, filter: dict, limit1, limit2):
+        sql_cmd = f"SELECT * from {bill_type}"
 
         if filter:
             sql_cmd += " where "
@@ -225,33 +233,8 @@ class Database:
                 filter_cmd.append(f'code like :code')
             if 'c_id' in filter:
                 filter_cmd.append(f'c_id =:c_id')
-
-            if 'date_from' in filter:
-                if 'date_to' in filter:
-                    filter_cmd.append(f'date between :date_from and :date_to')
-                else:
-                    filter_cmd.append(f'date = :date_from')
-
-            sql_cmd += ' and '.join(filter_cmd)
-            sql_cmd += f' limit {limit1}, {limit2}'
-            return self.connection.execute(sql_cmd, filter).fetchall()
-        else:
-            sql_cmd += f' limit {limit1}, {limit2}'
-            return self.connection.execute(sql_cmd).fetchall()
-
-
-    def query_all_bill_buy(self, filter: dict, limit1, limit2):
-        sql_cmd = "SELECT id, code, s_id, date, total, ispaid from bill_buy"
-
-        if filter:
-            sql_cmd += " where "
-            filter_cmd = []
-            if 'code' in filter:
-                filter['code'] = f'%{filter["code"]}%'
-                filter_cmd.append(f'code like :code')
             if 's_id' in filter:
                 filter_cmd.append(f's_id =:s_id')
-
             if 'date_from' in filter:
                 if 'date_to' in filter:
                     filter_cmd.append(f'date between :date_from and :date_to')

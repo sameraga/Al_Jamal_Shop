@@ -269,6 +269,13 @@
          </property>
         </widget>
        </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_26">
+         <property name="text">
+          <string>خصم الفاتورة:</string>
+         </property>
+        </widget>
+       </item>
        <item row="1" column="3">
         <widget class="QCheckBox" name="ch_ispaid">
          <property name="text">
@@ -279,13 +286,6 @@
          </property>
          <property name="tristate">
           <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_26">
-         <property name="text">
-          <string>خصم الفاتورة:</string>
          </property>
         </widget>
        </item>
@@ -326,11 +326,8 @@
   <tabstop>bs_table</tabstop>
   <tabstop>total</tabstop>
   <tabstop>discount</tabstop>
-  <tabstop>ch_ispaid</tabstop>
-  <tabstop>btn_save</tabstop>
-  <tabstop>btn_cancel</tabstop>
-  <tabstop>btn_print_bill</tabstop>
   <tabstop>last_total</tabstop>
+  <tabstop>btn_print_bill</tabstop>
  </tabstops>
  <resources/>
  <connections/>

@@ -268,14 +268,11 @@
  <tabstops>
   <tabstop>s_name</tabstop>
   <tabstop>b_date</tabstop>
+  <tabstop>bb_table</tabstop>
   <tabstop>total</tabstop>
   <tabstop>discount</tabstop>
-  <tabstop>ch_ispaid</tabstop>
-  <tabstop>btn_save</tabstop>
-  <tabstop>btn_cancel</tabstop>
-  <tabstop>btn_print_bill</tabstop>
-  <tabstop>bb_table</tabstop>
   <tabstop>last_total</tabstop>
+  <tabstop>ch_ispaid</tabstop>
  </tabstops>
  <resources/>
  <connections/>

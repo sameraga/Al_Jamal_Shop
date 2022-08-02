@@ -53,7 +53,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         self.c_name.clear()
         self.c_name.addItem('')
         self.c_name.addItems(database.db.query_csp("customer").values())
-        self.c_name.currentTextChanged.connect(lambda: self.c_phone.setText(database.db.get_customer_phone_by_name(self.c_name.currentText())))
+        self.c_name.currentTextChanged.connect(self.c_name_changed)
 
         self.bs_table: QtWidgets.QTableWidget
         delegate = ReadOnlyDelegate(self.bs_table)
@@ -68,6 +68,11 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         self.btn_cancel.clicked.connect(self.reject)
         self.btn_print_bill.clicked.connect(self.print_bill)
 
+    def c_name_changed(self):
+        if self.c_name.currentText() == '':
+            QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب أن تختار زبون للفاتورة')
+        self.c_phone.setText(database.db.get_customer_phone_by_name(self.c_name.currentText()))
+
     def fill_bill(self, id):
         if id == 0:
             self.b_id = database.db.get_next_id('bill_sell')
@@ -81,8 +86,10 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
             self.total.setText(str(bill['total']))
             self.discount.setText(str(bill['discount']))
             self.last_total.setText(str(float(bill['total']) - float(bill['discount'])))
-            if bill['ispaid'] == 1:
+            if bill['ispaid'] == '1':
                 self.ch_ispaid.setChecked(True)
+            else:
+                self.ch_ispaid.setChecked(False)
         self.bill_code.setText(str(self.code))
         orders = database.db.get_order_bill('sell_order_v', self.b_id)
         self.bs_table.setRowCount(len(orders) + 1)
@@ -167,7 +174,8 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         bill['c_id'] = database.db.get_customer_id_by_name(self.c_name.currentText())
         if self.ch_ispaid.isChecked():
             bill['ispaid'] = 1
-
+        else:
+            bill['ispaid'] = 0
         orders = []
         for idx in range(self.bs_table.rowCount()):
             order = dict()
@@ -226,7 +234,7 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
 
         self.bb_table: QtWidgets.QTableWidget
         delegate = ReadOnlyDelegate(self.bb_table)
-        self.bb_table.setItemDelegateForColumn(3, delegate)
+        self.bb_table.setItemDelegateForColumn(1, delegate)
         self.bb_table.setItemDelegateForColumn(5, delegate)
         self.bb_table.setRowCount(1)
         self.bb_table.keyReleaseEvent = self.table_key_press_event
@@ -250,8 +258,10 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
             self.total.setText(str(bill['total']))
             self.discount.setText(str(bill['discount']))
             self.last_total.setText(str(float(bill['total']) - float(bill['discount'])))
-            if bill['ispaid'] == 1:
+            if bill['ispaid'] == '1':
                 self.ch_ispaid.setChecked(True)
+            else:
+                self.ch_ispaid.setChecked(False)
         self.bill_code.setText(str(self.code))
         orders = database.db.get_order_bill('buy_order_v', self.b_id)
         self.bb_table.setRowCount(len(orders) + 1)
@@ -333,9 +343,14 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
         bill['date'] = QDate.toString(self.b_date.date())
         bill['total'] = self.total.text()
         bill['discount'] = self.discount.text()
+        if self.s_name.currentText() == '':
+            QtWidgets.QMessageBox.warning(None, 'خطأ', 'ادخال خاطئ\n يجب أن تدخل اسم المورد ')
+            return
         bill['s_id'] = database.db.get_supplier_id_by_name(self.s_name.currentText())
         if self.ch_ispaid.isChecked():
             bill['ispaid'] = 1
+        else:
+            bill['ispaid'] = 0
 
         orders = []
         for idx in range(self.bb_table.rowCount()):
@@ -377,8 +392,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         Form_Main.__init__(self)
         self.setupUi(self)
 
-        self.validator_code = QtGui.QRegExpValidator(QtCore.QRegExp('[a-z][0-9]*'))
-        self.validator_money = QtGui.QRegExpValidator(QtCore.QRegExp('^(\$)?(([1-9]\d{0,2}(\,\d{3})*)|([1-9]\d*)|(0))(\.\d{2})?$'))
+        self.validator_code = QtGui.QRegExpValidator(QtCore.QRegExp('[\u0621-\u064A0-9a-zA-Z][0-9]*'))
+        self.validator_money = QtGui.QRegExpValidator(QtCore.QRegExp('^(\$)?(([1-9]\d{0,2}(\,\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$'))
 
         self._typing_timer_p = QtCore.QTimer()
         self.product_id = 0
@@ -391,6 +406,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.page_size_customer = PAGE_SIZE
 
         self.customers = None
+        self.supplier = None
 
         self._typing_timer_s = QtCore.QTimer()
         self.supplier_id = 0
@@ -510,18 +526,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                 self.ch_billsell_date_to.setEnabled(False)
                 self.billsell_date_to.setEnabled(False)
                 self.ch_billsell_date_to.setChecked(False)
-
-    def check_date_to(self, x):
-        if x == 'bell_sell':
-            self._typing_timer_bs.start(1000)
-            if self.ch_billsell_date_to.isChecked():
-                self.billsell_date_to.setEnabled(True)
-                self.billsell_date_to.dateChanged.connect(lambda: self._typing_timer_bs.start(1000))
-            else:
-                self.billsell_date_to.setEnabled(False)
-
-    def check_date_from(self, x):
-        if x == 'bell_buy':
+        elif x == 'bell_buy':
             self._typing_timer_bb.start(1000)
             if self.ch_billbuy_date_from.isChecked():
                 self.billbuy_date_from.setEnabled(True)
@@ -534,7 +539,14 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                 self.ch_billbuy_date_to.setChecked(False)
 
     def check_date_to(self, x):
-        if x == 'bell_buy':
+        if x == 'bell_sell':
+            self._typing_timer_bs.start(1000)
+            if self.ch_billsell_date_to.isChecked():
+                self.billsell_date_to.setEnabled(True)
+                self.billsell_date_to.dateChanged.connect(lambda: self._typing_timer_bs.start(1000))
+            else:
+                self.billsell_date_to.setEnabled(False)
+        elif x == 'bell_buy':
             self._typing_timer_bb.start(1000)
             if self.ch_billbuy_date_to.isChecked():
                 self.billbuy_date_to.setEnabled(True)
@@ -586,24 +598,6 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.update_product_table()
         self.clear_product_inputs()
 
-    def change_page_size(self, table):
-        if table == 'product':
-            self.page_size_product = self.p_page_size.value()
-            self.p_page_num.setRange(1, math.ceil(int(database.db.count_row("product", 1)) / self.page_size_product))
-            self._typing_timer_p.start(1000)
-        elif table == 'customer':
-            self.page_size_customer = self.s_page_size_c.value()
-            self.page_num_c.setRange(1, math.ceil(int(database.db.count_customer(1)) / self.page_size_c))
-            self._typing_timer_c.start(1000)
-        elif table == 'supplier':
-            self.page_size_supplier = self.s_page_size.value()
-            self.s_page_num.setRange(1, math.ceil(int(database.db.count_row("supplier", 1)) / self.page_size_s))
-            self._typing_timer_s.start(1000)
-        elif table == 'bill_sell':
-            self.page_size_bill_sell = self.bs_page_size.value()
-            self.bs_page_num.setRange(1, math.ceil(int(database.db.count_row("bill_sell", 1)) / self.page_size_bill_sell))
-            self._typing_timer_bs.start(1000)
-
     def save_product_info(self):
         product = dict()
         product['code'] = self.p_code.text()
@@ -625,7 +619,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         if product['code'] and product['name']:
             if int(database.db.count_row("product", product['code'])) == 0:
                 database.db.insert_row("product", product)
-                toaster_Notify.QToaster.show_message(parent=self, message=f"إضافة مادة\nتم إضافة المادة{product['name']} بنجاح")
+                toaster_Notify.QToaster.show_message(parent=self, message=f"إضافة مادة\nتم إضافة المادة {product['name']} بنجاح")
                 self.update_product_table()
                 self.clear_product_inputs()
             else:
@@ -635,19 +629,20 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def update_product(self):
         product = self.save_product_info()
+        product['id'] = self.product_id
         if product['code'] and product['name']:
             if product['code'] == self.product_co:
-                database.db.update_row("product", product, self.product_id)
+                database.db.update_row("product", product)
                 self.update_product_table()
                 self.clear_product_inputs()
                 toaster_Notify.QToaster.show_message(parent=self,
-                                                     message=f"تعديل مادة\nتم تعديل المادة{product['name']} بنجاح")
+                                                     message=f"تعديل مادة\nتم تعديل المادة {product['name']} بنجاح")
             elif int(database.db.count_row("product", product['code'])) == 0:
-                database.db.update_row("product", product, self.product_id)
+                database.db.update_row("product", product)
                 self.update_product_table()
                 self.clear_product_inputs()
                 toaster_Notify.QToaster.show_message(parent=self,
-                                                     message=f"تعديل مادة\nتم تعديل المادة{product['name']} بنجاح")
+                                                     message=f"تعديل مادة\nتم تعديل المادة {product['name']} بنجاح")
             else:
                 QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن الكود مكرر')
         else:
@@ -823,7 +818,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         if customer['code'] and customer['name']:
             if int(database.db.count_row("customer", customer['code'])) == 0:
                 database.db.insert_row("customer", customer)
-                toaster_Notify.QToaster.show_message(parent=self, message=f"إضافة زبون\nتم إضافة الزبون{customer['name']} بنجاح")
+                toaster_Notify.QToaster.show_message(parent=self, message=f"إضافة زبون\nتم إضافة الزبون {customer['name']} بنجاح")
                 self.update_customer_table()
                 self.clear_customer_inputs()
             else:
@@ -833,19 +828,20 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def update_customer(self):
         customer = self.save_customer_info()
+        customer['id'] = self.customer_id
         if customer['code'] and customer['name']:
             if customer['code'] == self.customer_co:
-                database.db.update_row("customer", customer, self.customer_id)
+                database.db.update_row("customer", customer)
                 self.update_customer_table()
                 self.clear_customer_inputs()
                 toaster_Notify.QToaster.show_message(parent=self,
-                                                     message=f"تعديل زبون\nتم تعديل الزبون{customer['name']} بنجاح")
+                                                     message=f"تعديل زبون\nتم تعديل الزبون {customer['name']} بنجاح")
             elif int(database.db.count_row("customer", customer['code'])) == 0:
-                database.db.update_row("customer", customer, self.customer_id)
+                database.db.update_row("customer", customer)
                 self.update_customer_table()
                 self.clear_customer_inputs()
                 toaster_Notify.QToaster.show_message(parent=self,
-                                                     message=f"تعديل زبون\nتم تعديل الزبون{customer['name']} بنجاح")
+                                                     message=f"تعديل زبون\nتم تعديل الزبون {customer['name']} بنجاح")
             else:
                 QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن الكود مكرر')
         else:
@@ -892,7 +888,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.c_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
             self.c_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(str(row['balance'])))
             self.c_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignCenter)
-        self.p_table.resizeColumnsToContents()
+        self.c_table.resizeColumnsToContents()
 
     def clear_customer_inputs(self):
         self.customer_id = 0
@@ -999,7 +995,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         if supplier['code'] and supplier['name']:
             if int(database.db.count_row("supplier", supplier['code'])) == 0:
                 database.db.insert_row("supplier", supplier)
-                toaster_Notify.QToaster.show_message(parent=self, message=f"إضافة مورد\nتم إضافة المورد{supplier['name']} بنجاح")
+                toaster_Notify.QToaster.show_message(parent=self, message=f"إضافة مورد\nتم إضافة المورد {supplier['name']} بنجاح")
                 self.update_supplier_table()
                 self.clear_supplier_inputs()
             else:
@@ -1009,19 +1005,20 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def update_supplier(self):
         supplier = self.save_supplier_info()
+        supplier['id'] = self.supplier_id
         if supplier['code'] and supplier['name']:
             if supplier['code'] == self.supplier_co:
-                database.db.update_row("supplier", supplier, self.supplier_id)
+                database.db.update_row("supplier", supplier)
                 self.update_supplier_table()
                 self.clear_supplier_inputs()
                 toaster_Notify.QToaster.show_message(parent=self,
-                                                     message=f"تعديل مورد\nتم تعديل المورد{supplier['name']} بنجاح")
+                                                     message=f"تعديل مورد\nتم تعديل المورد {supplier['name']} بنجاح")
             elif int(database.db.count_row("supplier", supplier['code'])) == 0:
-                database.db.update_row("supplier", supplier, self.supplier_id)
+                database.db.update_row("supplier", supplier)
                 self.update_supplier_table()
                 self.clear_supplier_inputs()
                 toaster_Notify.QToaster.show_message(parent=self,
-                                                     message=f"تعديل مورد\nتم تعديل المورد{supplier['name']} بنجاح")
+                                                     message=f"تعديل مورد\nتم تعديل المورد {supplier['name']} بنجاح")
             else:
                 QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن الكود مكرر')
         else:
@@ -1127,8 +1124,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.billsell_cname.addItems(self.customers.values())
 
         self.bs_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self.bs_table.doubleClicked.connect(lambda mi: self.double_click(self.bs_table.item(mi.row(), 0).id))
-        self.bs_table.clicked.connect(lambda mi: self.one_click(self.bs_table.item(mi.row(), 0).id))
+        self.bs_table.doubleClicked.connect(lambda mi: self.double_click_bs(self.bs_table.item(mi.row(), 0).id))
+        self.bs_table.clicked.connect(lambda mi: self.one_click_bs(self.bs_table.item(mi.row(), 0).id))
         self.bs_page_num.setRange(1, math.ceil(int(database.db.count_row("bill_sell", 1)) / self.page_size_bill_sell))
 
         self.billsell_code.textChanged.connect(lambda text: self._typing_timer_bs.start(1000))
@@ -1165,11 +1162,11 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
         self.update_bill_sell_table()
 
-    def one_click(self, id):
+    def one_click_bs(self, id):
         self.bill_sell_id = id
         self.btn_edit_billsell.setEnabled(True)
 
-    def double_click(self, id):
+    def double_click_bs(self, id):
         self.bill_sell_id = id
         self.open_bill_sell(id)
 
@@ -1195,7 +1192,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def update_bill_sell_table(self):
         fil = self.search_bill_sell_save()
-        rows = database.db.query_all_bill_sell(fil, self.page_size_bill_sell * (self.bs_page_num.value() - 1), self.page_size_bill_sell)
+        rows = database.db.query_all_bill("bill_sell", fil, self.page_size_bill_sell * (self.bs_page_num.value() - 1), self.page_size_bill_sell)
         self.bs_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
             self.bs_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
@@ -1207,7 +1204,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             row['c_id'] = self.customers[row['c_id']]
             self.bs_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row['c_id']))
             self.bs_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
-            self.bs_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(str(row['total'])))
+            total = str(float(row['total']) - float(row['discount']))
+            self.bs_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(total))
             self.bs_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
             if row['ispaid'] == '1':
                 row['ispaid'] = 'مدفوعة'
@@ -1285,6 +1283,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         bb.exec()
         self.btn_edit_billbuy.setEnabled(False)
         self.update_bill_buy_table()
+        self.update_supplier_table()
+        self.update_product_table()
 
     def search_bill_buy_save(self):
         fil = {}
@@ -1301,8 +1301,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def update_bill_buy_table(self):
         fil = self.search_bill_buy_save()
-        rows = database.db.query_all_bill_buy(fil, self.page_size_bill_buy * (self.bb_page_num.value() - 1),
-                                               self.page_size_bill_sell)
+        rows = database.db.query_all_bill("bill_buy", fil, self.page_size_bill_buy * (self.bb_page_num.value() - 1), self.page_size_bill_sell)
         self.bb_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
             self.bb_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
@@ -1311,10 +1310,11 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.bb_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
             self.bb_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(row['code'])))
             self.bb_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignCenter)
-            row['s_id'] = self.customers[row['s_id']]
+            row['s_id'] = self.supplier[row['s_id']]
             self.bb_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row['s_id']))
             self.bb_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
-            self.bb_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(str(row['total'])))
+            total = str(float(row['total']) - float(row['discount']))
+            self.bb_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(total))
             self.bb_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
             if row['ispaid'] == '1':
                 row['ispaid'] = 'مدفوعة'
@@ -1324,10 +1324,11 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.bb_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignCenter)
             self.bb_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(row['date']))
             self.bb_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignCenter)
-        self.bs_table.resizeColumnsToContents()
+        self.bb_table.resizeColumnsToContents()
 
     def print_table_bell_buy(self):
         print("222")
+
 # #################################################################
 
     # export tables to exel
