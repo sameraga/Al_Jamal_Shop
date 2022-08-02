@@ -74,6 +74,14 @@ class Database:
             columns = ', '.join(obj.keys())
             placeholders = ':' + ', :'.join(obj.keys())
             query = f'INSERT INTO {table} ({columns}) VALUES ({placeholders})'
+            if table == "bill_sell":
+                if not obj['ispaid']:
+                    b = float(obj['total']) - float(obj['discount'])
+                    self.connection.execute(f"UPDATE customer set balance = balance + {b} WHERE customer.id = {obj['c_id']}")
+            if table == "bill_buy":
+                if not obj['ispaid']:
+                    b = float(obj['total']) - float(obj['discount'])
+                    self.connection.execute(f"UPDATE supplier set balance = balance + {b} WHERE supplier.id = {obj['s_id']}")
             self.connection.execute(query, obj)
             self.connection.commit()
         if isinstance(row, dict):
@@ -86,6 +94,14 @@ class Database:
         def _update(obj):
             placeholders = ', '.join([f'{key}=:{key}' for key in obj.keys()])
             query = f"UPDATE {table} SET {placeholders} WHERE id = '{obj['id']}'"
+            if table == "bill_sell":
+                if not obj['ispaid']:
+                    b = float(obj['total']) - float(obj['discount'])
+                    self.connection.execute(f"UPDATE customer set balance = balance + {b} WHERE customer.id = {obj['c_id']}")
+            if table == "bill_buy":
+                if not obj['ispaid']:
+                    b = float(obj['total']) - float(obj['discount'])
+                    self.connection.execute(f"UPDATE supplier set balance = balance + {b} WHERE supplier.id = {obj['s_id']}")
             self.connection.execute(query, obj)
             self.connection.commit()
         if isinstance(row, dict):
