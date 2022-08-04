@@ -51,7 +51,6 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         self.discount.setValidator(self.validator_money)
 
         self.c_name.clear()
-        self.c_name.addItem('')
         self.c_name.addItems(database.db.query_csp("customer").values())
         self.c_name.currentTextChanged.connect(self.c_name_changed)
 
@@ -69,8 +68,10 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         self.btn_print_bill.clicked.connect(self.print_bill)
 
     def c_name_changed(self):
-        if self.c_name.currentText() == '':
-            QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب أن تختار زبون للفاتورة')
+        if self.c_name.currentIndex() == 0:
+            self.ch_ispaid.setEnabled(False)
+        else:
+            self.ch_ispaid.setEnabled(True)
         self.c_phone.setText(database.db.get_customer_phone_by_name(self.c_name.currentText()))
 
     def fill_bill(self, id):
@@ -116,25 +117,30 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
 
     def update_table(self, current_row):
         code = self.bs_table.item(current_row, 0).text()
-        for idx in range(self.bs_table.rowCount() - 1):
-            if self.bs_table.item(idx, 0).text() == code:
-                new = int(self.bs_table.item(idx, 2).text()) + 1
-                self.bs_table.setItem(idx, 2, QtWidgets.QTableWidgetItem(str(new)))
-                self.bs_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(''))
-                return
         product = database.db.get_product_by_code(code)
         if product:
-            self.bs_table.item(current_row, 0).pid = product['id']
-            self.bs_table.setItem(current_row, 1, QtWidgets.QTableWidgetItem(product['name']))
-            self.bs_table.setItem(current_row, 2, QtWidgets.QTableWidgetItem('1'))
-            self.bs_table.setItem(current_row, 3, QtWidgets.QTableWidgetItem(str(product['sell_price'])))
-            self.bs_table.setItem(current_row, 4, QtWidgets.QTableWidgetItem('0'))
-            self.bs_table.setItem(current_row, 5, QtWidgets.QTableWidgetItem(str(product['sell_price'])))
-            self.bs_table.setRowCount(self.bs_table.rowCount() + 1)
-            btn_delete = QtWidgets.QPushButton(QtGui.QIcon.fromTheme('delete'), '')
-            btn_delete.clicked.connect(lambda: self.bs_table.removeRow(current_row))
-            self.bs_table.setCellWidget(current_row, 6, btn_delete)
-            self.calculate_total()
+            if int(product['quantity']) >= 1:
+                for idx in range(self.bs_table.rowCount() - 1):
+                    if self.bs_table.item(idx, 0).text() == code:
+                        new = int(self.bs_table.item(idx, 2).text()) + 1
+                        self.bs_table.setItem(idx, 2, QtWidgets.QTableWidgetItem(str(new)))
+                        self.bs_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(''))
+                        return
+
+                self.bs_table.item(current_row, 0).pid = product['id']
+                self.bs_table.setItem(current_row, 1, QtWidgets.QTableWidgetItem(product['name']))
+                self.bs_table.setItem(current_row, 2, QtWidgets.QTableWidgetItem('1'))
+                self.bs_table.setItem(current_row, 3, QtWidgets.QTableWidgetItem(str(product['sell_price'])))
+                self.bs_table.setItem(current_row, 4, QtWidgets.QTableWidgetItem('0'))
+                self.bs_table.setItem(current_row, 5, QtWidgets.QTableWidgetItem(str(product['sell_price'])))
+                self.bs_table.setRowCount(self.bs_table.rowCount() + 1)
+                btn_delete = QtWidgets.QPushButton(QtGui.QIcon.fromTheme('delete'), '')
+                btn_delete.clicked.connect(lambda: self.bs_table.removeRow(current_row))
+                self.bs_table.setCellWidget(current_row, 6, btn_delete)
+                self.calculate_total()
+            else:
+                self.bs_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(''))
+                QtWidgets.QMessageBox.warning(None, 'خطأ', 'غير متوفر\n لقد انتهت كمية هذا المنتج بالفعل')
         else:
             QtWidgets.QMessageBox.warning(None, 'خطأ', 'الرقم غير موجود\n أعد ادخال رقم صحيح')
 
@@ -147,6 +153,10 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         if self.bs_table.item(current_row, 2).text() == '':
             self.bs_table.setItem(current_row, 2, QtWidgets.QTableWidgetItem('1'))
         quantity = int(self.bs_table.item(current_row, 2).text())
+        if quantity > int(product['quantity']):
+            quantity = int(product['quantity'])
+            self.bs_table.setItem(current_row, 2, QtWidgets.QTableWidgetItem(product['quantity']))
+            toaster_Notify.QToaster.show_message(parent=self, message=f"غير متوفر\n لقد بقي من هذا المنتج {product['quantity']} قطعة فقط ")
         if discount > (float(product['price_range']) * quantity):
             discount = float(product['price_range']) * quantity
             self.bs_table.setItem(current_row, 4, QtWidgets.QTableWidgetItem(str(discount)))
@@ -230,7 +240,7 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
         self.s_name.clear()
         self.s_name.addItem('')
         self.s_name.addItems(database.db.query_csp("supplier").values())
-        self.s_name.currentTextChanged.connect(lambda: self.s_phone.setText(database.db.get_supplier_phone_by_name(self.s_name.currentText())))
+        self.s_name.currentTextChanged.connect(self.s_name_changed)
 
         self.bb_table: QtWidgets.QTableWidget
         delegate = ReadOnlyDelegate(self.bb_table)
@@ -244,6 +254,12 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
         self.btn_save.clicked.connect(self.save_bill)
         self.btn_cancel.clicked.connect(self.reject)
         self.btn_print_bill.clicked.connect(self.print_bill)
+
+    def s_name_changed(self):
+        if self.s_name.currentText() == '':
+            self.s_phone.setText('-')
+        else:
+            self.s_phone.setText(database.db.get_supplier_phone_by_name(self.s_name.currentText()))
 
     def fill_bill(self, id):
         if id == 0:
@@ -288,14 +304,15 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
 
     def update_table(self, current_row):
         code = self.bb_table.item(current_row, 0).text()
-        for idx in range(self.bb_table.rowCount() - 1):
-            if self.bb_table.item(idx, 0).text() == code:
-                new = int(self.bb_table.item(idx, 2).text()) + 1
-                self.bb_table.setItem(idx, 2, QtWidgets.QTableWidgetItem(str(new)))
-                self.bb_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(''))
-                return
         product = database.db.get_product_by_code(code)
         if product:
+            for idx in range(self.bb_table.rowCount() - 1):
+                if self.bb_table.item(idx, 0).text() == code:
+                    new = int(self.bb_table.item(idx, 2).text()) + 1
+                    self.bb_table.setItem(idx, 2, QtWidgets.QTableWidgetItem(str(new)))
+                    self.bb_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(''))
+                    return
+
             self.bb_table.item(current_row, 0).pid = product['id']
             self.bb_table.setItem(current_row, 1, QtWidgets.QTableWidgetItem(product['name']))
             self.bb_table.setItem(current_row, 2, QtWidgets.QTableWidgetItem('1'))
@@ -319,10 +336,10 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
         if self.bb_table.item(current_row, 2).text() == '':
             self.bb_table.setItem(current_row, 2, QtWidgets.QTableWidgetItem('1'))
         quantity = int(self.bb_table.item(current_row, 2).text())
-        # if discount > (float(product['price_range']) * quantity):
-        discount = discount * quantity
+        if discount > (float(self.bb_table.item(current_row, 3).text()) * quantity):
+            discount = float(self.bb_table.item(current_row, 3).text()) * quantity
         self.bb_table.setItem(current_row, 4, QtWidgets.QTableWidgetItem(str(discount)))
-        total = quantity * float(product['buy_price']) - discount
+        total = quantity * float(self.bb_table.item(current_row, 3).text()) - discount
         self.bb_table.setItem(current_row, 5, QtWidgets.QTableWidgetItem(str(total)))
         self.calculate_total()
 
@@ -906,6 +923,9 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.btn_add_customer.setEnabled(True)
 
     def fill_customer_info(self, id):
+        if id == '1':
+            self.clear_customer_inputs()
+            return
         self.btn_edit_customer.setEnabled(True)
         self.btn_delete_customer.setEnabled(True)
         self.btn_add_customer.setEnabled(False)
@@ -1176,6 +1196,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         sb.exec()
         self.btn_edit_billsell.setEnabled(False)
         self.update_bill_sell_table()
+        self.update_product_table()
+        self.update_customer_table()
 
     def search_bill_sell_save(self):
         fil = {}

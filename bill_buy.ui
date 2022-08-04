@@ -70,6 +70,9 @@
        </item>
        <item row="0" column="3">
         <widget class="QDateEdit" name="b_date">
+         <property name="layoutDirection">
+          <enum>Qt::LeftToRight</enum>
+         </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
          </property>
@@ -84,7 +87,7 @@
           </datetime>
          </property>
          <property name="currentSection">
-          <enum>QDateTimeEdit::DaySection</enum>
+          <enum>QDateTimeEdit::YearSection</enum>
          </property>
          <property name="displayFormat">
           <string>yyyy-M-d</string>
@@ -107,7 +110,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string/>
+          <string>-</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>

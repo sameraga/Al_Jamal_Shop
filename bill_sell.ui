@@ -82,7 +82,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string/>
+          <string>-</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -278,6 +278,9 @@
        </item>
        <item row="1" column="3">
         <widget class="QCheckBox" name="ch_ispaid">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="text">
           <string>مدفوع</string>
          </property>

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1276</width>
-    <height>755</height>
+    <width>1280</width>
+    <height>745</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -803,6 +803,12 @@
                       </item>
                       <item row="0" column="2">
                        <widget class="QComboBox" name="comboBox_7">
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
                         <property name="layoutDirection">
                          <enum>Qt::LeftToRight</enum>
                         </property>
@@ -4031,7 +4037,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1276</width>
+     <width>1280</width>
      <height>46</height>
     </rect>
    </property>

@@ -127,7 +127,7 @@ class Database:
     # product
     # ################################################################
     def get_product_by_code(self, code):
-        return self.connection.execute(f"select id, name, sell_price, price_range, buy_price from product where code = '{code}'").fetchone()
+        return self.connection.execute(f"select id, name, quantity, sell_price, price_range, buy_price from product where code = '{code}'").fetchone()
 
     def query_all_product(self, filter: dict, limit1, limit2):
         sql_cmd = "SELECT id, code, name, class, type, source, quantity, buy_price, sell_price from product"
