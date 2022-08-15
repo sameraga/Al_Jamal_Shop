@@ -482,7 +482,10 @@
                    </widget>
                   </item>
                   <item row="1" column="1">
-                   <widget class="QComboBox" name="exit_reason_2">
+                   <widget class="QComboBox" name="fm_owner">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
                     <property name="layoutDirection">
                      <enum>Qt::LeftToRight</enum>
                     </property>
@@ -504,7 +507,7 @@
                    </widget>
                   </item>
                   <item row="4" column="1">
-                   <widget class="QTextEdit" name="c_note_2">
+                   <widget class="QTextEdit" name="fm_note">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -514,7 +517,7 @@
                    </widget>
                   </item>
                   <item row="3" column="1">
-                   <widget class="QDateEdit" name="birth_date_5">
+                   <widget class="QDateEdit" name="fm_date">
                     <property name="layoutDirection">
                      <enum>Qt::LeftToRight</enum>
                     </property>
@@ -566,7 +569,7 @@
                    </widget>
                   </item>
                   <item row="2" column="1">
-                   <widget class="QLineEdit" name="m_code_2">
+                   <widget class="QLineEdit" name="fm_value">
                     <property name="maxLength">
                      <number>11</number>
                     </property>
@@ -576,7 +579,7 @@
                    </widget>
                   </item>
                   <item row="0" column="1">
-                   <widget class="QComboBox" name="comboBox_4">
+                   <widget class="QComboBox" name="fm_type">
                     <property name="layoutDirection">
                      <enum>Qt::LeftToRight</enum>
                     </property>
@@ -635,7 +638,10 @@
                   <item>
                    <layout class="QGridLayout" name="gridLayout_6">
                     <item row="1" column="2">
-                     <widget class="QComboBox" name="exit_reason_3">
+                     <widget class="QComboBox" name="s_fm_owner">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
                       <property name="layoutDirection">
                        <enum>Qt::LeftToRight</enum>
                       </property>
@@ -672,7 +678,10 @@
                      </widget>
                     </item>
                     <item row="1" column="3">
-                     <widget class="QCheckBox" name="ch_bill_date_t_4">
+                     <widget class="QCheckBox" name="ch_fm_date_to">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                         <horstretch>0</horstretch>
@@ -680,12 +689,12 @@
                        </sizepolicy>
                       </property>
                       <property name="text">
-                       <string>تاريخ الفاتورة إلى</string>
+                       <string>تاريخ الحركة إلى</string>
                       </property>
                      </widget>
                     </item>
                     <item row="0" column="3">
-                     <widget class="QCheckBox" name="ch_bill_date_f_4">
+                     <widget class="QCheckBox" name="ch_fm_date_from">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                         <horstretch>0</horstretch>
@@ -693,7 +702,7 @@
                        </sizepolicy>
                       </property>
                       <property name="text">
-                       <string>تاريخ الفاتورة من</string>
+                       <string>تاريخ الحركة من</string>
                       </property>
                      </widget>
                     </item>
@@ -708,7 +717,10 @@
                      </widget>
                     </item>
                     <item row="0" column="4">
-                     <widget class="QDateEdit" name="birth_date_6">
+                     <widget class="QDateEdit" name="fm_date_from">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
                       <property name="layoutDirection">
                        <enum>Qt::LeftToRight</enum>
                       </property>
@@ -741,7 +753,10 @@
                      </widget>
                     </item>
                     <item row="1" column="4">
-                     <widget class="QDateEdit" name="birth_date_7">
+                     <widget class="QDateEdit" name="fm_date_to">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                         <horstretch>0</horstretch>
@@ -789,51 +804,8 @@
                       </property>
                      </widget>
                     </item>
-                    <item row="0" column="2">
-                     <widget class="QComboBox" name="comboBox_7">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="layoutDirection">
-                       <enum>Qt::LeftToRight</enum>
-                      </property>
-                      <item>
-                       <property name="text">
-                        <string/>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>ميني ب ب</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>ب ب</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>وسط</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>محير</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>كبير</string>
-                       </property>
-                      </item>
-                     </widget>
-                    </item>
                     <item row="2" column="2" colspan="3">
-                     <widget class="QTextEdit" name="textEdit">
+                     <widget class="QTextEdit" name="s_fm_note">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                         <horstretch>0</horstretch>
@@ -854,10 +826,43 @@
                       </property>
                      </widget>
                     </item>
+                    <item row="0" column="2">
+                     <widget class="QComboBox" name="s_fm_type">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="layoutDirection">
+                       <enum>Qt::LeftToRight</enum>
+                      </property>
+                      <item>
+                       <property name="text">
+                        <string/>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>دفعة من زبون</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>دفعة إلى مورد</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>نفقات</string>
+                       </property>
+                      </item>
+                     </widget>
+                    </item>
                    </layout>
                   </item>
                   <item>
-                   <widget class="QTableWidget" name="m_table_2">
+                   <widget class="QTableWidget" name="fm_table">
                     <property name="editTriggers">
                      <set>QAbstractItemView::NoEditTriggers</set>
                     </property>
@@ -873,11 +878,6 @@
                     <column>
                      <property name="text">
                       <string>تسلسلي</string>
-                     </property>
-                    </column>
-                    <column>
-                     <property name="text">
-                      <string>صارد/وارد</string>
                      </property>
                     </column>
                     <column>
@@ -898,6 +898,11 @@
                     <column>
                      <property name="text">
                       <string>تاريخ الحركة</string>
+                     </property>
+                    </column>
+                    <column>
+                     <property name="text">
+                      <string>ملاحظات</string>
                      </property>
                     </column>
                    </widget>
@@ -929,7 +934,7 @@
                      </widget>
                     </item>
                     <item>
-                     <widget class="QSpinBox" name="s_page_size_2">
+                     <widget class="QSpinBox" name="fm_page_size">
                       <property name="font">
                        <font>
                         <pointsize>12</pointsize>
@@ -963,7 +968,7 @@
                      </spacer>
                     </item>
                     <item>
-                     <widget class="QPushButton" name="last_2">
+                     <widget class="QPushButton" name="fm_last">
                       <property name="text">
                        <string/>
                       </property>
@@ -980,7 +985,7 @@
                      </widget>
                     </item>
                     <item>
-                     <widget class="QPushButton" name="post_2">
+                     <widget class="QPushButton" name="fm_post">
                       <property name="text">
                        <string/>
                       </property>
@@ -997,7 +1002,7 @@
                      </widget>
                     </item>
                     <item>
-                     <widget class="QSpinBox" name="page_num_2">
+                     <widget class="QSpinBox" name="fm_page_num">
                       <property name="font">
                        <font>
                         <pointsize>12</pointsize>
@@ -1018,7 +1023,7 @@
                      </widget>
                     </item>
                     <item>
-                     <widget class="QPushButton" name="previous_2">
+                     <widget class="QPushButton" name="fm_previous">
                       <property name="text">
                        <string/>
                       </property>
@@ -1035,7 +1040,7 @@
                      </widget>
                     </item>
                     <item>
-                     <widget class="QPushButton" name="first_2">
+                     <widget class="QPushButton" name="fm_first">
                       <property name="text">
                        <string/>
                       </property>
@@ -1060,42 +1065,42 @@
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_33">
                 <item>
-                 <widget class="QPushButton" name="btn_add_medicine_2">
+                 <widget class="QPushButton" name="btn_add_fm">
                   <property name="text">
                    <string>اضافة</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_edit_medicine_2">
+                 <widget class="QPushButton" name="btn_edit_fm">
                   <property name="text">
                    <string>تعديل</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_delete_medicine_2">
+                 <widget class="QPushButton" name="btn_delete_fm">
                   <property name="text">
                    <string>حذف</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_clear_2">
+                 <widget class="QPushButton" name="btn_clear_fm">
                   <property name="text">
                    <string>مسح المدخلات</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_print_m_table_2">
+                 <widget class="QPushButton" name="btn_print_fm_table">
                   <property name="text">
                    <string>طباعة الجدول</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_m_to_exel_2">
+                 <widget class="QPushButton" name="btn_fm_to_exel">
                   <property name="text">
                    <string>تصدير الجدول</string>
                   </property>
@@ -1117,6 +1122,9 @@
                 </property>
                 <item row="1" column="2">
                  <widget class="QCheckBox" name="ch_billsell_date_to">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -1130,6 +1138,9 @@
                 </item>
                 <item row="1" column="3">
                  <widget class="QDateEdit" name="billsell_date_to">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -1212,6 +1223,9 @@
                 </item>
                 <item row="0" column="3">
                  <widget class="QDateEdit" name="billsell_date_from">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -1495,6 +1509,9 @@
                 </item>
                 <item row="0" column="3">
                  <widget class="QDateEdit" name="billbuy_date_from">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
                   <property name="layoutDirection">
                    <enum>Qt::LeftToRight</enum>
                   </property>
@@ -1528,6 +1545,9 @@
                 </item>
                 <item row="1" column="2">
                  <widget class="QCheckBox" name="ch_billbuy_date_to">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -1541,6 +1561,9 @@
                 </item>
                 <item row="1" column="3">
                  <widget class="QDateEdit" name="billbuy_date_to">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -4014,7 +4037,8 @@
  </widget>
  <resources>
   <include location="icons.qrc"/>
-  <include location="PycharmProjects/Al_Jamal_Shop/icons.qrc"/>
+  <include location="icons.qrc"/>
+  <include location="icons.qrc"/>
  </resources>
  <connections>
   <connection>

@@ -63,16 +63,21 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
 
         self.discount.returnPressed.connect(self.discount_on_press)
         self.fill_bill(self.b_id)
+
         self.btn_save.clicked.connect(self.save_bill)
         self.btn_cancel.clicked.connect(self.reject)
         self.btn_print_bill.clicked.connect(self.print_bill)
+
+        self.btn_save.setAutoDefault(False)
+        self.btn_cancel.setAutoDefault(False)
+        self.btn_print_bill.setAutoDefault(False)
 
     def c_name_changed(self):
         if self.c_name.currentIndex() == 0:
             self.ch_ispaid.setEnabled(False)
         else:
             self.ch_ispaid.setEnabled(True)
-        self.c_phone.setText(database.db.get_customer_phone_by_name(self.c_name.currentText()))
+        self.c_phone.setText(database.db.get_phone_by_name('customer', self.c_name.currentText()))
 
     def fill_bill(self, id):
         if id == 0:
@@ -83,7 +88,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
             self.b_id = bill['id']
             self.code = bill['code']
             self.b_date.setDate(QDate(bill['date']))
-            self.c_name.setCurrentText(database.db.get_customer_name_by_id(bill['c_id']))
+            self.c_name.setCurrentText(database.db.get_name_by_id('customer', bill['c_id']))
             self.total.setText(str(bill['total']))
             self.discount.setText(str(bill['discount']))
             self.last_total.setText(str(float(bill['total']) - float(bill['discount'])))
@@ -181,7 +186,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         bill['date'] = QDate.toString(self.b_date.date())
         bill['total'] = self.total.text()
         bill['discount'] = self.discount.text()
-        bill['c_id'] = database.db.get_customer_id_by_name(self.c_name.currentText())
+        bill['c_id'] = database.db.get_id_by_name('customer', self.c_name.currentText())
         if self.ch_ispaid.isChecked():
             bill['ispaid'] = 1
         else:
@@ -217,7 +222,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         self.accept()
 
     def print_bill(self):
-        pass
+        print('done')
 
 
 class BillBuy(QtWidgets.QDialog, Form_BillBuy):
@@ -251,15 +256,20 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
 
         self.discount.returnPressed.connect(self.discount_on_press)
         self.fill_bill(self.b_id)
+
         self.btn_save.clicked.connect(self.save_bill)
         self.btn_cancel.clicked.connect(self.reject)
         self.btn_print_bill.clicked.connect(self.print_bill)
+
+        self.btn_save.setAutoDefault(False)
+        self.btn_cancel.setAutoDefault(False)
+        self.btn_print_bill.setAutoDefault(False)
 
     def s_name_changed(self):
         if self.s_name.currentText() == '':
             self.s_phone.setText('-')
         else:
-            self.s_phone.setText(database.db.get_supplier_phone_by_name(self.s_name.currentText()))
+            self.s_phone.setText(database.db.get_phone_by_name('supplier', self.s_name.currentText()))
 
     def fill_bill(self, id):
         if id == 0:
@@ -270,7 +280,7 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
             self.b_id = bill['id']
             self.code = bill['code']
             self.b_date.setDate(QDate(bill['date']))
-            self.s_name.setCurrentText(database.db.get_supplier_name_by_id(bill['s_id']))
+            self.s_name.setCurrentText(database.db.get_name_by_id('supplier', bill['s_id']))
             self.total.setText(str(bill['total']))
             self.discount.setText(str(bill['discount']))
             self.last_total.setText(str(float(bill['total']) - float(bill['discount'])))
@@ -363,7 +373,7 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
         if self.s_name.currentText() == '':
             QtWidgets.QMessageBox.warning(None, 'خطأ', 'ادخال خاطئ\n يجب أن تدخل اسم المورد ')
             return
-        bill['s_id'] = database.db.get_supplier_id_by_name(self.s_name.currentText())
+        bill['s_id'] = database.db.get_id_by_name('supplier', self.s_name.currentText())
         if self.ch_ispaid.isChecked():
             bill['ispaid'] = 1
         else:
@@ -423,7 +433,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.page_size_customer = PAGE_SIZE
 
         self.customers = None
-        self.supplier = None
+        self.suppliers = None
 
         self._typing_timer_s = QtCore.QTimer()
         self.supplier_id = 0
@@ -439,6 +449,10 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.bill_buy_id = 0
         self.bill_buy_co = 0
         self.page_size_bill_buy = PAGE_SIZE
+
+        self._typing_timer_fm = QtCore.QTimer()
+        self.fm_id = 0
+        self.page_size_fm = PAGE_SIZE
 
         self.setup_login()
 
@@ -491,7 +505,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.tabWidget.tabBar().setVisible(False)
 
         self.customers = database.db.query_csp("customer")
-        self.supplier = database.db.query_csp("supplier")
+        self.suppliers = database.db.query_csp("supplier")
 
         # update tables
         self._typing_timer_p.setSingleShot(True)
@@ -499,6 +513,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self._typing_timer_s.setSingleShot(True)
         self._typing_timer_bs.setSingleShot(True)
         self._typing_timer_bb.setSingleShot(True)
+        self._typing_timer_fm.setSingleShot(True)
 
         self.change_pass.triggered.connect(self.change_pass_)
         self.exit.triggered.connect(lambda: sys.exit(1))
@@ -508,6 +523,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.setup_controls_supplier()
         self.setup_controls_bill_sell()
         self.setup_controls_bill_buy()
+        self.setup_controls_fund_movement()
 
     def change_page_size(self, table):
         if table == 'product':
@@ -530,6 +546,10 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.page_size_bill_buy = self.bb_page_size.value()
             self.bb_page_num.setRange(1, math.ceil(int(database.db.count_row("bill_buy", 1)) / self.page_size_bill_buy))
             self._typing_timer_bb.start(1000)
+        elif table == 'fund_movement':
+            self.page_size_fm = self.fm_page_size.value()
+            self.fm_page_num.setRange(1, math.ceil(int(database.db.count_row("fund_movement", 1)) / self.page_size_fm))
+            self._typing_timer_fm.start(1000)
 
     def check_date_from(self, x):
         if x == 'bell_sell':
@@ -554,6 +574,17 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                 self.ch_billbuy_date_to.setEnabled(False)
                 self.billbuy_date_to.setEnabled(False)
                 self.ch_billbuy_date_to.setChecked(False)
+        elif x == 'fund_movement':
+            self._typing_timer_fm.start(1000)
+            if self.ch_fm_date_from.isChecked():
+                self.fm_date_from.setEnabled(True)
+                self.fm_date_from.dateChanged.connect(lambda: self._typing_timer_fm.start(1000))
+                self.ch_fm_date_to.setEnabled(True)
+            else:
+                self.fm_date_from.setEnabled(False)
+                self.ch_fm_date_to.setEnabled(False)
+                self.fm_date_to.setEnabled(False)
+                self.ch_fm_date_to.setChecked(False)
 
     def check_date_to(self, x):
         if x == 'bell_sell':
@@ -570,6 +601,13 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                 self.billbuy_date_to.dateChanged.connect(lambda: self._typing_timer_bb.start(1000))
             else:
                 self.billbuy_date_to.setEnabled(False)
+        elif x == 'fund_movement':
+            self._typing_timer_fm.start(1000)
+            if self.ch_fm_date_to.isChecked():
+                self.fm_date_to.setEnabled(True)
+                self.fm_date_to.dateChanged.connect(lambda: self._typing_timer_fm.start(1000))
+            else:
+                self.fm_date_to.setEnabled(False)
 
     ####################################################################
 
@@ -836,6 +874,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             if int(database.db.count_row("customer", customer['code'])) == 0:
                 database.db.insert_row("customer", customer)
                 toaster_Notify.QToaster.show_message(parent=self, message=f"إضافة زبون\nتم إضافة الزبون {customer['name']} بنجاح")
+                self.customers = database.db.query_csp("customer")
                 self.update_customer_table()
                 self.clear_customer_inputs()
             else:
@@ -873,6 +912,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                                         msg.No)
             if button_reply == msg.Yes:
                 database.db.delete_row("customer", self.customer_id)
+                self.customers = database.db.query_csp("customer")
                 self.update_customer_table()
                 self.clear_customer_inputs()
                 toaster_Notify.QToaster.show_message(parent=self, message=f"حذف زبون\nتم حذف الزبون{customer['name']} بنجاح")
@@ -891,7 +931,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def update_customer_table(self):
         fil = self.search_customer_save()
-        rows = database.db.query_all_customer(fil, self.page_size_customer * (self.c_page_num.value() - 1), self.page_size_customer)
+        rows = database.db.query_all_cs('customer', fil, self.page_size_customer * (self.c_page_num.value() - 1), self.page_size_customer)
         self.c_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
             self.c_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(str(row_idx + 1 + (self.page_size_customer * (self.c_page_num.value() - 1)))))
@@ -941,7 +981,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def print_table_customer(self):
         fil = self.search_customer_save()
-        customer = database.db.query_all_medicine(fil, 0, database.db.count_row("customer", 1))
+        customer = database.db.query_all_cs('customer', fil, 0, database.db.count_row("customer", 1))
         with open('./html/customer_template.html', 'r') as f:
             template = Template(f.read())
             fp = tempfile.NamedTemporaryFile(mode='w', delete=False, dir='./html/tmp/', suffix='.html')
@@ -956,7 +996,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     ####################################################################
 
-    # supplier methods
+    # suppliers methods
     def setup_controls_supplier(self):
         self.s_code.setValidator(self.validator_code)
         self.s_code_search.setValidator(self.validator_code)
@@ -1016,6 +1056,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             if int(database.db.count_row("supplier", supplier['code'])) == 0:
                 database.db.insert_row("supplier", supplier)
                 toaster_Notify.QToaster.show_message(parent=self, message=f"إضافة مورد\nتم إضافة المورد {supplier['name']} بنجاح")
+                self.suppliers = database.db.query_csp("supplier")
                 self.update_supplier_table()
                 self.clear_supplier_inputs()
             else:
@@ -1053,6 +1094,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                                         msg.No)
             if button_reply == msg.Yes:
                 database.db.delete_row("supplier", self.supplier_id)
+                self.suppliers = database.db.query_csp("supplier")
                 self.update_supplier_table()
                 self.clear_supplier_inputs()
                 toaster_Notify.QToaster.show_message(parent=self, message=f"حذف مورد\nتم حذف المورد{supplier['name']} بنجاح")
@@ -1071,7 +1113,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def update_supplier_table(self):
         fil = self.search_supplier_save()
-        rows = database.db.query_all_supplier(fil, self.page_size_supplier * (self.s_page_num.value() - 1), self.page_size_supplier)
+        rows = database.db.query_all_cs('supplier', fil, self.page_size_supplier * (self.s_page_num.value() - 1), self.page_size_supplier)
         self.s_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
             self.s_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(str(row_idx + 1 + (self.page_size_supplier * (self.s_page_num.value() - 1)))))
@@ -1120,7 +1162,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def print_table_supplier(self):
         fil = self.search_supplier_save()
-        suppliers = database.db.query_all_supplier(fil, 0, database.db.count_row("supplier", 1))
+        suppliers = database.db.query_all_cs('supplier', fil, 0, database.db.count_row("supplier", 1))
         with open('./html/supplier_template.html', 'r') as f:
             template = Template(f.read())
             fp = tempfile.NamedTemporaryFile(mode='w', delete=False, dir='./html/tmp/', suffix='.html')
@@ -1158,7 +1200,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.bs_page_size.valueChanged.connect(lambda: self.change_page_size('bell_sell'))
 
         # print and to exel
-        self.btn_print_table_bs.clicked.connect(self.print_table_bell_sell)
+        self.btn_print_table_bs.clicked.connect(self.print_table_bill_sell)
         self.btn_to_exel_bs.clicked.connect(lambda: self.to_excel(self.bs_table))
 
         # pages
@@ -1239,8 +1281,25 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.bs_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignCenter)
         self.bs_table.resizeColumnsToContents()
 
-    def print_table_bell_sell(self):
-        print("222")
+    def print_table_bill_sell(self):
+        fil = self.search_bill_sell_save()
+        bills = database.db.query_all_bill("bill_sell", fil, 0, database.db.count_row("bill_sell", 1))
+        with open('./html/bill_sell_template.html', 'r') as f:
+            template = Template(f.read())
+            fp = tempfile.NamedTemporaryFile(mode='w', delete=False, dir='./html/tmp/', suffix='.html')
+            for idx, bill in enumerate(bills):
+                bill['idx'] = idx + 1
+                bill['c_id'] = self.customers[bill['c_id']]
+                bill['total'] = str(float(bill['total']) - float(bill['discount']))
+                if bill['ispaid'] == '1':
+                    bill['ispaid'] = 'مدفوعة'
+                else:
+                    bill['ispaid'] = 'غير مدفوعة'
+            html = template.render(bills=bills, date=time.strftime("%A, %d %B %Y %I:%M %p"))
+            html = html.replace('style.css', '../style.css').replace('ph1.png', '../ph1.png')
+            fp.write(html)
+            fp.close()
+            os.system('setsid firefox ' + fp.name + ' &')
 
     ####################################################################
 
@@ -1250,7 +1309,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self._typing_timer_bb.timeout.connect(self.update_bill_buy_table)
 
         self.billbuy_sname.addItem('')
-        self.billbuy_sname.addItems(self.supplier.values())
+        self.billbuy_sname.addItems(self.suppliers.values())
 
         self.bb_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.bb_table.doubleClicked.connect(lambda mi: self.double_click(self.bb_table.item(mi.row(), 0).id))
@@ -1267,7 +1326,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.bb_page_size.valueChanged.connect(lambda: self.change_page_size('bell_buy'))
 
         # print and to exel bill
-        self.btn_print_table_bb.clicked.connect(self.print_table_bell_buy)
+        self.btn_print_table_bb.clicked.connect(self.print_table_bill_buy)
         self.btn_to_exel_bb.clicked.connect(lambda: self.to_excel(self.bb_table))
 
         # pages
@@ -1284,10 +1343,6 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.billbuy_date_to.setSpecialValueText(' ')
 
         self.btn_edit_billbuy.setEnabled(False)
-
-        self.billbuy_date_from.setEnabled(False)
-        self.ch_billbuy_date_to.setEnabled(False)
-        self.billbuy_date_to.setEnabled(False)
 
         self.update_bill_buy_table()
 
@@ -1313,7 +1368,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         if self.billbuy_code.text():
             fil['code'] = self.billbuy_code.text()
         if self.billbuy_sname.currentText() != '':
-            fil['s_id'] = [k for k, v in self.supplier.items() if v == self.billbuy_sname.currentText()][0]
+            fil['s_id'] = [k for k, v in self.suppliers.items() if v == self.billbuy_sname.currentText()][0]
         if self.ch_billbuy_date_from.isChecked():
             fil['date_from'] = QDate.toString(self.billbuy_date_from.date())
             if self.ch_billbuy_date_to.isChecked():
@@ -1332,7 +1387,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.bb_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
             self.bb_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(row['code'])))
             self.bb_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignCenter)
-            row['s_id'] = self.supplier[row['s_id']]
+            row['s_id'] = self.suppliers[row['s_id']]
             self.bb_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row['s_id']))
             self.bb_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
             total = str(float(row['total']) - float(row['discount']))
@@ -1348,10 +1403,250 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.bb_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignCenter)
         self.bb_table.resizeColumnsToContents()
 
-    def print_table_bell_buy(self):
-        print("222")
+    def print_table_bill_buy(self):
+        fil = self.search_bill_sell_save()
+        bills = database.db.query_all_bill("bill_buy", fil, 0, database.db.count_row("bill_buy", 1))
+        with open('./html/bill_buy_template.html', 'r') as f:
+            template = Template(f.read())
+            fp = tempfile.NamedTemporaryFile(mode='w', delete=False, dir='./html/tmp/', suffix='.html')
+            for idx, bill in enumerate(bills):
+                bill['idx'] = idx + 1
+                bill['s_id'] = self.suppliers[bill['s_id']]
+                bill['total'] = str(float(bill['total']) - float(bill['discount']))
+                if bill['ispaid'] == '1':
+                    bill['ispaid'] = 'مدفوعة'
+                else:
+                    bill['ispaid'] = 'غير مدفوعة'
+            html = template.render(bills=bills, date=time.strftime("%A, %d %B %Y %I:%M %p"))
+            html = html.replace('style.css', '../style.css').replace('ph1.png', '../ph1.png')
+            fp.write(html)
+            fp.close()
+            os.system('setsid firefox ' + fp.name + ' &')
 
-# #################################################################
+    ####################################################################
+
+    # fund movement
+    def setup_controls_fund_movement(self):
+        self.fm_type.currentTextChanged.connect(self.fm_type_changed)
+        self.fm_value.setValidator(self.validator_money)
+
+        self._typing_timer_fm.timeout.connect(self.update_fm_table)
+
+        # table
+        self.fm_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.fm_table.doubleClicked.connect(lambda mi: self.fill_fm_info(self.fm_table.item(mi.row(), 0).id))
+        self.fm_page_num.setRange(1, math.ceil(int(database.db.count_row("fund_movement", 1)) / self.page_size_fm))
+
+        # search
+        self.s_fm_type.currentTextChanged.connect(self.s_fm_type_changed)
+        self.s_fm_owner.currentTextChanged.connect(lambda text: self._typing_timer_fm.start(1000))
+        self.ch_fm_date_from.toggled.connect(lambda: self.check_date_from('fund_movement'))
+        self.ch_fm_date_to.toggled.connect(lambda: self.check_date_to('fund_movement'))
+        self.s_fm_note.textChanged.connect(lambda text: self._typing_timer_p.start(1000))
+
+        self.fm_page_num.valueChanged.connect(lambda text: self._typing_timer_p.start(1000))
+        self.fm_page_size.valueChanged.connect(lambda: self.change_page_size('fund_movement'))
+
+        # btn
+        self.btn_add_fm.clicked.connect(self.create_new_fm)
+        self.btn_edit_fm.clicked.connect(self.update_fm)
+        self.btn_delete_fm.clicked.connect(self.delete_fm)
+        self.btn_clear_fm.clicked.connect(self.clear_fm_inputs)
+
+        # print and to exel
+        self.btn_print_fm_table.clicked.connect(self.print_table_fm)
+        self.btn_fm_to_exel.clicked.connect(lambda: self.to_excel(self.fm_table))
+
+        # pages
+        self.fm_post.clicked.connect(lambda: self.fm_page_num.setValue(self.fm_page_num.value() + 1))
+        self.fm_previous.clicked.connect(lambda: self.fm_page_num.setValue(self.fm_page_num.value() - 1))
+        self.fm_last.clicked.connect(lambda: self.fm_page_num.setValue(math.ceil(int(database.db.count_row("fund_movement", 1)) / self.page_size_fm)))
+        self.fm_first.clicked.connect(lambda: self.fm_page_num.setValue(1))
+
+        self.fm_date_from.setSpecialValueText(' ')
+        self.fm_date_to.setSpecialValueText(' ')
+
+        self.fm_date.setDate(QDate.currentDate())
+        self.btn_edit_fm.setEnabled(False)
+        self.btn_delete_fm.setEnabled(False)
+
+        self.update_fm_table()
+        self.clear_fm_inputs()
+
+    def fm_type_changed(self):
+        if self.fm_type.currentIndex() == 1:
+            self.fm_owner.setEnabled(True)
+            self.fm_owner.clear()
+            self.fm_owner.addItems(list(self.customers.values())[1:])
+            # self.fm_owner.removeItem(0)
+        elif self.fm_type.currentIndex() == 2:
+            self.fm_owner.setEnabled(True)
+            self.fm_owner.clear()
+            self.fm_owner.addItems(self.suppliers.values())
+        else:
+            self.fm_owner.setEnabled(False)
+            self.fm_owner.clear()
+
+    def s_fm_type_changed(self):
+        if self.s_fm_type.currentIndex() == 1:
+            self._typing_timer_fm.start(1000)
+            self.s_fm_owner.setEnabled(True)
+            self.s_fm_owner.clear()
+            self.s_fm_owner.addItem('')
+            self.s_fm_owner.addItems(self.customers.values())
+        elif self.s_fm_type.currentIndex() == 2:
+            self._typing_timer_fm.start(1000)
+            self.s_fm_owner.setEnabled(True)
+            self.s_fm_owner.clear()
+            self.s_fm_owner.addItem('')
+            self.s_fm_owner.addItems(self.suppliers.values())
+        else:
+            self._typing_timer_fm.start(1000)
+            self.s_fm_owner.setEnabled(False)
+            self.s_fm_owner.clear()
+
+    def save_fm_info(self):
+        fm = dict()
+        fm['type'] = self.fm_type.currentText()
+        if self.fm_type.currentIndex() == 1:
+            fm['owner'] = [k for k, v in self.customers.items() if v == self.fm_owner.currentText()][0]
+        elif self.fm_type.currentIndex() == 2:
+            fm['owner'] = [k for k, v in self.suppliers.items() if v == self.fm_owner.currentText()][0]
+        fm['value'] = self.fm_value.text()
+        fm['date'] = QDate.toString(self.fm_date.date())
+        fm['note'] = self.fm_note.toPlainText()
+
+        return fm
+
+    def create_new_fm(self):
+        fm = self.save_fm_info()
+        if fm['type']:
+            database.db.insert_row("fund_movement", fm)
+            toaster_Notify.QToaster.show_message(parent=self, message=f"إضافة حركة\nتم إضافة الحركة {fm['type']} بنجاح")
+            self.update_fm_table()
+            self.clear_fm_inputs()
+            if fm['type'] == "دفعة من زبون":
+                self.update_customer_table()
+            elif fm['type'] == "دفعة إلى مورد":
+                self.update_supplier_table()
+        else:
+            QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب أن تدخل نوع الحركة')
+
+    def update_fm(self):
+        fm = self.save_fm_info()
+        fm['id'] = self.fm_id
+        if fm['type']:
+            database.db.update_row("fund_movement", fm)
+            self.update_fm_table()
+            self.clear_fm_inputs()
+            if fm['type'] == "دفعة من زبون":
+                self.update_customer_table()
+            elif fm['type'] == "دفعة إلى مورد":
+                self.update_supplier_table()
+            toaster_Notify.QToaster.show_message(parent=self, message=f"تعديل حركة\nتم تعديل الحركة {fm['type']} بنجاح")
+        else:
+            QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب أن تدخل نوع الحركة')
+
+    def delete_fm(self):
+        msg = QtWidgets.QMessageBox()
+        button_reply = msg.question(self, 'تأكيد', f"هل أنت متأكد من حذف هذه الحركة؟ ", msg.Yes | msg.No, msg.No)
+        if button_reply == msg.Yes:
+            database.db.delete_row("fund_movement", self.fm_id)
+            self.update_fm_table()
+            self.update_customer_table()
+            self.update_supplier_table()
+            self.clear_fm_inputs()
+            toaster_Notify.QToaster.show_message(parent=self, message=f"حذف مادة\nتم حذف الحركة بنجاح")
+
+    def search_fm_save(self):
+        fil = {}
+        if self.s_fm_type.currentIndex() != 0:
+            fil['type'] = self.s_fm_type.currentText()
+            if self.s_fm_type.currentIndex() == 1:
+                fil['owner'] = [k for k, v in self.customers.items() if v == self.s_fm_owner.currentText()][0]
+            elif self.s_fm_type.currentIndex() == 2:
+                fil['owner'] = [k for k, v in self.suppliers.items() if v == self.s_fm_owner.currentText()][0]
+        if self.ch_fm_date_from.isChecked():
+            fil['date_from'] = QDate.toString(self.fm_date_from.date())
+            if self.ch_fm_date_to.isChecked():
+                fil['date_to'] = QDate.toString(self.fm_date_to.date())
+
+        return fil
+
+    def update_fm_table(self):
+        fil = self.search_fm_save()
+        rows = database.db.query_all_fm(fil, self.page_size_fm * (self.fm_page_num.value() - 1),
+                                        self.page_size_fm)
+        self.fm_table.setRowCount(len(rows))
+        for row_idx, row in enumerate(rows):
+            self.fm_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
+                str(row_idx + 1 + (self.page_size_fm * (self.fm_page_num.value() - 1)))))
+            self.fm_table.item(row_idx, 0).id = row['id']
+            self.fm_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.fm_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(row['type']))
+            self.fm_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignCenter)
+            if row['type'] == "دفعة من زبون":
+                row['owner'] = self.customers[row['owner']]
+            elif row['type'] == "دفعة إلى مورد":
+                row['owner'] = self.suppliers[row['owner']]
+            self.fm_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row['owner']))
+            self.fm_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.fm_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(row['value']))
+            self.fm_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.fm_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(row['date']))
+            self.fm_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.fm_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(row['note']))
+            self.fm_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignCenter)
+        self.fm_table.resizeColumnsToContents()
+
+    def clear_fm_inputs(self):
+        self.fm_id = 0
+        self.fm_type.setCurrentIndex(0)
+        self.fm_type.setFocus()
+        self.fm_owner.setCurrentIndex(0)
+        self.fm_value.clear()
+        self.fm_date.setDate(QDate.currentDate())
+        self.fm_note.clear()
+
+        self.btn_edit_fm.setEnabled(False)
+        self.btn_delete_fm.setEnabled(False)
+        self.btn_add_fm.setEnabled(True)
+
+    def fill_fm_info(self, id):
+        self.btn_edit_fm.setEnabled(True)
+        self.btn_delete_fm.setEnabled(True)
+        self.btn_add_fm.setEnabled(False)
+        self.fm_id = id
+        fm = database.db.query_row("fund_movement", id)
+        if fm:
+            self.fm_type.setCurrentText(fm['type'])
+            if fm['type'] == "دفعة من زبون":
+                self.fm_owner.setCurrentText(self.customers[fm['owner']])
+            elif fm['type'] == "دفعة إلى مورد":
+                self.fm_owner.setCurrentText(self.suppliers[fm['owner']])
+            self.fm_value.setText(fm['value'])
+            self.fm_date.setDate(QDate(fm['date']))
+            self.fm_note.setText(fm['note'])
+
+    def print_table_fm(self):
+        fil = self.search_fm_save()
+        fms = database.db.query_all_fm(fil, 0, database.db.count_row("fund_movement", 1))
+        with open('./html/fm_template.html', 'r') as f:
+            template = Template(f.read())
+            fp = tempfile.NamedTemporaryFile(mode='w', delete=False, dir='./html/tmp/', suffix='.html')
+            for idx, fm in enumerate(fms):
+                fm['idx'] = idx + 1
+                if fm['type'] == "دفعة من زبون":
+                    fm['owner'] = self.customers[fm['owner']]
+                elif fm['type'] == "دفعة إلى مورد":
+                    fm['owner'] = self.suppliers[fm['owner']]
+            html = template.render(fms=fms, date=time.strftime("%A, %d %B %Y %I:%M %p"))
+            html = html.replace('style.css', '../style.css').replace('ph1.png', '../ph1.png')
+            fp.write(html)
+            fp.close()
+            os.system('setsid firefox ' + fp.name + ' &')
+
+    # #################################################################
 
     # export tables to exel
     def to_excel(self, table):

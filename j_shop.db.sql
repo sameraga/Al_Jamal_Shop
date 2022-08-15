@@ -42,12 +42,6 @@ CREATE TABLE IF NOT EXISTS "buy_order" (
 	PRIMARY KEY("id" AUTOINCREMENT),
 	FOREIGN KEY("b_id") REFERENCES "bill_buy"("id")
 );
-CREATE TABLE IF NOT EXISTS "creditor" (
-	"id"	integer NOT NULL,
-	"c_id"	integer NOT NULL,
-	CONSTRAINT "creditor_pk" PRIMARY KEY("id" AUTOINCREMENT),
-	CONSTRAINT "creditor_customer_id_fk" FOREIGN KEY("c_id") REFERENCES "customer" on delete cascade
-);
 CREATE TABLE IF NOT EXISTS "customer" (
 	"id"	INTEGER UNIQUE,
 	"code"	TEXT,
@@ -56,6 +50,15 @@ CREATE TABLE IF NOT EXISTS "customer" (
 	"balance"	REAL,
 	"note"	TEXT,
 	PRIMARY KEY("id" AUTOINCREMENT)
+);
+CREATE TABLE IF NOT EXISTS "fund_movement" (
+	"id"	integer NOT NULL,
+	"owner"	integer,
+	"type"	INTEGER,
+	"value"	REAL,
+	"date"	TEXT,
+	"note"	INTEGER,
+	CONSTRAINT "creditor_pk" PRIMARY KEY("id" AUTOINCREMENT)
 );
 CREATE TABLE IF NOT EXISTS "product" (
 	"id"	INTEGER UNIQUE,
@@ -73,14 +76,15 @@ CREATE TABLE IF NOT EXISTS "product" (
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
 CREATE TABLE IF NOT EXISTS "sell_order" (
-	"id"	INTEGER,
-	"p_id"	INTEGER,
-	"b_id"	INTEGER,
+	"id"	INTEGER NOT NULL UNIQUE,
+	"p_id"	INTEGER NOT NULL,
+	"b_id"	INTEGER NOT NULL,
 	"quantity"	INTEGER,
 	"total"	REAL,
 	"discount"	REAL,
 	FOREIGN KEY("p_id") REFERENCES "product"("id"),
-	FOREIGN KEY("b_id") REFERENCES "bill_sell"("id")
+	FOREIGN KEY("b_id") REFERENCES "bill_sell"("id"),
+	PRIMARY KEY("id" AUTOINCREMENT)
 );
 CREATE TABLE IF NOT EXISTS "supplier" (
 	"id"	INTEGER UNIQUE,
@@ -99,8 +103,6 @@ CREATE TABLE IF NOT EXISTS "users" (
 	"permission"	TEXT,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
+CREATE VIEW buy_order_v as SELECT buy_order.id, product.id as p_id, buy_order.b_id, product.code, product.name, buy_order.quantity, product.buy_price, buy_order.discount, buy_order.total from product, buy_order WHERE buy_order.p_id = product.id;
 CREATE VIEW sell_order_v as SELECT sell_order.id, product.id as p_id, sell_order.b_id, product.code, product.name, sell_order.quantity, product.sell_price, sell_order.discount, sell_order.total from product, sell_order WHERE sell_order.p_id = product.id;
-CREATE UNIQUE INDEX IF NOT EXISTS "creditor_id_uindex" ON "creditor" (
-	"id"
-);
 COMMIT;
