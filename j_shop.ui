@@ -102,7 +102,7 @@
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,6">
+         <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0">
           <item>
            <widget class="QListWidget" name="listWidget">
             <property name="sizePolicy">
@@ -538,7 +538,7 @@
                      </date>
                     </property>
                     <property name="displayFormat">
-                     <string>yyyy-M-d</string>
+                     <string>yyyy-MM-dd</string>
                     </property>
                     <property name="date">
                      <date>
@@ -741,7 +741,7 @@
                        </date>
                       </property>
                       <property name="displayFormat">
-                       <string>yyyy-M-d</string>
+                       <string>yyyy-MM-dd</string>
                       </property>
                       <property name="date">
                        <date>
@@ -783,7 +783,7 @@
                        </date>
                       </property>
                       <property name="displayFormat">
-                       <string>yyyy-M-d</string>
+                       <string>yyyy-MM-dd</string>
                       </property>
                       <property name="date">
                        <date>
@@ -1167,7 +1167,7 @@
                    </date>
                   </property>
                   <property name="displayFormat">
-                   <string>yyyy-M-d</string>
+                   <string>yyyy-MM-dd</string>
                   </property>
                   <property name="date">
                    <date>
@@ -1252,7 +1252,7 @@
                    </date>
                   </property>
                   <property name="displayFormat">
-                   <string>yyyy-M-d</string>
+                   <string>yyyy-MM-dd</string>
                   </property>
                   <property name="date">
                    <date>
@@ -1532,7 +1532,7 @@
                    </date>
                   </property>
                   <property name="displayFormat">
-                   <string>yyyy-M-d</string>
+                   <string>yyyy-MM-dd</string>
                   </property>
                   <property name="date">
                    <date>
@@ -1590,7 +1590,7 @@
                    </date>
                   </property>
                   <property name="displayFormat">
-                   <string>yyyy-M-d</string>
+                   <string>yyyy-MM-dd</string>
                   </property>
                   <property name="date">
                    <date>
@@ -3468,7 +3468,7 @@
                 </column>
                 <column>
                  <property name="text">
-                  <string>New Column</string>
+                  <string>نوع الاشعار</string>
                  </property>
                 </column>
                </widget>
@@ -4012,7 +4012,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>46</height>
+     <height>35</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
@@ -4035,6 +4035,154 @@
    </property>
   </action>
  </widget>
+ <tabstops>
+  <tabstop>listWidget</tabstop>
+  <tabstop>fm_type</tabstop>
+  <tabstop>fm_owner</tabstop>
+  <tabstop>fm_value</tabstop>
+  <tabstop>fm_date</tabstop>
+  <tabstop>fm_note</tabstop>
+  <tabstop>s_fm_type</tabstop>
+  <tabstop>s_fm_owner</tabstop>
+  <tabstop>ch_fm_date_from</tabstop>
+  <tabstop>ch_fm_date_to</tabstop>
+  <tabstop>fm_date_from</tabstop>
+  <tabstop>fm_date_to</tabstop>
+  <tabstop>s_fm_note</tabstop>
+  <tabstop>btn_add_fm</tabstop>
+  <tabstop>btn_edit_fm</tabstop>
+  <tabstop>btn_delete_fm</tabstop>
+  <tabstop>btn_clear_fm</tabstop>
+  <tabstop>btn_print_fm_table</tabstop>
+  <tabstop>btn_fm_to_exel</tabstop>
+  <tabstop>fm_page_size</tabstop>
+  <tabstop>fm_last</tabstop>
+  <tabstop>fm_post</tabstop>
+  <tabstop>fm_page_num</tabstop>
+  <tabstop>fm_previous</tabstop>
+  <tabstop>fm_first</tabstop>
+  <tabstop>billsell_code</tabstop>
+  <tabstop>billsell_cname</tabstop>
+  <tabstop>ch_billsell_date_from</tabstop>
+  <tabstop>ch_billsell_date_to</tabstop>
+  <tabstop>billsell_date_from</tabstop>
+  <tabstop>billsell_date_to</tabstop>
+  <tabstop>btn_add_billsell</tabstop>
+  <tabstop>btn_edit_billsell</tabstop>
+  <tabstop>btn_print_table_bs</tabstop>
+  <tabstop>btn_to_exel_bs</tabstop>
+  <tabstop>bs_page_size</tabstop>
+  <tabstop>bs_last</tabstop>
+  <tabstop>bs_post</tabstop>
+  <tabstop>bs_page_num</tabstop>
+  <tabstop>bs_previous</tabstop>
+  <tabstop>bs_first</tabstop>
+  <tabstop>billbuy_code</tabstop>
+  <tabstop>billbuy_sname</tabstop>
+  <tabstop>ch_billbuy_date_from</tabstop>
+  <tabstop>ch_billbuy_date_to</tabstop>
+  <tabstop>billbuy_date_from</tabstop>
+  <tabstop>billbuy_date_to</tabstop>
+  <tabstop>btn_add_billbuy</tabstop>
+  <tabstop>btn_edit_billbuy</tabstop>
+  <tabstop>btn_print_table_bb</tabstop>
+  <tabstop>btn_to_exel_bb</tabstop>
+  <tabstop>bb_page_size</tabstop>
+  <tabstop>bb_last</tabstop>
+  <tabstop>bb_post</tabstop>
+  <tabstop>bb_page_num</tabstop>
+  <tabstop>bb_previous</tabstop>
+  <tabstop>bb_first</tabstop>
+  <tabstop>p_code</tabstop>
+  <tabstop>p_name</tabstop>
+  <tabstop>p_class</tabstop>
+  <tabstop>p_type</tabstop>
+  <tabstop>p_source</tabstop>
+  <tabstop>p_quantity</tabstop>
+  <tabstop>p_less_quantity</tabstop>
+  <tabstop>p_buy_price</tabstop>
+  <tabstop>p_sell_price</tabstop>
+  <tabstop>p_sell_price_wh</tabstop>
+  <tabstop>p_price_range</tabstop>
+  <tabstop>btn_add_product</tabstop>
+  <tabstop>btn_edit_product</tabstop>
+  <tabstop>btn_delete_product</tabstop>
+  <tabstop>btn_clear_product</tabstop>
+  <tabstop>btn_print_table_p</tabstop>
+  <tabstop>btn_to_exel_p</tabstop>
+  <tabstop>p_code_search</tabstop>
+  <tabstop>p_name_search</tabstop>
+  <tabstop>p_class_search</tabstop>
+  <tabstop>p_type_search</tabstop>
+  <tabstop>p_page_size</tabstop>
+  <tabstop>p_last</tabstop>
+  <tabstop>p_post</tabstop>
+  <tabstop>p_page_num</tabstop>
+  <tabstop>p_previous</tabstop>
+  <tabstop>p_first</tabstop>
+  <tabstop>c_code</tabstop>
+  <tabstop>c_name</tabstop>
+  <tabstop>c_phone</tabstop>
+  <tabstop>c_balance</tabstop>
+  <tabstop>c_note</tabstop>
+  <tabstop>btn_add_customer</tabstop>
+  <tabstop>btn_edit_customer</tabstop>
+  <tabstop>btn_delete_customer</tabstop>
+  <tabstop>btn_clear_customer</tabstop>
+  <tabstop>btn_print_table_c</tabstop>
+  <tabstop>btn_to_exel_c</tabstop>
+  <tabstop>c_code_search</tabstop>
+  <tabstop>c_name_search</tabstop>
+  <tabstop>c_page_size</tabstop>
+  <tabstop>c_last</tabstop>
+  <tabstop>c_post</tabstop>
+  <tabstop>c_page_num</tabstop>
+  <tabstop>c_previous</tabstop>
+  <tabstop>c_first</tabstop>
+  <tabstop>s_code</tabstop>
+  <tabstop>s_name</tabstop>
+  <tabstop>s_phone</tabstop>
+  <tabstop>s_address</tabstop>
+  <tabstop>s_balance</tabstop>
+  <tabstop>s_note</tabstop>
+  <tabstop>btn_add_supplier</tabstop>
+  <tabstop>btn_edit_supplier</tabstop>
+  <tabstop>btn_delete_supplier</tabstop>
+  <tabstop>btn_clear_supplier</tabstop>
+  <tabstop>btn_print_table_s</tabstop>
+  <tabstop>btn_to_exel_s</tabstop>
+  <tabstop>s_code_search</tabstop>
+  <tabstop>s_name_search</tabstop>
+  <tabstop>s_page_size</tabstop>
+  <tabstop>s_last</tabstop>
+  <tabstop>s_post</tabstop>
+  <tabstop>s_page_num</tabstop>
+  <tabstop>s_previous</tabstop>
+  <tabstop>s_first</tabstop>
+  <tabstop>s_table</tabstop>
+  <tabstop>bb_table</tabstop>
+  <tabstop>fm_table</tabstop>
+  <tabstop>c_table</tabstop>
+  <tabstop>bs_table</tabstop>
+  <tabstop>p_table</tabstop>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>tableWidget</tabstop>
+  <tabstop>s_page_size_4</tabstop>
+  <tabstop>last_4</tabstop>
+  <tabstop>post_4</tabstop>
+  <tabstop>page_num_4</tabstop>
+  <tabstop>previous_4</tabstop>
+  <tabstop>first_4</tabstop>
+  <tabstop>txt_username</tabstop>
+  <tabstop>txt_password</tabstop>
+  <tabstop>btn_in</tabstop>
+  <tabstop>btn_exit</tabstop>
+  <tabstop>old_pass</tabstop>
+  <tabstop>new_pass</tabstop>
+  <tabstop>new_pass_confirm</tabstop>
+  <tabstop>btn_save_pass</tabstop>
+  <tabstop>btn_cancel_pass</tabstop>
+ </tabstops>
  <resources>
   <include location="icons.qrc"/>
   <include location="icons.qrc"/>

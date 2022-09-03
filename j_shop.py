@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 
+import sys
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    from os import chdir
+    chdir(sys._MEIPASS)
+
 import glob
 import locale
 import math
 import os
-import sys
 import tempfile
 import time
 import PyQt5.QtCore as QtCore
@@ -109,8 +113,12 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
             self.bs_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(str(row['discount'])))
             self.bs_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(str(row['total'])))
             btn_delete = QtWidgets.QPushButton(QtGui.QIcon.fromTheme('delete'), '')
-            btn_delete.clicked.connect(lambda: self.bs_table.removeRow(row_idx))
+            btn_delete.clicked.connect(lambda: self.delete_order(self.bs_table.currentRow()))
             self.bs_table.setCellWidget(row_idx, 6, btn_delete)
+
+    def delete_order(self, current_row):
+        self.bs_table.removeRow(current_row)
+        self.calculate_total()
 
     def table_key_press_event(self, event: QtGui.QKeyEvent):
         self.bs_table: QtWidgets.QTableWidget
@@ -140,7 +148,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
                 self.bs_table.setItem(current_row, 5, QtWidgets.QTableWidgetItem(str(product['sell_price'])))
                 self.bs_table.setRowCount(self.bs_table.rowCount() + 1)
                 btn_delete = QtWidgets.QPushButton(QtGui.QIcon.fromTheme('delete'), '')
-                btn_delete.clicked.connect(lambda: self.bs_table.removeRow(current_row))
+                btn_delete.clicked.connect(lambda: self.delete_order(self.bs_table.currentRow()))
                 self.bs_table.setCellWidget(current_row, 6, btn_delete)
                 self.calculate_total()
             else:
@@ -161,7 +169,8 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         if quantity > int(product['quantity']):
             quantity = int(product['quantity'])
             self.bs_table.setItem(current_row, 2, QtWidgets.QTableWidgetItem(product['quantity']))
-            toaster_Notify.QToaster.show_message(parent=self, message=f"غير متوفر\n لقد بقي من هذا المنتج {product['quantity']} قطعة فقط ")
+            toaster_Notify.QToaster.show_message(parent=self,
+                                                 message=f"غير متوفر\n لقد بقي من هذا المنتج {product['quantity']} قطعة فقط ")
         if discount > (float(product['price_range']) * quantity):
             discount = float(product['price_range']) * quantity
             self.bs_table.setItem(current_row, 4, QtWidgets.QTableWidgetItem(str(discount)))
@@ -175,6 +184,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
             if self.bs_table.item(i, 5) is not None:
                 total += float(self.bs_table.item(i, 5).text())
         self.total.setText(str(total))
+        self.last_total.setText(str(total - float(self.discount.text())))
 
     def discount_on_press(self):
         self.last_total.setText(str(float(self.total.text()) - float(self.discount.text())))
@@ -301,8 +311,12 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
             self.bb_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(str(row['discount'])))
             self.bb_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(str(row['total'])))
             btn_delete = QtWidgets.QPushButton(QtGui.QIcon.fromTheme('delete'), '')
-            btn_delete.clicked.connect(lambda: self.bb_table.removeRow(row_idx))
+            btn_delete.clicked.connect(lambda: self.delete_order(self.bb_table.currentRow()))
             self.bb_table.setCellWidget(row_idx, 6, btn_delete)
+
+    def delete_order(self, current_row):
+        self.bs_table.removeRow(current_row)
+        self.calculate_total()
 
     def table_key_press_event(self, event: QtGui.QKeyEvent):
         self.bb_table: QtWidgets.QTableWidget
@@ -331,7 +345,7 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
             self.bb_table.setItem(current_row, 5, QtWidgets.QTableWidgetItem(str(product['buy_price'])))
             self.bb_table.setRowCount(self.bb_table.rowCount() + 1)
             btn_delete = QtWidgets.QPushButton(QtGui.QIcon.fromTheme('delete'), '')
-            btn_delete.clicked.connect(lambda: self.bb_table.removeRow(current_row))
+            btn_delete.clicked.connect(lambda: self.delete_order(self.bb_table.currentRow()))
             self.bb_table.setCellWidget(current_row, 6, btn_delete)
             self.calculate_total()
         else:
@@ -359,6 +373,7 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
             if self.bb_table.item(i, 5) is not None:
                 total += float(self.bb_table.item(i, 5).text())
         self.total.setText(str(total))
+        self.last_total.setText(str(total - float(self.discount.text())))
 
     def discount_on_press(self):
         self.last_total.setText(str(float(self.total.text()) - float(self.discount.text())))
@@ -420,7 +435,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.setupUi(self)
 
         self.validator_code = QtGui.QRegExpValidator(QtCore.QRegExp('[\u0621-\u064A0-9a-zA-Z][0-9]*'))
-        self.validator_money = QtGui.QRegExpValidator(QtCore.QRegExp('^(\$)?(([1-9]\d{0,2}(\,\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$'))
+        self.validator_money = QtGui.QRegExpValidator(
+            QtCore.QRegExp('^(\$)?(([1-9]\d{0,2}(\,\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$'))
 
         self._typing_timer_p = QtCore.QTimer()
         self.product_id = 0
@@ -481,7 +497,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.menubar.setVisible(False)
         self.old_pass.setFocus()
         self.btn_save_pass.clicked.connect(self.save_new_pass)
-        self.btn_cancel_pass.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(0))
+        self.btn_cancel_pass.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(0) or self.menubar.setVisible(True))
 
     def save_new_pass(self):
         global PASS
@@ -491,7 +507,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                     PASS = hashlib.sha256(self.new_pass.text().encode()).digest()
                     database.db.change_user_pass(USER, PASS)
                     self.stackedWidget.setCurrentIndex(0)
-                    toaster_Notify.QToaster.show_message(parent=self, message="تغيير كلمة المرور\nتم تغيير كلمة المرور بنجاح")
+                    toaster_Notify.QToaster.show_message(parent=self,
+                                                         message="تغيير كلمة المرور\nتم تغيير كلمة المرور بنجاح")
                 else:
                     self.lbl_wrong.setText('* كلمة المرور الجديدة لا يمكن أن تكون فارغة !!!')
             else:
@@ -540,7 +557,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self._typing_timer_s.start(1000)
         elif table == 'bill_sell':
             self.page_size_bill_sell = self.bs_page_size.value()
-            self.bs_page_num.setRange(1, math.ceil(int(database.db.count_row("bill_sell", 1)) / self.page_size_bill_sell))
+            self.bs_page_num.setRange(1,
+                                      math.ceil(int(database.db.count_row("bill_sell", 1)) / self.page_size_bill_sell))
             self._typing_timer_bs.start(1000)
         elif table == 'bill_buy':
             self.page_size_bill_buy = self.bb_page_size.value()
@@ -560,8 +578,10 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                 self.ch_billsell_date_to.setEnabled(True)
             else:
                 self.billsell_date_from.setEnabled(False)
+                self.billsell_date_from.setDate(QDate.currentDate())
                 self.ch_billsell_date_to.setEnabled(False)
                 self.billsell_date_to.setEnabled(False)
+                self.billsell_date_to.setDate(QDate.currentDate())
                 self.ch_billsell_date_to.setChecked(False)
         elif x == 'bell_buy':
             self._typing_timer_bb.start(1000)
@@ -571,8 +591,10 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                 self.ch_billbuy_date_to.setEnabled(True)
             else:
                 self.billbuy_date_from.setEnabled(False)
+                self.billbuy_date_from.setDate(QDate.currentDate())
                 self.ch_billbuy_date_to.setEnabled(False)
                 self.billbuy_date_to.setEnabled(False)
+                self.billbuy_date_to.setDate(QDate.currentDate())
                 self.ch_billbuy_date_to.setChecked(False)
         elif x == 'fund_movement':
             self._typing_timer_fm.start(1000)
@@ -582,8 +604,10 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                 self.ch_fm_date_to.setEnabled(True)
             else:
                 self.fm_date_from.setEnabled(False)
+                self.fm_date_from.setDate(QDate.currentDate())
                 self.ch_fm_date_to.setEnabled(False)
                 self.fm_date_to.setEnabled(False)
+                self.fm_date_to.setDate(QDate.currentDate())
                 self.ch_fm_date_to.setChecked(False)
 
     def check_date_to(self, x):
@@ -594,6 +618,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                 self.billsell_date_to.dateChanged.connect(lambda: self._typing_timer_bs.start(1000))
             else:
                 self.billsell_date_to.setEnabled(False)
+                self.billsell_date_to.setDate(QDate.currentDate())
         elif x == 'bell_buy':
             self._typing_timer_bb.start(1000)
             if self.ch_billbuy_date_to.isChecked():
@@ -601,6 +626,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                 self.billbuy_date_to.dateChanged.connect(lambda: self._typing_timer_bb.start(1000))
             else:
                 self.billbuy_date_to.setEnabled(False)
+                self.billbuy_date_to.setDate(QDate.currentDate())
         elif x == 'fund_movement':
             self._typing_timer_fm.start(1000)
             if self.ch_fm_date_to.isChecked():
@@ -608,6 +634,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                 self.fm_date_to.dateChanged.connect(lambda: self._typing_timer_fm.start(1000))
             else:
                 self.fm_date_to.setEnabled(False)
+                self.fm_date_to.setDate(QDate.currentDate())
 
     ####################################################################
 
@@ -620,6 +647,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         # table
         self.p_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.p_table.doubleClicked.connect(lambda mi: self.fill_product_info(self.p_table.item(mi.row(), 0).id))
+        self.p_table.clicked.connect(lambda mi: self.one_click_p(self.p_table.item(mi.row(), 0).id))
         self.p_page_num.setRange(1, math.ceil(int(database.db.count_row("product", 1)) / self.page_size_product))
 
         # search
@@ -644,7 +672,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         # pages
         self.p_post.clicked.connect(lambda: self.p_page_num.setValue(self.p_page_num.value() + 1))
         self.p_previous.clicked.connect(lambda: self.p_page_num.setValue(self.p_page_num.value() - 1))
-        self.p_last.clicked.connect(lambda: self.p_page_num.setValue(math.ceil(int(database.db.count_row("product", 1)) / self.page_size_product)))
+        self.p_last.clicked.connect(lambda: self.p_page_num.setValue(
+            math.ceil(int(database.db.count_row("product", 1)) / self.page_size_product)))
         self.p_first.clicked.connect(lambda: self.p_page_num.setValue(1))
 
         self.btn_edit_product.setEnabled(False)
@@ -652,6 +681,10 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
         self.update_product_table()
         self.clear_product_inputs()
+
+    def one_click_p(self, id):
+        self.product_id = id
+        self.btn_delete_product.setEnabled(True)
 
     def save_product_info(self):
         product = dict()
@@ -674,7 +707,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         if product['code'] and product['name']:
             if int(database.db.count_row("product", product['code'])) == 0:
                 database.db.insert_row("product", product)
-                toaster_Notify.QToaster.show_message(parent=self, message=f"إضافة مادة\nتم إضافة المادة {product['name']} بنجاح")
+                toaster_Notify.QToaster.show_message(parent=self,
+                                                     message=f"إضافة مادة\nتم إضافة المادة {product['name']} بنجاح")
                 self.update_product_table()
                 self.clear_product_inputs()
             else:
@@ -706,18 +740,15 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     def delete_product(self):
         product = self.save_product_info()
         msg = QtWidgets.QMessageBox()
-        if product['code']:
-            button_reply = msg.question(self, 'تأكيد', f"هل أنت متأكد من حذف {product['name']} ؟ ",
-                                        msg.Yes | msg.No,
-                                        msg.No)
-            if button_reply == msg.Yes:
-                database.db.delete_row("product", self.product_id)
-                self.update_product_table()
-                self.clear_product_inputs()
-                toaster_Notify.QToaster.show_message(parent=self, message=f"حذف مادة\nتم حذف المادة{product['name']} بنجاح")
-        else:
-            QtWidgets.QMessageBox.warning(
-                None, 'خطأ', 'الرقم غير موجود\n أعد الضغط على اسم المادة التي تريد من الجدول')
+        button_reply = msg.question(self, 'تأكيد', f"هل أنت متأكد من حذف {product['name']} ؟ ",
+                                    msg.Yes | msg.No,
+                                    msg.No)
+        if button_reply == msg.Yes:
+            database.db.delete_row("product", self.product_id)
+            self.update_product_table()
+            self.clear_product_inputs()
+            toaster_Notify.QToaster.show_message(parent=self,
+                                                 message=f"حذف مادة\nتم حذف المادة{product['name']} بنجاح")
 
     def search_product_save(self):
         fil = {}
@@ -734,10 +765,12 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def update_product_table(self):
         fil = self.search_product_save()
-        rows = database.db.query_all_product(fil, self.page_size_product * (self.p_page_num.value() - 1), self.page_size_product)
+        rows = database.db.query_all_product(fil, self.page_size_product * (self.p_page_num.value() - 1),
+                                             self.page_size_product)
         self.p_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
-            self.p_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(str(row_idx + 1 + (self.page_size_product * (self.p_page_num.value() - 1)))))
+            self.p_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
+                str(row_idx + 1 + (self.page_size_product * (self.p_page_num.value() - 1)))))
             self.p_table.item(row_idx, 0).id = row['id']
             self.p_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
             self.p_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(row['code'])))
@@ -827,6 +860,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         # table
         self.c_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.c_table.doubleClicked.connect(lambda mi: self.fill_customer_info(self.c_table.item(mi.row(), 0).id))
+        self.c_table.clicked.connect(lambda mi: self.one_click_c(self.c_table.item(mi.row(), 0).id))
         self.c_page_num.setRange(1, math.ceil(int(database.db.count_row("customer", 1)) / self.page_size_customer))
 
         # search
@@ -858,6 +892,10 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.update_customer_table()
         self.clear_customer_inputs()
 
+    def one_click_c(self, id):
+        self.customer_id = id
+        self.btn_delete_customer.setEnabled(True)
+
     def save_customer_info(self):
         customer = dict()
         customer['code'] = self.c_code.text()
@@ -873,7 +911,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         if customer['code'] and customer['name']:
             if int(database.db.count_row("customer", customer['code'])) == 0:
                 database.db.insert_row("customer", customer)
-                toaster_Notify.QToaster.show_message(parent=self, message=f"إضافة زبون\nتم إضافة الزبون {customer['name']} بنجاح")
+                toaster_Notify.QToaster.show_message(parent=self,
+                                                     message=f"إضافة زبون\nتم إضافة الزبون {customer['name']} بنجاح")
                 self.customers = database.db.query_csp("customer")
                 self.update_customer_table()
                 self.clear_customer_inputs()
@@ -906,19 +945,15 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     def delete_customer(self):
         customer = self.save_customer_info()
         msg = QtWidgets.QMessageBox()
-        if customer['code']:
-            button_reply = msg.question(self, 'تأكيد', f"هل أنت متأكد من حذف {customer['name']} ؟ ",
-                                        msg.Yes | msg.No,
-                                        msg.No)
-            if button_reply == msg.Yes:
-                database.db.delete_row("customer", self.customer_id)
-                self.customers = database.db.query_csp("customer")
-                self.update_customer_table()
-                self.clear_customer_inputs()
-                toaster_Notify.QToaster.show_message(parent=self, message=f"حذف زبون\nتم حذف الزبون{customer['name']} بنجاح")
-        else:
-            QtWidgets.QMessageBox.warning(
-                None, 'خطأ', 'الرقم غير موجود\n أعد الضغط على اسم الزبون الذي تريد من الجدول')
+        button_reply = msg.question(self, 'تأكيد', f"هل أنت متأكد من حذف {customer['name']} ؟ ",
+                                    msg.Yes | msg.No,
+                                    msg.No)
+        if button_reply == msg.Yes:
+            database.db.delete_row("customer", self.customer_id)
+            self.customers = database.db.query_csp("customer")
+            self.update_customer_table()
+            self.clear_customer_inputs()
+            toaster_Notify.QToaster.show_message(parent=self, message=f"حذف زبون\nتم حذف الزبون{customer['name']} بنجاح")
 
     def search_customer_save(self):
         fil = {}
@@ -931,10 +966,12 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def update_customer_table(self):
         fil = self.search_customer_save()
-        rows = database.db.query_all_cs('customer', fil, self.page_size_customer * (self.c_page_num.value() - 1), self.page_size_customer)
+        rows = database.db.query_all_cs('customer', fil, self.page_size_customer * (self.c_page_num.value() - 1),
+                                        self.page_size_customer)
         self.c_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
-            self.c_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(str(row_idx + 1 + (self.page_size_customer * (self.c_page_num.value() - 1)))))
+            self.c_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
+                str(row_idx + 1 + (self.page_size_customer * (self.c_page_num.value() - 1)))))
             self.c_table.item(row_idx, 0).id = row['id']
             self.c_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
             self.c_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(row['code'])))
@@ -1007,6 +1044,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         # table
         self.s_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.s_table.doubleClicked.connect(lambda mi: self.fill_supplier_info(self.s_table.item(mi.row(), 0).id))
+        self.s_table.clicked.connect(lambda mi: self.one_click_s(self.s_table.item(mi.row(), 0).id))
         self.s_page_num.setRange(1, math.ceil(int(database.db.count_row("supplier", 1)) / self.page_size_supplier))
 
         # search
@@ -1039,6 +1077,10 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.update_supplier_table()
         self.clear_supplier_inputs()
 
+    def one_click_s(self, id):
+        self.supplier_id = id
+        self.btn_delete_supplier.setEnabled(True)
+
     def save_supplier_info(self):
         supplier = dict()
         supplier['code'] = self.s_code.text()
@@ -1055,7 +1097,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         if supplier['code'] and supplier['name']:
             if int(database.db.count_row("supplier", supplier['code'])) == 0:
                 database.db.insert_row("supplier", supplier)
-                toaster_Notify.QToaster.show_message(parent=self, message=f"إضافة مورد\nتم إضافة المورد {supplier['name']} بنجاح")
+                toaster_Notify.QToaster.show_message(parent=self,
+                                                     message=f"إضافة مورد\nتم إضافة المورد {supplier['name']} بنجاح")
                 self.suppliers = database.db.query_csp("supplier")
                 self.update_supplier_table()
                 self.clear_supplier_inputs()
@@ -1088,19 +1131,16 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     def delete_supplier(self):
         supplier = self.save_supplier_info()
         msg = QtWidgets.QMessageBox()
-        if supplier['code']:
-            button_reply = msg.question(self, 'تأكيد', f"هل أنت متأكد من حذف {supplier['name']} ؟ ",
-                                        msg.Yes | msg.No,
-                                        msg.No)
-            if button_reply == msg.Yes:
-                database.db.delete_row("supplier", self.supplier_id)
-                self.suppliers = database.db.query_csp("supplier")
-                self.update_supplier_table()
-                self.clear_supplier_inputs()
-                toaster_Notify.QToaster.show_message(parent=self, message=f"حذف مورد\nتم حذف المورد{supplier['name']} بنجاح")
-        else:
-            QtWidgets.QMessageBox.warning(
-                None, 'خطأ', 'الرقم غير موجود\n أعد الضغط على اسم المورد الذي تريد من الجدول')
+        button_reply = msg.question(self, 'تأكيد', f"هل أنت متأكد من حذف {supplier['name']} ؟ ",
+                                    msg.Yes | msg.No,
+                                    msg.No)
+        if button_reply == msg.Yes:
+            database.db.delete_row("supplier", self.supplier_id)
+            self.suppliers = database.db.query_csp("supplier")
+            self.update_supplier_table()
+            self.clear_supplier_inputs()
+            toaster_Notify.QToaster.show_message(parent=self,
+                                                 message=f"حذف مورد\nتم حذف المورد{supplier['name']} بنجاح")
 
     def search_supplier_save(self):
         fil = {}
@@ -1113,10 +1153,12 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def update_supplier_table(self):
         fil = self.search_supplier_save()
-        rows = database.db.query_all_cs('supplier', fil, self.page_size_supplier * (self.s_page_num.value() - 1), self.page_size_supplier)
+        rows = database.db.query_all_cs('supplier', fil, self.page_size_supplier * (self.s_page_num.value() - 1),
+                                        self.page_size_supplier)
         self.s_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
-            self.s_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(str(row_idx + 1 + (self.page_size_supplier * (self.s_page_num.value() - 1)))))
+            self.s_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
+                str(row_idx + 1 + (self.page_size_supplier * (self.s_page_num.value() - 1)))))
             self.s_table.item(row_idx, 0).id = row['id']
             self.s_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
             self.s_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(row['code'])))
@@ -1216,6 +1258,9 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.billsell_date_from.setSpecialValueText(' ')
         self.billsell_date_to.setSpecialValueText(' ')
 
+        self.billsell_date_from.setDate(QDate.currentDate())
+        self.billsell_date_to.setDate(QDate.currentDate())
+
         self.btn_edit_billsell.setEnabled(False)
 
         self.billsell_date_from.setEnabled(False)
@@ -1256,7 +1301,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def update_bill_sell_table(self):
         fil = self.search_bill_sell_save()
-        rows = database.db.query_all_bill("bill_sell", fil, self.page_size_bill_sell * (self.bs_page_num.value() - 1), self.page_size_bill_sell)
+        rows = database.db.query_all_bill("bill_sell", fil, self.page_size_bill_sell * (self.bs_page_num.value() - 1),
+                                          self.page_size_bill_sell)
         self.bs_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
             self.bs_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
@@ -1313,7 +1359,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
         self.bb_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.bb_table.doubleClicked.connect(lambda mi: self.double_click(self.bb_table.item(mi.row(), 0).id))
-        self.bb_table.clicked.connect(lambda mi: self.one_click(self.bb_table.item(mi.row(), 0).id))
+        self.bb_table.clicked.connect(lambda mi: self.one_click_bb(self.bb_table.item(mi.row(), 0).id))
         self.bb_page_num.setRange(1, math.ceil(int(database.db.count_row("bill_buy", 1)) / self.page_size_bill_buy))
 
         self.billbuy_code.textChanged.connect(lambda text: self._typing_timer_bb.start(1000))
@@ -1342,11 +1388,14 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.billbuy_date_from.setSpecialValueText(' ')
         self.billbuy_date_to.setSpecialValueText(' ')
 
+        self.billbuy_date_from.setDate(QDate.currentDate())
+        self.billbuy_date_to.setDate(QDate.currentDate())
+
         self.btn_edit_billbuy.setEnabled(False)
 
         self.update_bill_buy_table()
 
-    def one_click(self, id):
+    def one_click_bb(self, id):
         self.bill_buy_id = id
         self.btn_edit_billbuy.setEnabled(True)
 
@@ -1378,7 +1427,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def update_bill_buy_table(self):
         fil = self.search_bill_buy_save()
-        rows = database.db.query_all_bill("bill_buy", fil, self.page_size_bill_buy * (self.bb_page_num.value() - 1), self.page_size_bill_sell)
+        rows = database.db.query_all_bill("bill_buy", fil, self.page_size_bill_buy * (self.bb_page_num.value() - 1),
+                                          self.page_size_bill_sell)
         self.bb_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
             self.bb_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
@@ -1435,6 +1485,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         # table
         self.fm_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.fm_table.doubleClicked.connect(lambda mi: self.fill_fm_info(self.fm_table.item(mi.row(), 0).id))
+        self.fm_table.clicked.connect(lambda mi: self.one_click_fm(self.fm_table.item(mi.row(), 0).id))
         self.fm_page_num.setRange(1, math.ceil(int(database.db.count_row("fund_movement", 1)) / self.page_size_fm))
 
         # search
@@ -1442,9 +1493,9 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.s_fm_owner.currentTextChanged.connect(lambda text: self._typing_timer_fm.start(1000))
         self.ch_fm_date_from.toggled.connect(lambda: self.check_date_from('fund_movement'))
         self.ch_fm_date_to.toggled.connect(lambda: self.check_date_to('fund_movement'))
-        self.s_fm_note.textChanged.connect(lambda text: self._typing_timer_p.start(1000))
+        self.s_fm_note.textChanged.connect(lambda: self._typing_timer_fm.start(1000))
 
-        self.fm_page_num.valueChanged.connect(lambda text: self._typing_timer_p.start(1000))
+        self.fm_page_num.valueChanged.connect(lambda text: self._typing_timer_fm.start(1000))
         self.fm_page_size.valueChanged.connect(lambda: self.change_page_size('fund_movement'))
 
         # btn
@@ -1460,18 +1511,25 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         # pages
         self.fm_post.clicked.connect(lambda: self.fm_page_num.setValue(self.fm_page_num.value() + 1))
         self.fm_previous.clicked.connect(lambda: self.fm_page_num.setValue(self.fm_page_num.value() - 1))
-        self.fm_last.clicked.connect(lambda: self.fm_page_num.setValue(math.ceil(int(database.db.count_row("fund_movement", 1)) / self.page_size_fm)))
+        self.fm_last.clicked.connect(lambda: self.fm_page_num.setValue(
+            math.ceil(int(database.db.count_row("fund_movement", 1)) / self.page_size_fm)))
         self.fm_first.clicked.connect(lambda: self.fm_page_num.setValue(1))
 
         self.fm_date_from.setSpecialValueText(' ')
         self.fm_date_to.setSpecialValueText(' ')
 
         self.fm_date.setDate(QDate.currentDate())
+        self.fm_date_from.setDate(QDate.currentDate())
+        self.fm_date_to.setDate(QDate.currentDate())
         self.btn_edit_fm.setEnabled(False)
         self.btn_delete_fm.setEnabled(False)
 
         self.update_fm_table()
         self.clear_fm_inputs()
+
+    def one_click_fm(self, id):
+        self.fm_id = id
+        self.btn_delete_fm.setEnabled(True)
 
     def fm_type_changed(self):
         if self.fm_type.currentIndex() == 1:
@@ -1562,14 +1620,16 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         fil = {}
         if self.s_fm_type.currentIndex() != 0:
             fil['type'] = self.s_fm_type.currentText()
-            if self.s_fm_type.currentIndex() == 1:
+            if self.s_fm_type.currentIndex() == 1 and self.s_fm_owner.currentText():
                 fil['owner'] = [k for k, v in self.customers.items() if v == self.s_fm_owner.currentText()][0]
-            elif self.s_fm_type.currentIndex() == 2:
+            elif self.s_fm_type.currentIndex() == 2 and self.s_fm_owner.currentText():
                 fil['owner'] = [k for k, v in self.suppliers.items() if v == self.s_fm_owner.currentText()][0]
         if self.ch_fm_date_from.isChecked():
             fil['date_from'] = QDate.toString(self.fm_date_from.date())
             if self.ch_fm_date_to.isChecked():
                 fil['date_to'] = QDate.toString(self.fm_date_to.date())
+        if self.s_fm_note.toPlainText():
+            fil['note'] = self.s_fm_note.toPlainText()
 
         return fil
 
@@ -1653,6 +1713,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         file_name, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File', '', ".dot(*.dot)")
         wbk = xlwt.Workbook()
         sheet = wbk.add_sheet("sheet", cell_overwrite_ok=True)
+        sheet.cols_right_to_left = True
         style = xlwt.XFStyle()
         font = xlwt.Font()
         font.bold = True

@@ -1,6 +1,6 @@
 import PyQt5.QtCore as QtCore
 
-date_format = 'yyyy-M-d'
+date_format = 'yyyy-MM-dd'
 
 
 class QDate(QtCore.QDate):
