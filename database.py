@@ -20,21 +20,23 @@ def _dict_factory(cursor, row):
 
 
 class Database:
-    def __init__(self, database_path):
+    def __init__(self, database_path, password):
         self.connection = sqlite.connect(database_path)
+        self.connection.execute('PRAGMA key=' + password)
+        self.connection.execute('PRAGMA foreign_keys = ON')
         self.connection.row_factory = _dict_factory
 
     @staticmethod
-    def open_database():
+    def open_database(password):
         global db
-        db = Database('j_shop.db')
+        db = Database('j_shop.db', password)
 
     def change_user_pass(self, username, password):
         self.connection.execute('UPDATE users SET pass = ? WHERE users.name = ?', (password, username))
         self.connection.commit()
 
     def is_user(self, username):
-        return self.connection.execute(f"select pass from users where name = '{username}'").fetchone()
+        return self.connection.execute("select id from users where name = ?", (username,)).fetchone()
 
     def count_row(self, table, r):
         if r == 1:
@@ -62,6 +64,17 @@ class Database:
     def count_table(self, table, id):
         return self.connection.execute(f"SELECT count(*) as count FROM {table} where id = '{id}'").fetchone()['count']
 
+    def get_earnings(self, day):
+        return self.connection.execute(f"SELECT sum((quantity * (SELECT sell_price - buy_price "
+                                       f"FROM product WHERE id = p_id)) - discount) as earnings FROM sell_order "
+                                       f"WHERE b_id in (SELECT id FROM bill_sell WHERE date <= DATE() and date >= DATE(DATE(),'-{day} day'))").fetchone()['earnings']
+
+    def get_sales(self, day):
+        return self.connection.execute(f"SELECT sum(total - discount) as sales FROM bill_sell WHERE date <= DATE() and date >= DATE(DATE(),'-{day} day')").fetchone()['sales']
+
+    def get_purchases(self, day):
+        return self.connection.execute(f"SELECT sum(total - discount) as purchases FROM bill_buy WHERE date <= DATE() and date >= DATE(DATE(),'-{day} day')").fetchone()['purchases']
+
     def insert_table(self, table, dic):
         new_ids = [int(d['id']) for d in dic]
         placeholders = ", ".join("?" * len(new_ids))
@@ -81,25 +94,7 @@ class Database:
             query = f'INSERT INTO {table} ({columns}) VALUES ({placeholders})'
             self.connection.execute(query, obj)
             self.connection.commit()
-
         if isinstance(row, dict):
-            if table == "bill_sell":
-                if not row['ispaid']:
-                    b = float(row['total']) - float(row['discount'])
-                    self.connection.execute(f"UPDATE customer set balance = balance + {b} WHERE customer.id = {row['c_id']}")
-            elif table == "bill_buy":
-                if not row['ispaid']:
-                    b = float(row['total']) - float(row['discount'])
-                    self.connection.execute(f"UPDATE supplier set balance = balance + {b} WHERE supplier.id = {row['s_id']}")
-            elif table == "buy_order":
-                self.connection.execute(f"UPDATE product SET quantity = quantity + {row['quantity']} WHERE id = {row['p_id']}")
-            elif table == "sell_order":
-                self.connection.execute(f"UPDATE product SET quantity = quantity - {row['quantity']} WHERE id = {row['p_id']}")
-            elif table == "fund_movement":
-                if row['type'] == "دفعة من زبون":
-                    self.connection.execute(f"UPDATE customer SET balance = balance - {row['value']} WHERE id = {row['owner']}")
-                elif row['type'] == "دفعة إلى مورد":
-                    self.connection.execute(f"UPDATE supplier SET balance = balance - {row['value']} WHERE id = {row['owner']}")
             _insert(row)
         elif isinstance(row, list):
             for d in row:
@@ -109,26 +104,6 @@ class Database:
         def _update(obj):
             placeholders = ', '.join([f'{key}=:{key}' for key in obj.keys()])
             query = f"UPDATE {table} SET {placeholders} WHERE id = '{obj['id']}'"
-            if table == "bill_sell":
-                if not obj['ispaid']:
-                    b = float(obj['total']) - float(obj['discount'])
-                    self.connection.execute(f"UPDATE customer set balance = balance + {b} WHERE customer.id = {obj['c_id']}")
-            elif table == "bill_buy":
-                if not obj['ispaid']:
-                    b = float(obj['total']) - float(obj['discount'])
-                    self.connection.execute(f"UPDATE supplier set balance = balance + {b} WHERE supplier.id = {obj['s_id']}")
-            elif table == "buy_order":
-                qu = self.connection.execute(f"SELECT quantity FROM buy_order WHERE id = {obj['id']}").fetchone()['quantity']
-                self.connection.execute(f"UPDATE product SET quantity = quantity - {qu} + {obj['quantity']} WHERE id = {obj['p_id']}")
-            elif table == "sell_order":
-                qu = self.connection.execute(f"SELECT quantity FROM sell_order WHERE id = {obj['id']}").fetchone()['quantity']
-                self.connection.execute(f"UPDATE product SET quantity = quantity + {qu} - {obj['quantity']} WHERE id = {obj['p_id']}")
-            elif table == "fund_movement":
-                qu = self.connection.execute(f"SELECT value FROM fund_movement WHERE id = {obj['id']}").fetchone()['value']
-                if obj['type'] == "دفعة من زبون":
-                    self.connection.execute(f"UPDATE customer SET balance = balance + {qu} - {obj['value']} WHERE id = {obj['owner']}")
-                elif obj['type'] == "دفعة إلى مورد":
-                    self.connection.execute(f"UPDATE supplier SET balance = balance + {qu} - {obj['value']} WHERE id = {obj['owner']}")
             self.connection.execute(query, obj)
             self.connection.commit()
         if isinstance(row, dict):
@@ -138,12 +113,6 @@ class Database:
                 _update(d)
 
     def delete_row(self, table, id):
-        if table == 'fund_movement':
-            fm = self.connection.execute(f"SELECT type, owner, value FROM fund_movement WHERE id = {id}").fetchone()
-            if fm['type'] == 'دفعة من زبون':
-                self.connection.execute(f"UPDATE customer SET balance = balance + {fm['value']} WHERE id = {fm['owner']}")
-            elif fm['type'] == 'دفعة إلى مورد':
-                self.connection.execute(f"UPDATE supplier SET balance = balance - {fm['value']} WHERE id = {fm['owner']}")
         self.connection.execute(f'delete from {table} where id = {id}')
         self.connection.commit()
 
@@ -267,3 +236,6 @@ class Database:
 
     def get_order_bill(self, table, b_id):
         return self.connection.execute(f"select * FROM {table} WHERE b_id = {b_id}").fetchall()
+
+    def get_noti(self, table):
+        return self.connection.execute(f"SELECT code, name, quantity FROM {table} WHERE quantity <= less_quantity").fetchall()

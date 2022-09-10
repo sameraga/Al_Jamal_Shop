@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
-
+import json
 import sys
+
+import aes
+
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     from os import chdir
+
     chdir(sys._MEIPASS)
 
 import glob
@@ -194,8 +198,8 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         bill['id'] = self.b_id
         bill['code'] = self.bill_code.text()
         bill['date'] = QDate.toString(self.b_date.date())
-        bill['total'] = self.total.text()
-        bill['discount'] = self.discount.text()
+        bill['total'] = float(self.total.text())
+        bill['discount'] = float(self.discount.text())
         bill['c_id'] = database.db.get_id_by_name('customer', self.c_name.currentText())
         if self.ch_ispaid.isChecked():
             bill['ispaid'] = 1
@@ -434,7 +438,10 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         Form_Main.__init__(self)
         self.setupUi(self)
 
+        self.config = None
+
         self.validator_code = QtGui.QRegExpValidator(QtCore.QRegExp('[\u0621-\u064A0-9a-zA-Z][0-9]*'))
+        self.validator_int = QtGui.QRegExpValidator(QtCore.QRegExp('[0-9]+'))
         self.validator_money = QtGui.QRegExpValidator(
             QtCore.QRegExp('^(\$)?(([1-9]\d{0,2}(\,\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$'))
 
@@ -481,23 +488,33 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     def enter_app(self):
         global PASS
         global USER
-        PASS = hashlib.sha256(self.txt_password.text().encode()).digest()
+        password = self.txt_password.text()
+        PASS = hashlib.sha256(password.encode()).digest()
         USER = self.txt_username.text()
-
-        database.Database.open_database()
-        p: dict = database.db.is_user(USER)
-        if p and 'pass' in p and p['pass'] == PASS:
-            self.setup_controls()
-            self.stackedWidget.setCurrentIndex(0)
-        else:
-            self.lbl_wrong.setText('* اسم المستخدم أو كلمة المرور غير صحيحة !!!')
+        if password != '':
+            self.config = dict()
+            with open('config.dat', 'r') as config_file:
+                aes_cipher = aes.AESCipher(password)
+                try:
+                    self.config = json.loads(aes_cipher.decrypt(config_file.read()))
+                except Exception:
+                    self.lbl_wrong.setText('* كلمة المرور غير صحيحة !!!')
+                else:
+                    database.Database.open_database(self.config['db_password'])
+                    p = database.db.is_user(USER)
+                    if p is not None:
+                        self.setup_controls()
+                        self.stackedWidget.setCurrentIndex(0)
+                    else:
+                        self.lbl_wrong.setText('* اسم المستخدم غير صحيح !!!')
 
     def change_pass_(self):
         self.stackedWidget.setCurrentIndex(2)
         self.menubar.setVisible(False)
         self.old_pass.setFocus()
         self.btn_save_pass.clicked.connect(self.save_new_pass)
-        self.btn_cancel_pass.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(0) or self.menubar.setVisible(True))
+        self.btn_cancel_pass.clicked.connect(
+            lambda: self.stackedWidget.setCurrentIndex(0) or self.menubar.setVisible(True))
 
     def save_new_pass(self):
         global PASS
@@ -535,6 +552,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.change_pass.triggered.connect(self.change_pass_)
         self.exit.triggered.connect(lambda: sys.exit(1))
 
+        self.update_notification()
         self.setup_controls_product()
         self.setup_controls_customer()
         self.setup_controls_supplier()
@@ -642,6 +660,13 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     def setup_controls_product(self):
         self.p_code.setValidator(self.validator_code)
         self.p_code_search.setValidator(self.validator_code)
+        self.p_quantity.setValidator(self.validator_int)
+        self.p_less_quantity.setValidator(self.validator_int)
+        self.p_buy_price.setValidator(self.validator_money)
+        self.p_sell_price.setValidator(self.validator_money)
+        self.p_sell_price_wh.setValidator(self.validator_money)
+        self.p_price_range.setValidator(self.validator_money)
+
         self._typing_timer_p.timeout.connect(self.update_product_table)
 
         # table
@@ -705,14 +730,17 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     def create_new_product(self):
         product = self.save_product_info()
         if product['code'] and product['name']:
-            if int(database.db.count_row("product", product['code'])) == 0:
-                database.db.insert_row("product", product)
-                toaster_Notify.QToaster.show_message(parent=self,
-                                                     message=f"إضافة مادة\nتم إضافة المادة {product['name']} بنجاح")
-                self.update_product_table()
-                self.clear_product_inputs()
+            if product['buy_price'] and product['sell_price'] and product['sell_price_wh'] and product['price_range']:
+                if int(database.db.count_row("product", product['code'])) == 0:
+                    database.db.insert_row("product", product)
+                    toaster_Notify.QToaster.show_message(parent=self,
+                                                         message=f"إضافة مادة\nتم إضافة المادة {product['name']} بنجاح")
+                    self.update_product_table()
+                    self.clear_product_inputs()
+                else:
+                    QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن الكود مكرر')
             else:
-                QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن الكود مكرر')
+                QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب ادخال كافة الأسعار')
         else:
             QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب أن تدخل الكود واسم المادة')
 
@@ -720,20 +748,23 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         product = self.save_product_info()
         product['id'] = self.product_id
         if product['code'] and product['name']:
-            if product['code'] == self.product_co:
-                database.db.update_row("product", product)
-                self.update_product_table()
-                self.clear_product_inputs()
-                toaster_Notify.QToaster.show_message(parent=self,
-                                                     message=f"تعديل مادة\nتم تعديل المادة {product['name']} بنجاح")
-            elif int(database.db.count_row("product", product['code'])) == 0:
-                database.db.update_row("product", product)
-                self.update_product_table()
-                self.clear_product_inputs()
-                toaster_Notify.QToaster.show_message(parent=self,
-                                                     message=f"تعديل مادة\nتم تعديل المادة {product['name']} بنجاح")
+            if product['buy_price'] and product['sell_price'] and product['sell_price_wh'] and product['price_range']:
+                if product['code'] == self.product_co:
+                    database.db.update_row("product", product)
+                    self.update_product_table()
+                    self.clear_product_inputs()
+                    toaster_Notify.QToaster.show_message(parent=self,
+                                                         message=f"تعديل مادة\nتم تعديل المادة {product['name']} بنجاح")
+                elif int(database.db.count_row("product", product['code'])) == 0:
+                    database.db.update_row("product", product)
+                    self.update_product_table()
+                    self.clear_product_inputs()
+                    toaster_Notify.QToaster.show_message(parent=self,
+                                                         message=f"تعديل مادة\nتم تعديل المادة {product['name']} بنجاح")
+                else:
+                    QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن الكود مكرر')
             else:
-                QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن الكود مكرر')
+                QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب ادخال كافة الأسعار')
         else:
             QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب أن تدخل الكود واسم المادة')
 
@@ -801,12 +832,12 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.p_class.setCurrentIndex(0)
         self.p_type.setCurrentIndex(0)
         self.p_source.clear()
-        self.p_quantity.clear()
-        self.p_less_quantity.clear()
-        self.p_buy_price.clear()
-        self.p_sell_price.clear()
-        self.p_sell_price_wh.clear()
-        self.p_price_range.clear()
+        self.p_quantity.setText('0')
+        self.p_less_quantity.setText('0')
+        self.p_buy_price.setText('0')
+        self.p_sell_price.setText('0')
+        self.p_sell_price_wh.setText('0')
+        self.p_price_range.setText('0')
 
         self.btn_edit_product.setEnabled(False)
         self.btn_delete_product.setEnabled(False)
@@ -953,7 +984,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.customers = database.db.query_csp("customer")
             self.update_customer_table()
             self.clear_customer_inputs()
-            toaster_Notify.QToaster.show_message(parent=self, message=f"حذف زبون\nتم حذف الزبون{customer['name']} بنجاح")
+            toaster_Notify.QToaster.show_message(parent=self,
+                                                 message=f"حذف زبون\nتم حذف الزبون{customer['name']} بنجاح")
 
     def search_customer_save(self):
         fil = {}
@@ -1226,6 +1258,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
         self.billsell_cname.addItem('')
         self.billsell_cname.addItems(self.customers.values())
+        self.calculate_main()
 
         self.bs_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.bs_table.doubleClicked.connect(lambda mi: self.double_click_bs(self.bs_table.item(mi.row(), 0).id))
@@ -1285,6 +1318,21 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.update_bill_sell_table()
         self.update_product_table()
         self.update_customer_table()
+        self.calculate_main()
+
+    def calculate_main(self):
+        self.month_sales: QtWidgets.QLCDNumber
+        self.month_sales.display(database.db.get_sales(30))
+        if database.db.get_earnings(1) == '':
+            self.day_earnings.display(0)
+        else:
+            self.day_earnings.display(database.db.get_earnings(1))
+        self.week_earnings.display(database.db.get_earnings(7))
+        self.month_earnings.display(database.db.get_earnings(30))
+        if database.db.get_purchases(30) == '':
+            self.month_purchases.display(0)
+        else:
+            self.month_purchases.display(database.db.get_purchases(30))
 
     def search_bill_sell_save(self):
         fil = {}
@@ -1411,6 +1459,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.update_bill_buy_table()
         self.update_supplier_table()
         self.update_product_table()
+        self.calculate_main()
 
     def search_bill_buy_save(self):
         fil = {}
@@ -1731,6 +1780,17 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             wbk.save(file_name)
         except IOError:
             QtWidgets.QMessageBox.warning(None, 'خطأ', 'يوجد خطأ في حفظ الملف')
+
+    def update_notification(self):
+        rows = database.db.get_noti("product")
+        self.notif_table.setRowCount(len(rows))
+        for row_idx, row in enumerate(rows):
+            self.notif_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
+                str(row_idx + 1 + (self.n_page_size.value() * (self.n_page_num.value() - 1)))))
+            self.notif_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+            noti = f"إن المادة {row['name']} ذات الكود  {row['code']}  شارفت على الانتهاء"
+            self.notif_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(noti))
+        self.notif_table.resizeColumnsToContents()
 
 
 if __name__ == '__main__':

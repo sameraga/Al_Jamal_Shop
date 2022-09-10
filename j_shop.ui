@@ -102,7 +102,7 @@
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0">
+         <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,6">
           <item>
            <widget class="QListWidget" name="listWidget">
             <property name="sizePolicy">
@@ -235,12 +235,18 @@
                    <number>0</number>
                   </property>
                   <item>
-                   <widget class="QLCDNumber" name="lcdNumber">
+                   <widget class="QLCDNumber" name="month_sales">
                     <property name="styleSheet">
                      <string notr="true">background-color: rgb(134, 89, 0);</string>
                     </property>
                     <property name="frameShape">
                      <enum>QFrame::Box</enum>
+                    </property>
+                    <property name="frameShadow">
+                     <enum>QFrame::Raised</enum>
+                    </property>
+                    <property name="lineWidth">
+                     <number>1</number>
                     </property>
                     <property name="midLineWidth">
                      <number>0</number>
@@ -277,7 +283,7 @@
                    <number>0</number>
                   </property>
                   <item>
-                   <widget class="QLCDNumber" name="lcdNumber_2">
+                   <widget class="QLCDNumber" name="day_earnings">
                     <property name="midLineWidth">
                      <number>0</number>
                     </property>
@@ -310,7 +316,7 @@
                    <number>0</number>
                   </property>
                   <item>
-                   <widget class="QLCDNumber" name="lcdNumber_3">
+                   <widget class="QLCDNumber" name="week_earnings">
                     <property name="midLineWidth">
                      <number>0</number>
                     </property>
@@ -343,7 +349,7 @@
                    <number>0</number>
                   </property>
                   <item>
-                   <widget class="QLCDNumber" name="lcdNumber_5">
+                   <widget class="QLCDNumber" name="month_earnings">
                     <property name="midLineWidth">
                      <number>0</number>
                     </property>
@@ -376,7 +382,7 @@
                    <number>0</number>
                   </property>
                   <item>
-                   <widget class="QLCDNumber" name="lcdNumber_4">
+                   <widget class="QLCDNumber" name="month_purchases">
                     <property name="styleSheet">
                      <string notr="true">background-color: rgb(15, 5, 93);</string>
                     </property>
@@ -1924,6 +1930,9 @@
                   </item>
                   <item row="5" column="1">
                    <widget class="QLineEdit" name="p_quantity">
+                    <property name="text">
+                     <string>0</string>
+                    </property>
                     <property name="alignment">
                      <set>Qt::AlignCenter</set>
                     </property>
@@ -2104,6 +2113,9 @@
                   </item>
                   <item row="6" column="1">
                    <widget class="QLineEdit" name="p_less_quantity">
+                    <property name="text">
+                     <string>0</string>
+                    </property>
                     <property name="alignment">
                      <set>Qt::AlignCenter</set>
                     </property>
@@ -3460,7 +3472,14 @@
              </attribute>
              <layout class="QVBoxLayout" name="verticalLayout_17">
               <item>
-               <widget class="QTableWidget" name="tableWidget">
+               <widget class="QTableWidget" name="notif_table">
+                <property name="rowCount">
+                 <number>1</number>
+                </property>
+                <attribute name="verticalHeaderVisible">
+                 <bool>false</bool>
+                </attribute>
+                <row/>
                 <column>
                  <property name="text">
                   <string>الرقم</string>
@@ -3468,7 +3487,7 @@
                 </column>
                 <column>
                  <property name="text">
-                  <string>نوع الاشعار</string>
+                  <string>الاشعار</string>
                  </property>
                 </column>
                </widget>
@@ -3500,7 +3519,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QSpinBox" name="s_page_size_4">
+                 <widget class="QSpinBox" name="n_page_size">
                   <property name="font">
                    <font>
                     <pointsize>12</pointsize>
@@ -3568,7 +3587,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QSpinBox" name="page_num_4">
+                 <widget class="QSpinBox" name="n_page_num">
                   <property name="font">
                    <font>
                     <pointsize>12</pointsize>
@@ -4166,11 +4185,11 @@
   <tabstop>bs_table</tabstop>
   <tabstop>p_table</tabstop>
   <tabstop>tabWidget</tabstop>
-  <tabstop>tableWidget</tabstop>
-  <tabstop>s_page_size_4</tabstop>
+  <tabstop>notif_table</tabstop>
+  <tabstop>n_page_size</tabstop>
   <tabstop>last_4</tabstop>
   <tabstop>post_4</tabstop>
-  <tabstop>page_num_4</tabstop>
+  <tabstop>n_page_num</tabstop>
   <tabstop>previous_4</tabstop>
   <tabstop>first_4</tabstop>
   <tabstop>txt_username</tabstop>
