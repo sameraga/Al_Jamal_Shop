@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>955</width>
-    <height>790</height>
+    <height>720</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,12 +21,8 @@
     <layout class="QVBoxLayout" name="verticalLayout_11">
      <item>
       <layout class="QGridLayout" name="gridLayout_4">
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_20">
-         <property name="text">
-          <string>رقم الفاتورة</string>
-         </property>
-        </widget>
+       <item row="2" column="1">
+        <widget class="QComboBox" name="s_name"/>
        </item>
        <item row="0" column="2">
         <widget class="QLabel" name="label_21">
@@ -35,20 +31,19 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_22">
-         <property name="text">
-          <string>اسم المورد</string>
+       <item row="2" column="3">
+        <widget class="QLabel" name="s_phone">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
          </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QComboBox" name="s_name"/>
-       </item>
-       <item row="1" column="2">
-        <widget class="QLabel" name="label_23">
          <property name="text">
-          <string>رقم تواصل المورد</string>
+          <string>-</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
          </property>
         </widget>
        </item>
@@ -65,6 +60,27 @@
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="QLabel" name="label_23">
+         <property name="text">
+          <string>رقم تواصل المورد</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_20">
+         <property name="text">
+          <string>رقم الفاتورة</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_22">
+         <property name="text">
+          <string>اسم المورد</string>
          </property>
         </widget>
        </item>
@@ -101,16 +117,17 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="3">
-        <widget class="QLabel" name="s_phone">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_27">
          <property name="text">
-          <string>-</string>
+          <string>رقم الفاتورة المطابقة</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="bill_match_code">
+         <property name="maxLength">
+          <number>11</number>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -155,11 +172,6 @@
        <column>
         <property name="text">
          <string>سعر القطعة</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>الخصم</string>
         </property>
        </column>
        <column>

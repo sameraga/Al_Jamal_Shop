@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>959</width>
-    <height>784</height>
+    <height>720</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,8 +21,15 @@
     <layout class="QVBoxLayout" name="verticalLayout_11">
      <item>
       <layout class="QGridLayout" name="gridLayout_4">
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_20">
+       <item row="0" column="2">
+        <widget class="QLabel" name="label_21">
+         <property name="text">
+          <string>تاريخ الفاتورة</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_29">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
            <horstretch>0</horstretch>
@@ -36,21 +43,51 @@
           </size>
          </property>
          <property name="text">
-          <string>رقم الفاتورة</string>
+          <string>نوع الفاتورة</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
          </property>
         </widget>
        </item>
-       <item row="0" column="2">
-        <widget class="QLabel" name="label_21">
-         <property name="text">
-          <string>تاريخ الفاتورة</string>
-         </property>
+       <item row="1" column="1">
+        <widget class="QComboBox" name="bill_type">
+         <item>
+          <property name="text">
+           <string>مفرق</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>جملة</string>
+          </property>
+         </item>
         </widget>
        </item>
        <item row="1" column="2">
+        <widget class="QCheckBox" name="ch_ispaid">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>مدفوع</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+         <property name="tristate">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QLabel" name="d_tr22">
+         <property name="text">
+          <string>تصريف الفاتورة: </string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
         <widget class="QLabel" name="label_23">
          <property name="text">
           <string>رقم تواصل الزبون</string>
@@ -73,26 +110,29 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="3">
-        <widget class="QLabel" name="c_phone">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_20">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="text">
-          <string>-</string>
+          <string>رقم الفاتورة</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
-        <widget class="QComboBox" name="c_name"/>
-       </item>
-       <item row="1" column="0">
+       <item row="2" column="0">
         <widget class="QLabel" name="label_22">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -114,7 +154,26 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="3">
+       <item row="2" column="1">
+        <widget class="QComboBox" name="c_name"/>
+       </item>
+       <item row="1" column="4">
+        <widget class="QLabel" name="d_tr">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>تصريف الفاتورة: </string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3" colspan="2">
         <widget class="QDateEdit" name="b_date">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -150,6 +209,22 @@
            <month>1</month>
            <day>1</day>
           </date>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3" colspan="2">
+        <widget class="QLabel" name="c_phone">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>-</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
          </property>
         </widget>
        </item>
@@ -191,7 +266,12 @@
        </column>
        <column>
         <property name="text">
-         <string>سعر القطعة</string>
+         <string>سعر القطعة $</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>سعر القطعة LT</string>
         </property>
        </column>
        <column>
@@ -201,7 +281,12 @@
        </column>
        <column>
         <property name="text">
-         <string>الاجمالي</string>
+         <string>الاجمالي $</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>الاجمالي LT</string>
         </property>
        </column>
        <column>
@@ -213,48 +298,39 @@
      </item>
      <item>
       <layout class="QGridLayout" name="gridLayout_5">
-       <item row="0" column="1">
-        <widget class="QLineEdit" name="total">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
+       <item row="1" column="3">
+        <widget class="QLineEdit" name="discount_t">
          <property name="text">
           <string>0</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
-         </property>
-         <property name="readOnly">
-          <bool>true</bool>
          </property>
         </widget>
        </item>
        <item row="0" column="0">
         <widget class="QLabel" name="label_24">
          <property name="text">
-          <string>مجموع الاجمالي: </string>
+          <string>مجموع الاجمالي $:</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
-        <widget class="QLineEdit" name="discount">
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_26">
          <property name="text">
-          <string>0</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
+          <string>خصم الفاتورة $:</string>
          </property>
         </widget>
        </item>
        <item row="0" column="2">
         <widget class="QLabel" name="label_25">
          <property name="text">
-          <string>النهائي: </string>
+          <string>مجموع الاجمالي LT:</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="3">
-        <widget class="QLineEdit" name="last_total">
+       <item row="2" column="3">
+        <widget class="QLineEdit" name="last_total_t">
          <property name="enabled">
           <bool>true</bool>
          </property>
@@ -269,26 +345,128 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_26">
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="last_total_d">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
          <property name="text">
-          <string>خصم الفاتورة:</string>
+          <string>0</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
-       <item row="1" column="3">
-        <widget class="QCheckBox" name="ch_ispaid">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
+       <item row="1" column="2">
+        <widget class="QLabel" name="label_28">
          <property name="text">
-          <string>مدفوع</string>
+          <string>خصم الفاتورة LT:</string>
          </property>
-         <property name="checked">
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="QLineEdit" name="total_t">
+         <property name="enabled">
           <bool>true</bool>
          </property>
-         <property name="tristate">
-          <bool>false</bool>
+         <property name="text">
+          <string>0</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_27">
+         <property name="text">
+          <string>النهائي $: </string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="discount_d">
+         <property name="text">
+          <string>0</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="QLabel" name="label_30">
+         <property name="text">
+          <string>النهائي LT: </string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="total_d">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="text">
+          <string>0</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_31">
+         <property name="text">
+          <string>المدفوع $: </string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="QLabel" name="label_32">
+         <property name="text">
+          <string>المدفوع LT: </string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="paid_d">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="text">
+          <string>0</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="3">
+        <widget class="QLineEdit" name="paid_t">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="text">
+          <string>0</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -339,9 +517,8 @@
   <tabstop>c_name</tabstop>
   <tabstop>b_date</tabstop>
   <tabstop>bs_table</tabstop>
-  <tabstop>total</tabstop>
-  <tabstop>discount</tabstop>
-  <tabstop>last_total</tabstop>
+  <tabstop>total_d</tabstop>
+  <tabstop>total_t</tabstop>
   <tabstop>btn_print_bill</tabstop>
  </tabstops>
  <resources/>

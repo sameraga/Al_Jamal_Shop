@@ -237,5 +237,15 @@ class Database:
     def get_order_bill(self, table, b_id):
         return self.connection.execute(f"select * FROM {table} WHERE b_id = {b_id}").fetchall()
 
-    def get_noti(self, table):
-        return self.connection.execute(f"SELECT code, name, quantity FROM {table} WHERE quantity <= less_quantity").fetchall()
+    def get_noti_pro1(self):
+        return self.connection.execute(f"SELECT code, name, quantity FROM product WHERE quantity <= less_quantity").fetchall()
+
+    def get_noti_pro2(self):
+        return self.connection.execute(f"SELECT code, name, quantity FROM product WHERE quantity = 0").fetchall()
+
+    def get_noti_cus(self, table):
+        return self.connection.execute(f"SELECT code, name, range_balance FROM {table} WHERE balance >= range_balance").fetchall()
+
+    def get_box(self):
+        return self.connection.execute("SELECT * FROM box").fetchone()
+
