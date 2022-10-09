@@ -119,7 +119,7 @@ class Database:
     # product
     # ################################################################
     def get_product_by_code(self, code):
-        return self.connection.execute(f"select id, name, quantity, sell_price, price_range, buy_price from product where code = '{code}'").fetchone()
+        return self.connection.execute(f"select id, name, quantity, sell_price, sell_price_wh, price_range, buy_price from product where code = '{code}'").fetchone()
 
     def query_all_product(self, filter: dict, limit1, limit2):
         sql_cmd = "SELECT id, code, name, class, type, source, quantity, buy_price, sell_price from product"
@@ -249,3 +249,9 @@ class Database:
     def get_box(self):
         return self.connection.execute("SELECT * FROM box").fetchone()
 
+    def exchange_dollar_turky(self, to, do, tu):
+        if to == 'do_tu':
+            self.connection.execute("UPDATE box SET dollar = dollar - ?, turky = turky + ?", (do, tu))
+        else:
+            self.connection.execute("UPDATE box SET dollar = dollar + ?, turky = turky - ?", (do, tu))
+        self.connection.commit()

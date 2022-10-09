@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-import json
+
 import sys
-
-import aes
-
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     from os import chdir
-
     chdir(sys._MEIPASS)
+
+import json
+import aes
 
 import glob
 import locale
@@ -51,6 +50,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         self.validator_money = QtGui.QRegExpValidator(
             QtCore.QRegExp('^(\$)?(([1-9]\d{0,2}(\,\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$'))
 
+        self.ch = id
         self.b_id = id
         self.code = None
         self.setup_control()
@@ -61,6 +61,8 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         self.discount_t.setValidator(self.validator_money)
         self.paid_d.setValidator(self.validator_money)
         self.paid_t.setValidator(self.validator_money)
+
+        self.ch_ispaid.stateChanged.connect(self.ch_ispaid_change)
 
         self.c_name.clear()
         self.c_name.addItems(database.db.query_csp("customer").values())
@@ -77,6 +79,8 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
 
         self.discount_d.returnPressed.connect(lambda: self.discount_on_press("d"))
         self.discount_t.returnPressed.connect(lambda: self.discount_on_press("t"))
+        self.paid_d.returnPressed.connect(lambda: self.paid_change("d"))
+        self.paid_t.returnPressed.connect(lambda: self.paid_change("t"))
         self.fill_bill(self.b_id)
 
         self.btn_save.clicked.connect(self.save_bill)
@@ -87,11 +91,20 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         self.btn_cancel.setAutoDefault(False)
         self.btn_print_bill.setAutoDefault(False)
 
+    def ch_ispaid_change(self):
+        if self.ch_ispaid.isChecked():
+            self.paid_d.setEnabled(True)
+            self.paid_t.setEnabled(True)
+        else:
+            self.paid_d.setEnabled(False)
+            self.paid_t.setEnabled(False)
+
     def c_name_changed(self):
         if self.c_name.currentIndex() == 0:
             self.ch_ispaid.setEnabled(False)
         else:
-            self.ch_ispaid.setEnabled(True)
+            if self.ch == 0:
+                self.ch_ispaid.setEnabled(True)
         self.c_phone.setText(database.db.get_phone_by_name('customer', self.c_name.currentText()))
 
     def fill_bill(self, id):
@@ -117,9 +130,11 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
             format_float = round(float(bill['total']) - float(bill['discount']), 2)
             self.last_total_d.setText(str(format_float))
             format_float = round(float(self.total_t.text()) - float(self.discount_t.text()), 2)
-            self.last_total_d.setText(str(format_float))
+            self.last_total_t.setText(str(format_float))
             if bill['ispaid'] == '1':
                 self.ch_ispaid.setChecked(True)
+                self.paid_d.setText(bill['paid_d'])
+                self.paid_t.setText(bill['paid_t'])
             else:
                 self.ch_ispaid.setChecked(False)
         self.bill_code.setText(str(self.code))
@@ -244,6 +259,15 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
             self.discount_d.setText(str(float(self.discount_t.text()) / DOLLAR))
             d_float = round(float(self.total_d.text()) - float(self.discount_d.text()), 2)
             self.last_total_d.setText(str(d_float))
+
+    def paid_change(self, x):
+        global DOLLAR
+        if x == 'd':
+            dd = float(self.last_total_d.text()) - float(self.paid_d.text())
+            self.paid_t.setText(str(round(dd * DOLLAR, 2)))
+        else:
+            tt = float(self.last_total_t.text()) - float(self.paid_t.text())
+            self.paid_d.setText(str(round(tt / DOLLAR, 2)))
 
     def save_bill(self):
         bill = dict()
@@ -376,7 +400,7 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
             self.bb_table.setCellWidget(row_idx, 5, btn_delete)
 
     def delete_order(self, current_row):
-        self.bs_table.removeRow(current_row)
+        self.bb_table.removeRow(current_row)
         self.calculate_total()
 
     def table_key_press_event(self, event: QtGui.QKeyEvent):
@@ -475,7 +499,6 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
                     order['total'] = self.bb_table.item(idx, 4).text()
 
                 orders.append(order)
-
         if int(database.db.count_row("bill_buy", bill['code'])) == 0:
             database.db.insert_row("bill_buy", bill)
         else:
@@ -538,6 +561,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def setup_login(self):
         self.menubar.setVisible(False)
+        self.stackedWidget.setCurrentIndex(1)
         self.txt_username.setFocus()
         self.btn_in.clicked.connect(self.enter_app)
         self.btn_exit.clicked.connect(lambda: sys.exit(1))
@@ -594,6 +618,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     def setup_controls(self):
         self.menubar.setVisible(True)
         self.tabWidget.tabBar().setVisible(False)
+        self.tabWidget.setCurrentIndex(0)
 
         self.dollar_tr.setValidator(self.validator_money)
         self.ta_dt_d.setValidator(self.validator_money)
@@ -602,10 +627,10 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.ta_dt_d.textChanged.connect(lambda: self.exchange_dollar('dollar'))
         self.ta_td_t.textChanged.connect(lambda: self.exchange_dollar('turky'))
 
-        self.box_dolar.setText(database.db.get_box()['dollar'])
-        self.box_turky.setText(database.db.get_box()['turky'])
+        self.setup_box()
 
-        self.btn_ta_dt.clicked.connect(self.exchange_dollar_turky)
+        self.btn_ta_dt.clicked.connect(lambda: self.exchange_dollar_turky('do_tu'))
+        self.btn_ta_td.clicked.connect(lambda: self.exchange_dollar_turky('tu_do'))
 
         self.customers = database.db.query_csp("customer")
         self.suppliers = database.db.query_csp("supplier")
@@ -652,7 +677,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                 self.ta_dt_t.setText('0')
             elif d <= float(self.box_dolar.text()):
                 self.btn_ta_dt.setEnabled(True)
-                self.ta_dt_t.setText(str(d * DOLLAR))
+                self.ta_dt_t.setText(str(round(d * DOLLAR, 2)))
         else:
             if self.ta_td_t.text() == '':
                 d = 0
@@ -665,9 +690,20 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                 self.btn_ta_td.setEnabled(True)
                 self.ta_td_d.setText(str(round(d / DOLLAR, 2)))
 
-    def exchange_dollar_turky(self):
-        if float(self.ta_dt_d.text()) < database.db.get_box()['dollar']:
-            pass
+    def exchange_dollar_turky(self, to):
+        if to == 'do_tu':
+            database.db.exchange_dollar_turky("do_tu", float(self.ta_dt_d.text()), float(self.ta_dt_t.text()))
+            self.ta_dt_d.setText('0')
+            self.ta_dt_t.setText('0')
+        else:
+            database.db.exchange_dollar_turky("tu_do", float(self.ta_td_d.text()), float(self.ta_td_t.text()))
+            self.ta_td_t.setText('0')
+            self.ta_td_d.setText('0')
+        self.setup_box()
+
+    def setup_box(self):
+        self.box_dolar.setText(database.db.get_box()['dollar'])
+        self.box_turky.setText(database.db.get_box()['turky'])
 
     def change_page_size(self, table):
         if table == 'product':
@@ -1479,6 +1515,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.month_purchases.display(0)
         else:
             self.month_purchases.display(database.db.get_purchases(30))
+        self.setup_box()
 
     def search_bill_sell_save(self):
         fil = {}
@@ -1676,6 +1713,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     def setup_controls_fund_movement(self):
         self.fm_type.currentTextChanged.connect(self.fm_type_changed)
         self.fm_value.setValidator(self.validator_money)
+        self.fm_value_t.setValidator(self.validator_money)
 
         self._typing_timer_fm.timeout.connect(self.update_fm_table)
 
@@ -1733,14 +1771,16 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.fm_owner.setEnabled(True)
             self.fm_owner.clear()
             self.fm_owner.addItems(list(self.customers.values())[1:])
-            # self.fm_owner.removeItem(0)
+            self.fm_value_t.setEnabled(False)
         elif self.fm_type.currentIndex() == 2:
             self.fm_owner.setEnabled(True)
             self.fm_owner.clear()
             self.fm_owner.addItems(self.suppliers.values())
+            self.fm_value_t.setEnabled(False)
         else:
             self.fm_owner.setEnabled(False)
             self.fm_owner.clear()
+            self.fm_value_t.setEnabled(True)
 
     def s_fm_type_changed(self):
         if self.s_fm_type.currentIndex() == 1:
@@ -1768,6 +1808,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         elif self.fm_type.currentIndex() == 2:
             fm['owner'] = [k for k, v in self.suppliers.items() if v == self.fm_owner.currentText()][0]
         fm['value'] = self.fm_value.text()
+        fm['value_t'] = self.fm_value_t.text()
         fm['date'] = QDate.toString(self.fm_date.date())
         fm['note'] = self.fm_note.toPlainText()
 
@@ -1779,6 +1820,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             database.db.insert_row("fund_movement", fm)
             toaster_Notify.QToaster.show_message(parent=self, message=f"إضافة حركة\nتم إضافة الحركة {fm['type']} بنجاح")
             self.update_fm_table()
+            self.setup_box()
             self.clear_fm_inputs()
             if fm['type'] == "دفعة من زبون":
                 self.update_customer_table()
@@ -1798,6 +1840,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                 self.update_customer_table()
             elif fm['type'] == "دفعة إلى مورد":
                 self.update_supplier_table()
+            self.setup_box()
             toaster_Notify.QToaster.show_message(parent=self, message=f"تعديل حركة\nتم تعديل الحركة {fm['type']} بنجاح")
         else:
             QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب أن تدخل نوع الحركة')
@@ -1808,6 +1851,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         if button_reply == msg.Yes:
             database.db.delete_row("fund_movement", self.fm_id)
             self.update_fm_table()
+            self.setup_box()
             self.update_customer_table()
             self.update_supplier_table()
             self.clear_fm_inputs()
@@ -1850,10 +1894,12 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.fm_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
             self.fm_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(row['value']))
             self.fm_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
-            self.fm_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(row['date']))
+            self.fm_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(row['value_t']))
             self.fm_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignCenter)
-            self.fm_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(row['note']))
+            self.fm_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(row['date']))
             self.fm_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.fm_table.setItem(row_idx, 6, QtWidgets.QTableWidgetItem(row['note']))
+            self.fm_table.item(row_idx, 6).setTextAlignment(QtCore.Qt.AlignCenter)
         self.fm_table.resizeColumnsToContents()
 
     def clear_fm_inputs(self):
@@ -1861,7 +1907,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.fm_type.setCurrentIndex(0)
         self.fm_type.setFocus()
         self.fm_owner.setCurrentIndex(0)
-        self.fm_value.clear()
+        self.fm_value.setText('0')
+        self.fm_value_t.setText('0')
         self.fm_date.setDate(QDate.currentDate())
         self.fm_note.clear()
 
@@ -1882,6 +1929,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             elif fm['type'] == "دفعة إلى مورد":
                 self.fm_owner.setCurrentText(self.suppliers[fm['owner']])
             self.fm_value.setText(fm['value'])
+            self.fm_value_t.setText(fm['value_t'])
             self.fm_date.setDate(QDate(fm['date']))
             self.fm_note.setText(fm['note'])
 
