@@ -1878,11 +1878,15 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         fil = self.search_fm_save()
         rows = database.db.query_all_fm(fil, self.page_size_fm * (self.fm_page_num.value() - 1),
                                         self.page_size_fm)
-        self.fm_table.setRowCount(len(rows))
+        rows_b = database.db.query_all_bill("bill_buy", fil, self.page_size_fm * (self.fm_page_num.value() - 1), self.page_size_fm)
+        rows_s = database.db.query_all_bill("bill_sell", fil, self.page_size_fm * (self.fm_page_num.value() - 1), self.page_size_fm)
+
+        self.fm_table.setRowCount(len(rows) + len(rows_b))
         for row_idx, row in enumerate(rows):
             self.fm_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
                 str(row_idx + 1 + (self.page_size_fm * (self.fm_page_num.value() - 1)))))
             self.fm_table.item(row_idx, 0).id = row['id']
+            self.fm_table.item(row_idx, 0).is_bill = 0
             self.fm_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
             self.fm_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(row['type']))
             self.fm_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignCenter)
@@ -1900,6 +1904,11 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.fm_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignCenter)
             self.fm_table.setItem(row_idx, 6, QtWidgets.QTableWidgetItem(row['note']))
             self.fm_table.item(row_idx, 6).setTextAlignment(QtCore.Qt.AlignCenter)
+
+        for row_idx, row in enumerate(rows_s):
+            row_idx += len(rows)
+            self.fm_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
+                str(row_idx + 1 + (self.page_size_fm * (self.fm_page_num.value() - 1)))))
         self.fm_table.resizeColumnsToContents()
 
     def clear_fm_inputs(self):
