@@ -75,10 +75,10 @@ class Database:
     def get_purchases(self, day):
         return self.connection.execute(f"SELECT sum(total - discount) as purchases FROM bill_buy WHERE date <= DATE() and date >= DATE(DATE(),'-{day} day')").fetchone()['purchases']
 
-    def insert_table(self, table, dic):
+    def insert_table(self, table, dic, fk):
         new_ids = [int(d['id']) for d in dic]
         placeholders = ", ".join("?" * len(new_ids))
-        del_ids = self.connection.execute(f"SELECT id FROM {table} WHERE b_id = {dic[0]['b_id']} and id not in ({placeholders})", tuple(new_ids)).fetchall()
+        del_ids = self.connection.execute(f"SELECT id FROM {table} WHERE b_id = {fk} and id not in ({placeholders})", tuple(new_ids)).fetchall()
         for d in dic:
             if self.count_table(table, d['id']) == '1':
                 self.update_row(table, d)
@@ -205,6 +205,12 @@ class Database:
         else:
             sql_cmd += f' limit {limit1}, {limit2}'
             return self.connection.execute(sql_cmd).fetchall()
+
+    def get_balance(self, type_fm, owner):
+        if type_fm == "دفعة من زبون":
+            return self.connection.execute("SELECT balance FROM customer WHERE id = ?", (owner, )).fetchone()['balance']
+        else:
+            return self.connection.execute("SELECT balance FROM supplier WHERE id = ?", (owner, )).fetchone()['balance']
 
     # ################################################################
 
