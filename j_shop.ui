@@ -230,6 +230,39 @@
                  <number>0</number>
                 </property>
                 <item>
+                 <layout class="QVBoxLayout" name="verticalLayout_5" stretch="3,1">
+                  <property name="spacing">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QLCDNumber" name="capital">
+                    <property name="midLineWidth">
+                     <number>0</number>
+                    </property>
+                    <property name="smallDecimalPoint">
+                     <bool>true</bool>
+                    </property>
+                    <property name="digitCount">
+                     <number>5</number>
+                    </property>
+                    <property name="value" stdset="0">
+                     <double>5.670000000000000</double>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="label_3">
+                    <property name="text">
+                     <string>رأس المال</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item>
                  <layout class="QVBoxLayout" name="verticalLayout_3" stretch="3,0">
                   <property name="spacing">
                    <number>0</number>
@@ -269,72 +302,6 @@
                     </property>
                     <property name="text">
                      <string>مبيعات الشهر</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <layout class="QVBoxLayout" name="verticalLayout_4" stretch="3,1">
-                  <property name="spacing">
-                   <number>0</number>
-                  </property>
-                  <item>
-                   <widget class="QLCDNumber" name="day_earnings">
-                    <property name="midLineWidth">
-                     <number>0</number>
-                    </property>
-                    <property name="smallDecimalPoint">
-                     <bool>true</bool>
-                    </property>
-                    <property name="digitCount">
-                     <number>5</number>
-                    </property>
-                    <property name="value" stdset="0">
-                     <double>5.670000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="label_2">
-                    <property name="text">
-                     <string>أرباح اليوم</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <layout class="QVBoxLayout" name="verticalLayout_5" stretch="3,1">
-                  <property name="spacing">
-                   <number>0</number>
-                  </property>
-                  <item>
-                   <widget class="QLCDNumber" name="week_earnings">
-                    <property name="midLineWidth">
-                     <number>0</number>
-                    </property>
-                    <property name="smallDecimalPoint">
-                     <bool>true</bool>
-                    </property>
-                    <property name="digitCount">
-                     <number>5</number>
-                    </property>
-                    <property name="value" stdset="0">
-                     <double>5.670000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="label_3">
-                    <property name="text">
-                     <string>أرباح الأسبوع</string>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignCenter</set>

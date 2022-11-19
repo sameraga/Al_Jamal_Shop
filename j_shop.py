@@ -657,6 +657,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.setup_controls_bill_sell()
         self.setup_controls_bill_buy()
         self.setup_controls_fund_movement()
+        self.calculate_main()
 
     def dollar_change(self):
         global DOLLAR
@@ -664,6 +665,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             DOLLAR = 0
         else:
             DOLLAR = float(self.dollar_tr.text())
+            self.calculate_main()
 
     def exchange_dollar(self, coin):
         global DOLLAR
@@ -1443,7 +1445,6 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
         self.billsell_cname.addItem('')
         self.billsell_cname.addItems(self.customers.values())
-        self.calculate_main()
 
         self.bs_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.bs_table.doubleClicked.connect(lambda mi: self.double_click_bs(self.bs_table.item(mi.row(), 0).id))
@@ -1510,16 +1511,10 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.calculate_main()
 
     def calculate_main(self):
+        global DOLLAR
         self.month_sales: QtWidgets.QLCDNumber
         self.month_sales.display(database.db.get_sales(30))
-        if database.db.get_earnings(1) == '':
-            self.day_earnings.display(0)
-        else:
-            self.day_earnings.display(database.db.get_earnings(1))
-        if database.db.get_earnings(7) == '':
-            self.week_earnings.display(0)
-        else:
-            self.week_earnings.display(database.db.get_earnings(7))
+        self.capital.display(database.db.get_capital(True, DOLLAR))
         if database.db.get_earnings(30) == '':
             self.month_earnings.display(0)
         else:

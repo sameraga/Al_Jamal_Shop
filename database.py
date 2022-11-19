@@ -50,35 +50,49 @@ class Database:
         return self.connection.execute(f"select max(id)+1 as seq from {table}").fetchone()['seq']
 
     def query_row(self, table, id):
-        return self.connection.execute(f"select * from {table} where id = {id}").fetchone()
+        return self.connection.execute(f"select * from {table} where id = ?", (id, )).fetchone()
 
     def query_csp(self, table):
         return {e['id']: e['name'] for e in self.connection.execute(f'select id, name from {table}').fetchall()}
 
     def get_id_by_code(self, table, code):
-        return self.connection.execute(f"select id from {table} where code = '{code}'").fetchone()['id']
+        return self.connection.execute(f"select id from {table} where code = ?", (code, )).fetchone()['id']
 
     def get_code_by_id(self, table, id):
-        return self.connection.execute(f'select code from {table} where id = {id}').fetchone()['code']
+        return self.connection.execute(f'select code from {table} where id = ?', (id, )).fetchone()['code']
 
     def count_table(self, table, id):
-        return self.connection.execute(f"SELECT count(*) as count FROM {table} where id = '{id}'").fetchone()['count']
+        return self.connection.execute(f"SELECT count(*) as count FROM {table} where id = ?", (id, )).fetchone()['count']
 
     def get_earnings(self, day):
-        return self.connection.execute(f"SELECT sum((quantity * (SELECT sell_price - buy_price "
-                                       f"FROM product WHERE id = p_id)) - discount) as earnings FROM sell_order "
-                                       f"WHERE b_id in (SELECT id FROM bill_sell WHERE date <= DATE() and date >= DATE(DATE(),'-{day} day'))").fetchone()['earnings']
+        day = f'-{day} day'
+        return self.connection.execute("SELECT sum((quantity * (SELECT sell_price - buy_price FROM product WHERE id = p_id)) - discount) "
+                                       "as earnings FROM sell_order WHERE b_id in (SELECT id FROM bill_sell "
+                                       "WHERE date <= DATE() and date >= DATE(DATE(), ?))", (day, )).fetchone()['earnings']
 
     def get_sales(self, day):
-        return self.connection.execute(f"SELECT sum(total - discount) as sales FROM bill_sell WHERE date <= DATE() and date >= DATE(DATE(),'-{day} day')").fetchone()['sales']
+        day = f'-{day} day'
+        return self.connection.execute("SELECT sum(total - discount) as sales FROM bill_sell WHERE date <= DATE() and date >= DATE(DATE(),?)", (day, )).fetchone()['sales']
 
     def get_purchases(self, day):
-        return self.connection.execute(f"SELECT sum(total - discount) as purchases FROM bill_buy WHERE date <= DATE() and date >= DATE(DATE(),'-{day} day')").fetchone()['purchases']
+        day = f'-{day} day'
+        return self.connection.execute("SELECT sum(total - discount) as purchases FROM bill_buy WHERE date <= DATE() and date >= DATE(DATE(),?)", (day, )).fetchone()['purchases']
+
+    def get_capital(self, with_box, do_tr):
+        pro_capital = self.connection.execute("SELECT sum(quantity * buy_price) as pro_capital FROM product").fetchone()['pro_capital']
+        if do_tr == 0:
+            box = self.connection.execute("SELECT dollar as box FROM box").fetchone()['box']
+        else:
+            box = self.connection.execute("SELECT dollar + (turky / ?) as box FROM box", (do_tr, )).fetchone()['box']
+        if with_box:
+            return float(box) + float(pro_capital)
+        else:
+            return pro_capital
 
     def insert_table(self, table, dic, fk):
         new_ids = [int(d['id']) for d in dic]
         placeholders = ", ".join("?" * len(new_ids))
-        del_ids = self.connection.execute(f"SELECT id FROM {table} WHERE b_id = {fk} and id not in ({placeholders})", tuple(new_ids)).fetchall()
+        del_ids = self.connection.execute(f"SELECT id FROM {table} WHERE b_id = ? and id not in ({placeholders})", tuple([fk, *new_ids])).fetchall()
         for d in dic:
             if self.count_table(table, d['id']) == '1':
                 self.update_row(table, d)
@@ -102,10 +116,11 @@ class Database:
 
     def update_row(self, table, row):
         def _update(obj):
-            placeholders = ', '.join([f'{key}=:{key}' for key in obj.keys()])
-            query = f"UPDATE {table} SET {placeholders} WHERE id = '{obj['id']}'"
-            self.connection.execute(query, obj)
-            self.connection.commit()
+            placeholders = ', '.join([f'{key}=?' for key in obj.keys()])
+            query = f"UPDATE {table} SET {placeholders} WHERE id = ?"
+            li = list(obj.values())
+            li.append(obj['id'])
+            self.connection.execute(query, tuple(li))
         if isinstance(row, dict):
             _update(row)
         elif isinstance(row, list):
@@ -113,13 +128,13 @@ class Database:
                 _update(d)
 
     def delete_row(self, table, id):
-        self.connection.execute(f'delete from {table} where id = {id}')
+        self.connection.execute(f'delete from {table} where id = ?', (id, ))
         self.connection.commit()
 
     # product
     # ################################################################
     def get_product_by_code(self, code):
-        return self.connection.execute(f"select id, name, quantity, sell_price, sell_price_wh, price_range, buy_price from product where code = '{code}'").fetchone()
+        return self.connection.execute(f"select id, name, quantity, sell_price, sell_price_wh, price_range, buy_price from product where code = ?", (code, )).fetchone()
 
     def query_all_product(self, filter: dict, limit1, limit2):
         sql_cmd = "SELECT id, code, name, class, type, source, quantity, buy_price, sell_price from product"
@@ -151,13 +166,13 @@ class Database:
     # ################################################################
 
     def get_id_by_name(self, table, name):
-        return self.connection.execute(f"select id from {table} where name = '{name}'").fetchone()['id']
+        return self.connection.execute(f"select id from {table} where name = ?", (name, )).fetchone()['id']
 
     def get_name_by_id(self, table, id):
-        return self.connection.execute(f"select name from {table} where id = {id}").fetchone()['name']
+        return self.connection.execute(f"select name from {table} where id = ?", (id, )).fetchone()['name']
 
     def get_phone_by_name(self, table, name):
-        return self.connection.execute(f"select phone from {table} where name = '{name}'").fetchone()['phone']
+        return self.connection.execute(f"select phone from {table} where name = ?", (name, )).fetchone()['phone']
 
     def query_all_cs(self, table, filter: dict, limit1, limit2):
         sql_cmd = f"SELECT id, code, name, phone, balance from {table}"
@@ -241,7 +256,7 @@ class Database:
             return self.connection.execute(sql_cmd).fetchall()
 
     def get_order_bill(self, table, b_id):
-        return self.connection.execute(f"select * FROM {table} WHERE b_id = {b_id}").fetchall()
+        return self.connection.execute(f"select * FROM {table} WHERE b_id = ?", (b_id, )).fetchall()
 
     def get_noti_pro1(self):
         return self.connection.execute(f"SELECT code, name, quantity FROM product WHERE quantity <= less_quantity").fetchall()
