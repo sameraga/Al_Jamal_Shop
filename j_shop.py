@@ -52,6 +52,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         self.ch = id
         self.b_id = id
         self.code = None
+        self.up_bo = False
         self.setup_control()
 
     def setup_control(self):
@@ -170,6 +171,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
                 self.update_table(self.bs_table.currentRow())
                 self.bs_table.setRowCount(self.bs_table.rowCount() + 1)
             elif self.bs_table.currentColumn() == 0 and self.bs_table.currentRow() + 1 != self.bs_table.rowCount():
+                self.up_bo = True
                 self.update_table(self.bs_table.currentRow())
             else:
                 self.enter_event(self.bs_table.currentRow())
@@ -180,10 +182,11 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         if product:
             if int(product['quantity']) >= 1:
                 for idx in range(self.bs_table.rowCount() - 1):
-                    if self.bs_table.item(idx, 0).text() == code:
+                    if self.bs_table.item(idx, 0).text() == code and current_row != idx:
                         new = int(self.bs_table.item(idx, 2).text()) + 1
                         self.bs_table.setItem(idx, 2, QtWidgets.QTableWidgetItem(str(new)))
                         self.bs_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(''))
+                        self.delete_order(current_row)
                         return
 
                 self.bs_table.item(current_row, 0).pid = product['id']
@@ -441,8 +444,8 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
             self.bb_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(''))
 
     def enter_event(self, current_row):
-        code = self.bb_table.item(current_row, 0).text()
-        product = database.db.get_product_by_code(code)
+        # code = self.bb_table.item(current_row, 0).text()
+        # product = database.db.get_product_by_code(code)
         if self.bb_table.item(current_row, 4).text() == '':
             self.bb_table.setItem(current_row, 4, QtWidgets.QTableWidgetItem('0'))
 
