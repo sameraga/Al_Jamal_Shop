@@ -20,23 +20,22 @@ def _dict_factory(cursor, row):
 
 
 class Database:
-    def __init__(self, database_path, password):
+    def __init__(self, database_path):
         self.connection = sqlite.connect(database_path)
-        self.connection.execute('PRAGMA key=' + password)
         self.connection.execute('PRAGMA foreign_keys = ON')
         self.connection.row_factory = _dict_factory
 
     @staticmethod
-    def open_database(password):
+    def open_database():
         global db
-        db = Database('j_shop.db', password)
+        db = Database('j_shop.db')
 
     def change_user_pass(self, username, password):
         self.connection.execute('UPDATE users SET pass = ? WHERE users.name = ?', (password, username))
         self.connection.commit()
 
     def is_user(self, username):
-        return self.connection.execute("select id from users where name = ?", (username,)).fetchone()
+        return self.connection.execute("select pass, permission from users where name = ?", (username,)).fetchone()
 
     def count_row(self, table, r):
         if r == 1:

@@ -5,9 +5,6 @@ if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     from os import chdir
     chdir(sys._MEIPASS)
 
-import json
-import aes
-
 import glob
 import locale
 import math
@@ -32,6 +29,7 @@ Form_BillBuy, _ = uic.loadUiType('bill_buy.ui')
 PAGE_SIZE = 10
 USER = ''
 PASS = ''
+PERMISSION = ''
 DOLLAR = 0
 
 
@@ -52,7 +50,6 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         self.ch = id
         self.b_id = id
         self.code = None
-        self.up_bo = False
         self.setup_control()
 
     def setup_control(self):
@@ -171,7 +168,6 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
                 self.update_table(self.bs_table.currentRow())
                 self.bs_table.setRowCount(self.bs_table.rowCount() + 1)
             elif self.bs_table.currentColumn() == 0 and self.bs_table.currentRow() + 1 != self.bs_table.rowCount():
-                self.up_bo = True
                 self.update_table(self.bs_table.currentRow())
             else:
                 self.enter_event(self.bs_table.currentRow())
@@ -423,10 +419,11 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
         product = database.db.get_product_by_code(code)
         if product:
             for idx in range(self.bb_table.rowCount() - 1):
-                if self.bb_table.item(idx, 0).text() == code:
+                if self.bb_table.item(idx, 0).text() == code and current_row != idx:
                     new = int(self.bb_table.item(idx, 2).text()) + 1
                     self.bb_table.setItem(idx, 2, QtWidgets.QTableWidgetItem(str(new)))
                     self.bb_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(''))
+                    self.delete_order(current_row)
                     return
 
             self.bb_table.item(current_row, 0).pid = product['id']
@@ -444,8 +441,6 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
             self.bb_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(''))
 
     def enter_event(self, current_row):
-        # code = self.bb_table.item(current_row, 0).text()
-        # product = database.db.get_product_by_code(code)
         if self.bb_table.item(current_row, 4).text() == '':
             self.bb_table.setItem(current_row, 4, QtWidgets.QTableWidgetItem('0'))
 
@@ -524,8 +519,6 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         Form_Main.__init__(self)
         self.setupUi(self)
 
-        self.config = None
-
         self.validator_code = QtGui.QRegExpValidator(QtCore.QRegExp('[\u0621-\u064A0-9a-zA-Z][0-9]*'))
         self.validator_int = QtGui.QRegExpValidator(QtCore.QRegExp('[0-9]+'))
         self.validator_money = QtGui.QRegExpValidator(QtCore.QRegExp('^(([1-9]\d{0,2}(\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$'))
@@ -573,27 +566,25 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.btn_exit.clicked.connect(lambda: sys.exit(1))
 
     def enter_app(self):
-        global PASS
         global USER
-        password = self.txt_password.text()
-        PASS = hashlib.sha256(password.encode()).digest()
-        USER = self.txt_username.text()
-        if password != '':
-            self.config = dict()
-            with open('config.dat', 'r') as config_file:
-                aes_cipher = aes.AESCipher(password)
-                try:
-                    self.config = json.loads(aes_cipher.decrypt(config_file.read()))
-                except Exception:
-                    self.lbl_wrong.setText('* كلمة المرور غير صحيحة !!!')
+        global PASS
+        global PERMISSION
+        if self.txt_password.text() != '' and self.txt_username.text() != '':
+            database.Database.open_database()
+            p = database.db.is_user(self.txt_username.text())
+            if p is not None:
+                if self.txt_password.text() == p['pass']:
+                    PASS = self.txt_password.text()
+                    USER = self.txt_username.text()
+                    PERMISSION = p['permission']
+                    self.setup_controls()
+                    self.stackedWidget.setCurrentIndex(0)
                 else:
-                    database.Database.open_database(self.config['db_password'])
-                    p = database.db.is_user(USER)
-                    if p is not None:
-                        self.setup_controls()
-                        self.stackedWidget.setCurrentIndex(0)
-                    else:
-                        self.lbl_wrong.setText('* اسم المستخدم غير صحيح !!!')
+                    self.lbl_wrong.setText('* كلمة المرور غير صحيحة !!!')
+            else:
+                self.lbl_wrong.setText('* اسم المستخدم غير صحيح !!!')
+        else:
+            self.lbl_wrong.setText('* يجب أن تدخل اسم المستخدم وكلمة المرور !!!')
 
     def change_pass_(self):
         self.stackedWidget.setCurrentIndex(2)
@@ -608,7 +599,6 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         if self.old_pass.text() == PASS:
             if self.new_pass.text() == self.new_pass_confirm.text():
                 if self.new_pass.text() != '':
-                    PASS = hashlib.sha256(self.new_pass.text().encode()).digest()
                     database.db.change_user_pass(USER, PASS)
                     self.stackedWidget.setCurrentIndex(0)
                     toaster_Notify.QToaster.show_message(parent=self,
