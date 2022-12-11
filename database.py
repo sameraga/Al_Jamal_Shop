@@ -1,4 +1,4 @@
-from sqlcipher3 import dbapi2 as sqlite
+from sqlite3 import dbapi2 as sqlite
 
 db = None
 
