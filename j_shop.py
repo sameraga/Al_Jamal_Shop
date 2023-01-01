@@ -17,11 +17,11 @@ import PyQt5.QtWidgets as QtWidgets
 from jinja2 import Template
 import xlwt
 import PyQt5.uic as uic
-import hashlib
 
 import toaster_Notify
 from QDate import QDate
 import database
+from dlg_choice_code import PrintDialog
 
 Form_Main, _ = uic.loadUiType('j_shop.ui')
 Form_BillSell, _ = uic.loadUiType('bill_sell.ui')
@@ -174,39 +174,61 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
 
     def update_table(self, current_row):
         code = self.bs_table.item(current_row, 0).text()
-        product = database.db.get_product_by_code(code)
-        if product:
-            if int(product['quantity']) >= 1:
-                for idx in range(self.bs_table.rowCount() - 1):
-                    if self.bs_table.item(idx, 0).text() == code and current_row != idx:
-                        new = int(self.bs_table.item(idx, 2).text()) + 1
-                        self.bs_table.setItem(idx, 2, QtWidgets.QTableWidgetItem(str(new)))
-                        self.bs_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(''))
-                        self.delete_order(current_row)
-                        return
-
-                self.bs_table.item(current_row, 0).pid = product['id']
-                self.bs_table.setItem(current_row, 1, QtWidgets.QTableWidgetItem(product['name']))
-                self.bs_table.setItem(current_row, 2, QtWidgets.QTableWidgetItem('1'))
-                if self.bill_type.currentIndex() == 0:
-                    self.bs_table.setItem(current_row, 3, QtWidgets.QTableWidgetItem(str(product['sell_price'])))
-                else:
-                    self.bs_table.setItem(current_row, 3, QtWidgets.QTableWidgetItem(str(product['sell_price_wh'])))
-                format_float = round(float(self.bs_table.item(current_row, 3).text()) * float(self.d_tr.text()), 2)
-                self.bs_table.setItem(current_row, 4, QtWidgets.QTableWidgetItem(str(format_float)))
-                self.bs_table.setItem(current_row, 5, QtWidgets.QTableWidgetItem('0'))
-                self.bs_table.setItem(current_row, 6, QtWidgets.QTableWidgetItem(self.bs_table.item(current_row, 3).text()))
-                self.bs_table.setItem(current_row, 7, QtWidgets.QTableWidgetItem(str(format_float)))
-
-                btn_delete = QtWidgets.QPushButton(QtGui.QIcon.fromTheme('delete'), '')
-                btn_delete.clicked.connect(lambda: self.delete_order(self.bs_table.currentRow()))
-                self.bs_table.setCellWidget(current_row, 8, btn_delete)
-                self.calculate_total()
-            else:
-                self.bs_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(''))
-                QtWidgets.QMessageBox.warning(None, 'خطأ', 'غير متوفر\n لقد انتهت كمية هذا المنتج بالفعل')
-        else:
+        product = dict()
+        product_result = database.db.get_product_like_code(code)
+        if len(product_result) == 0:
             QtWidgets.QMessageBox.warning(None, 'خطأ', 'الرقم غير موجود\n أعد ادخال رقم صحيح')
+            self.delete_order(current_row)
+            return
+        elif len(product_result) == 1:
+            product = product_result[0]
+        else:
+            dlg = PrintDialog(code)
+            dlg.exec()
+            if dlg.result_value:
+                product = dlg.result_value
+            else:
+                QtWidgets.QMessageBox.warning(None, 'خطأ', 'الرقم غير موجود\n أعد ادخال رقم صحيح')
+                self.delete_order(current_row)
+                return
+
+        if int(product['quantity']) >= 1:
+            for idx in range(self.bs_table.rowCount() - 1):
+                if self.bs_table.item(idx, 0).text() == product['code'] and current_row != idx:
+                    new = int(self.bs_table.item(idx, 2).text()) + 1
+                    self.bs_table.setItem(idx, 2, QtWidgets.QTableWidgetItem(str(new)))
+                    total_d = new * float(self.bs_table.item(idx, 3).text())
+                    total_d = round(total_d, 2)
+                    self.bs_table.setItem(idx, 6, QtWidgets.QTableWidgetItem(str(total_d)))
+                    total_t = new * float(self.bs_table.item(idx, 4).text())
+                    total_t = round(total_t, 2)
+                    self.bs_table.setItem(idx, 7, QtWidgets.QTableWidgetItem(str(total_t)))
+                    self.bs_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(''))
+                    self.delete_order(current_row)
+                    return
+
+            self.bs_table.item(current_row, 0).pid = product['id']
+            self.bs_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(product['code']))
+            self.bs_table.setItem(current_row, 1, QtWidgets.QTableWidgetItem(product['name']))
+            self.bs_table.setItem(current_row, 2, QtWidgets.QTableWidgetItem('1'))
+            if self.bill_type.currentIndex() == 0:
+                self.bs_table.setItem(current_row, 3, QtWidgets.QTableWidgetItem(str(product['sell_price'])))
+            else:
+                self.bs_table.setItem(current_row, 3, QtWidgets.QTableWidgetItem(str(product['sell_price_wh'])))
+            format_float = round(float(self.bs_table.item(current_row, 3).text()) * float(self.d_tr.text()), 2)
+            self.bs_table.setItem(current_row, 4, QtWidgets.QTableWidgetItem(str(format_float)))
+            self.bs_table.setItem(current_row, 5, QtWidgets.QTableWidgetItem('0'))
+            self.bs_table.setItem(current_row, 6, QtWidgets.QTableWidgetItem(self.bs_table.item(current_row, 3).text()))
+            self.bs_table.setItem(current_row, 7, QtWidgets.QTableWidgetItem(str(format_float)))
+
+            btn_delete = QtWidgets.QPushButton(QtGui.QIcon.fromTheme('delete'), '')
+            btn_delete.clicked.connect(lambda: self.delete_order(self.bs_table.currentRow()))
+            self.bs_table.setCellWidget(current_row, 8, btn_delete)
+            self.calculate_total()
+        else:
+            self.bs_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(''))
+            QtWidgets.QMessageBox.warning(None, 'خطأ', 'غير متوفر\n لقد انتهت كمية هذا المنتج بالفعل')
+            self.delete_order(current_row)
 
     def enter_event(self, current_row):
         code = self.bs_table.item(current_row, 0).text()
@@ -416,29 +438,46 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
 
     def update_table(self, current_row):
         code = self.bb_table.item(current_row, 0).text()
-        product = database.db.get_product_by_code(code)
-        if product:
-            for idx in range(self.bb_table.rowCount() - 1):
-                if self.bb_table.item(idx, 0).text() == code and current_row != idx:
-                    new = int(self.bb_table.item(idx, 2).text()) + 1
-                    self.bb_table.setItem(idx, 2, QtWidgets.QTableWidgetItem(str(new)))
-                    self.bb_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(''))
-                    self.delete_order(current_row)
-                    return
-
-            self.bb_table.item(current_row, 0).pid = product['id']
-            self.bb_table.setItem(current_row, 1, QtWidgets.QTableWidgetItem(product['name']))
-            self.bb_table.setItem(current_row, 2, QtWidgets.QTableWidgetItem('1'))
-            self.bb_table.setItem(current_row, 3, QtWidgets.QTableWidgetItem(str(product['buy_price'])))
-            self.bb_table.setItem(current_row, 4, QtWidgets.QTableWidgetItem(str(product['buy_price'])))
-
-            btn_delete = QtWidgets.QPushButton(QtGui.QIcon.fromTheme('delete'), '')
-            btn_delete.clicked.connect(lambda: self.delete_order(self.bb_table.currentRow()))
-            self.bb_table.setCellWidget(current_row, 5, btn_delete)
-            self.calculate_total()
-        else:
+        product = dict()
+        product_result = database.db.get_product_like_code(code)
+        if len(product_result) == 0:
             QtWidgets.QMessageBox.warning(None, 'خطأ', 'الرقم غير موجود\n أعد ادخال رقم صحيح')
-            self.bb_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(''))
+            self.delete_order(current_row)
+            return
+        elif len(product_result) == 1:
+            product = product_result[0]
+        else:
+            dlg = PrintDialog(code)
+            dlg.exec()
+            if dlg.result_value:
+                product = dlg.result_value
+            else:
+                QtWidgets.QMessageBox.warning(None, 'خطأ', 'الرقم غير موجود\n أعد ادخال رقم صحيح')
+                self.delete_order(current_row)
+                return
+
+        for idx in range(self.bb_table.rowCount() - 1):
+            if self.bb_table.item(idx, 0).text() == product['code'] and current_row != idx:
+                new = int(self.bb_table.item(idx, 2).text()) + 1
+                self.bb_table.setItem(idx, 2, QtWidgets.QTableWidgetItem(str(new)))
+                total = new * float(self.bb_table.item(idx, 3).text())
+                total = round(total, 2)
+                self.bb_table.setItem(idx, 4, QtWidgets.QTableWidgetItem(str(total)))
+                self.bb_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(''))
+                self.delete_order(current_row)
+                return
+
+        self.bb_table.item(current_row, 0).pid = product['id']
+        self.bb_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(product['code']))
+        self.bb_table.setItem(current_row, 1, QtWidgets.QTableWidgetItem(product['name']))
+        self.bb_table.setItem(current_row, 2, QtWidgets.QTableWidgetItem('1'))
+        self.bb_table.setItem(current_row, 3, QtWidgets.QTableWidgetItem(str(product['buy_price'])))
+        self.bb_table.setItem(current_row, 4, QtWidgets.QTableWidgetItem(str(product['buy_price'])))
+
+        btn_delete = QtWidgets.QPushButton(QtGui.QIcon.fromTheme('delete'), '')
+        btn_delete.clicked.connect(lambda: self.delete_order(self.bb_table.currentRow()))
+        self.bb_table.setCellWidget(current_row, 5, btn_delete)
+        self.calculate_total()
 
     def enter_event(self, current_row):
         if self.bb_table.item(current_row, 4).text() == '':
