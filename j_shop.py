@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import subprocess
 import sys
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     from os import chdir
@@ -2069,7 +2069,8 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     locale.setlocale(locale.LC_ALL, "en_US.utf8")
     # ser = os.popen("wmic bios get serialnumber").read().replace("\n", "").replace("	", "").replace(" ", "")
-
+    # ser = subprocess.run("sed -nr 's/^Serial Number: (.*)$/\1/p' /proc/scsi/*/*")
+    
     # if ser == SerialNumber:
     mainWindow = AppMainWindow()
     mainWindow.show()
