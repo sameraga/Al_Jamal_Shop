@@ -30,6 +30,7 @@ PAGE_SIZE = 10
 USER = ''
 PASS = ''
 PERMISSION = ''
+SerialNumber = 'SerialNumberK2004N0103378'
 DOLLAR = 0
 
 
@@ -244,6 +245,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
             self.bs_table.setItem(current_row, 2, QtWidgets.QTableWidgetItem(product['quantity']))
             toaster_Notify.QToaster.show_message(parent=self,
                                                  message=f"غير متوفر\n لقد بقي من هذا المنتج {product['quantity']} قطعة فقط ")
+
         if discount > (float(product['price_range']) * float(self.d_tr.text()) * quantity):
             discount = float(product['price_range']) * float(self.d_tr.text()) * quantity
             self.bs_table.setItem(current_row, 5, QtWidgets.QTableWidgetItem(str(discount)))
@@ -1863,7 +1865,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         if fm['type']:
             if fm['type'] in ["دفعة من زبون", "دفعة إلى مورد"]:
                 balance = database.db.get_balance(fm['type'], fm['owner'])
-                if balance > fm['value']:
+                if fm['value'] > balance:
                     QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن الدفعة أكبر من الرصيد')
             database.db.insert_row("fund_movement", fm)
             toaster_Notify.QToaster.show_message(parent=self, message=f"إضافة حركة\nتم إضافة الحركة {fm['type']} بنجاح")
@@ -2009,7 +2011,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     # export tables to exel
     def to_excel(self, table):
-        file_name, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File', '', ".dot(*.dot)")
+        file_name, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File', '', ".xlsx(*.xlsx)")
         wbk = xlwt.Workbook()
         sheet = wbk.add_sheet("sheet", cell_overwrite_ok=True)
         sheet.cols_right_to_left = True
@@ -2066,10 +2068,14 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     locale.setlocale(locale.LC_ALL, "en_US.utf8")
+    # ser = os.popen("wmic bios get serialnumber").read().replace("\n", "").replace("	", "").replace(" ", "")
 
+    # if ser == SerialNumber:
     mainWindow = AppMainWindow()
     mainWindow.show()
     mainWindow.setWindowIcon(QtGui.QIcon('icons/ph1.png'))
     for filename in glob.glob("html/tmp/*"):
         os.remove(filename)
     exit_code = app.exec_()
+    # else:
+    #     QtWidgets.QMessageBox.warning(None, 'خطأ', 'البرنامج غير مفعل\n يجب تفعيل هذا البرنامج من الشركة')
