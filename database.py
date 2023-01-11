@@ -120,6 +120,7 @@ class Database:
             li = list(obj.values())
             li.append(obj['id'])
             self.connection.execute(query, tuple(li))
+            self.connection.commit()
         if isinstance(row, dict):
             _update(row)
         elif isinstance(row, list):
@@ -218,10 +219,10 @@ class Database:
                 filter['note'] = f'%{filter["note"]}%'
                 filter_cmd.append(f'note like :note')
             sql_cmd += ' and '.join(filter_cmd)
-            sql_cmd += f' limit {limit1}, {limit2}'
+            sql_cmd += f' ORDER by date DESC limit {limit1}, {limit2}'
             return self.connection.execute(sql_cmd, filter).fetchall()
         else:
-            sql_cmd += f' limit {limit1}, {limit2}'
+            sql_cmd += f' ORDER by date DESC limit {limit1}, {limit2}'
             return self.connection.execute(sql_cmd).fetchall()
 
     def get_balance(self, type_fm, owner):

@@ -577,11 +577,16 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
         self.customers = None
         self.suppliers = None
+        self.partners = None
 
         self._typing_timer_s = QtCore.QTimer()
         self.supplier_id = 0
         self.supplier_co = 0
         self.page_size_supplier = PAGE_SIZE
+
+        self._typing_timer_pa = QtCore.QTimer()
+        self.partners_id = 0
+        self.partners_co = 0
 
         self._typing_timer_bs = QtCore.QTimer()
         self.bill_sell_id = 0
@@ -671,6 +676,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
         self.customers = database.db.query_csp("customer")
         self.suppliers = database.db.query_csp("supplier")
+        self.partners = database.db.query_csp("partners")
 
         # update tables
         self._typing_timer_p.setSingleShot(True)
@@ -688,6 +694,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.setup_controls_product()
         self.setup_controls_customer()
         self.setup_controls_supplier()
+        self.setup_controls_partners()
         self.setup_controls_bill_sell()
         self.setup_controls_bill_buy()
         self.setup_controls_fund_movement()
@@ -700,6 +707,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         else:
             DOLLAR = float(self.dollar_tr.text())
             self.calculate_main()
+        self.fm_do_tr.setText(str(DOLLAR))
 
     def exchange_dollar(self, coin):
         global DOLLAR
@@ -757,6 +765,9 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.page_size_supplier = self.s_page_size.value()
             self.s_page_num.setRange(1, math.ceil(int(database.db.count_row("supplier", 1)) / self.page_size_s))
             self._typing_timer_s.start(1000)
+        elif table == 'partners':
+            self.pa_page_num.setRange(1, math.ceil(int(database.db.count_row("partners", 1)) / self.pa_page_size.value()))
+            self._typing_timer_pa.start(1000)
         elif table == 'bill_sell':
             self.page_size_bill_sell = self.bs_page_size.value()
             self.bs_page_num.setRange(1,
@@ -1471,7 +1482,189 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             os.system('setsid firefox ' + fp.name + ' &')
 
     ####################################################################
+    # partners
+    def setup_controls_partners(self):
+        self.pa_code.setValidator(self.validator_code)
+        self.pa_code_search.setValidator(self.validator_code)
+        self.pa_balance.setValidator(self.validator_money)
+        self.pa_phone.setValidator(self.validator_phone)
 
+        self._typing_timer_pa.timeout.connect(self.update_partners_table)
+
+        # table
+        self.pa_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.pa_table.doubleClicked.connect(lambda mi: self.fill_partners_info(self.pa_table.item(mi.row(), 0).id))
+        self.pa_table.clicked.connect(lambda mi: self.one_click_pa(self.pa_table.item(mi.row(), 0).id))
+        self.pa_page_num.setRange(1, math.ceil(int(database.db.count_row("partners", 1)) / self.pa_page_size.value()))
+
+        # search
+        self.pa_code_search.textChanged.connect(lambda text: self._typing_timer_pa.start(1000))
+        self.pa_name_search.textChanged.connect(lambda text: self._typing_timer_pa.start(1000))
+
+        self.pa_page_num.valueChanged.connect(lambda text: self._typing_timer_pa.start(1000))
+        self.pa_page_size.valueChanged.connect(lambda: self.change_page_size('partners'))
+
+        # btn
+        self.btn_add_partners.clicked.connect(self.create_new_partners)
+        self.btn_edit_partners.clicked.connect(self.update_partners)
+        self.btn_delete_partners.clicked.connect(self.delete_partners)
+        self.btn_clear_partners.clicked.connect(self.clear_partners_inputs)
+
+        # print and to exel
+        self.btn_print_table_pa.clicked.connect(self.print_table_partners)
+        self.btn_to_exel_pa.clicked.connect(lambda: self.to_excel(self.pa_table))
+
+        # pages
+        self.pa_post.clicked.connect(lambda: self.pa_page_num.setValue(self.pa_page_num.value() + 1))
+        self.pa_previous.clicked.connect(lambda: self.pa_page_num.setValue(self.pa_page_num.value() - 1))
+        self.pa_last.clicked.connect(lambda: self.pa_page_num.setValue(math.ceil(int(database.db.count_row("partners", 1)) / self.pa_page_size.value())))
+        self.pa_first.clicked.connect(lambda: self.pa_page_num.setValue(1))
+
+        self.btn_edit_partners.setEnabled(False)
+        self.btn_delete_partners.setEnabled(False)
+
+        self.update_partners_table()
+        self.clear_partners_inputs()
+
+    def one_click_pa(self, id):
+        self.partners_id = id
+        self.btn_delete_partners.setEnabled(True)
+
+    def save_partners_info(self) -> dict:
+        partner = dict()
+        partner['code'] = self.pa_code.text()
+        partner['name'] = self.pa_name.text()
+        partner['phone'] = self.pa_phone.text()
+        partner['balance'] = self.pa_balance.text()
+        partner['note'] = self.pa_note.toPlainText()
+
+        return partner
+
+    def create_new_partners(self):
+        partners = self.save_partners_info()
+        if partners['code'] and partners['name']:
+            if int(database.db.count_row("partners", partners['code'])) == 0:
+                database.db.insert_row("partners", partners)
+                toaster_Notify.QToaster.show_message(parent=self,
+                                                     message=f"إضافة شريك\nتم إضافة الشريك {partners['name']} بنجاح")
+                self.partners = database.db.query_csp("partners")
+                self.update_partners_table()
+                self.clear_partners_inputs()
+            else:
+                QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن الكود مكرر')
+        else:
+            QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب أن تدخل الكود واسم الشريك')
+
+    def update_partners(self):
+        partners = self.save_partners_info()
+        partners['id'] = self.partners_id
+        if partners['code'] and partners['name']:
+            if partners['code'] == self.partners_co:
+                database.db.update_row("partners", partners)
+                self.update_partners_table()
+                self.clear_partners_inputs()
+                toaster_Notify.QToaster.show_message(parent=self,
+                                                     message=f"تعديل شريك\nتم تعديل الشريك {partners['name']} بنجاح")
+            elif int(database.db.count_row("partners", partners['code'])) == 0:
+                database.db.update_row("partners", partners)
+                self.update_partners_table()
+                self.clear_partners_inputs()
+                toaster_Notify.QToaster.show_message(parent=self,
+                                                     message=f"تعديل شريك\nتم تعديل الشريك {partners['name']} بنجاح")
+            else:
+                QtWidgets.QMessageBox.warning(None, 'خطأ', 'إن الكود مكرر')
+        else:
+            QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب أن تدخل الكود واسم الشريك')
+
+    def delete_partners(self):
+        partners = self.save_partners_info()
+        msg = QtWidgets.QMessageBox()
+        button_reply = msg.question(self, 'تأكيد', f"هل أنت متأكد من حذف {partners['name']} ؟ ",
+                                    msg.Yes | msg.No,
+                                    msg.No)
+        if button_reply == msg.Yes:
+            database.db.delete_row("partners", self.partners_id)
+            self.partners = database.db.query_csp("partners")
+            self.update_partners_table()
+            self.clear_partners_inputs()
+            toaster_Notify.QToaster.show_message(parent=self,
+                                                 message=f"حذف شريك\nتم حذف الشريك{partners['name']} بنجاح")
+        self.btn_delete_partners.setEnabled(False)
+
+    def search_partners_save(self):
+        fil = {}
+        if self.pa_code_search.text():
+            fil['code'] = self.pa_code_search.text()
+        if self.pa_name_search.text():
+            fil['name'] = self.pa_name_search.text()
+
+        return fil
+
+    def update_partners_table(self):
+        fil = self.search_partners_save()
+        rows = database.db.query_all_cs('partners', fil, self.pa_page_size.value() * (self.s_page_num.value() - 1),
+                                        self.pa_page_size.value())
+        self.pa_table.setRowCount(len(rows))
+        for row_idx, row in enumerate(rows):
+            self.pa_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
+                str(row_idx + 1 + (self.pa_page_size.value() * (self.pa_page_num.value() - 1)))))
+            self.pa_table.item(row_idx, 0).id = row['id']
+            self.pa_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.pa_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(row['code'])))
+            self.pa_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.pa_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row['name']))
+            self.pa_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.pa_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(row['phone']))
+            self.pa_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.pa_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(str(row['balance'])))
+            self.pa_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignCenter)
+        self.pa_table.resizeColumnsToContents()
+
+    def clear_partners_inputs(self):
+        self.partners_id = 0
+        self.partners_co = 0
+
+        self.pa_code.clear()
+        self.pa_code.setFocus()
+        self.pa_name.clear()
+        self.pa_phone.clear()
+        self.pa_balance.setText('0')
+        self.pa_note.clear()
+
+        self.btn_edit_partners.setEnabled(False)
+        self.btn_delete_partners.setEnabled(False)
+        self.btn_add_partners.setEnabled(True)
+
+    def fill_partners_info(self, id):
+        self.btn_edit_partners.setEnabled(True)
+        self.btn_delete_partners.setEnabled(True)
+        self.btn_add_partners.setEnabled(False)
+        self.partners_id = id
+        partner = database.db.query_row("partners", id)
+        if partner:
+            self.partners_co = partner['code']
+            self.pa_code.setText(partner['code'])
+            self.pa_name.setText(partner['name'])
+            self.pa_phone.setText(partner['phone'])
+            self.pa_balance.setText(str(partner['balance']))
+            self.pa_note.setText(partner['note'])
+
+    def print_table_partners(self):
+        fil = self.search_partners_save()
+        partners = database.db.query_all_cs('partners', fil, 0, database.db.count_row("partners", 1))
+        with open('./html/partners_template.html', 'r') as f:
+            template = Template(f.read())
+            fp = tempfile.NamedTemporaryFile(mode='w', delete=False, dir='./html/tmp/', suffix='.html')
+            for idx, supplier in enumerate(partners):
+                supplier['idx'] = idx + 1
+
+            html = template.render(partners=partners, date=time.strftime("%A, %d %B %Y %I:%M %p"))
+            html = html.replace('style.css', '../style.css').replace('ph1.png', '../ph1.png')
+            fp.write(html)
+            fp.close()
+            os.system('setsid firefox ' + fp.name + ' &')
+
+    ####################################################################
     # bill sell methods
     def setup_controls_bill_sell(self):
         self.billsell_code.setValidator(self.validator_code)
@@ -1557,6 +1750,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.month_purchases.display(0)
         else:
             self.month_purchases.display(database.db.get_purchases(30))
+
         self.setup_box()
 
     def search_bill_sell_save(self):
@@ -1758,8 +1952,13 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     # fund movement
     def setup_controls_fund_movement(self):
         self.fm_type.currentTextChanged.connect(self.fm_type_changed)
+        self.fm_owner.currentTextChanged.connect(self.fm_owner_changed)
+
         self.fm_value.setValidator(self.validator_money)
         self.fm_value_t.setValidator(self.validator_money)
+
+        self.fm_value.textChanged.connect(self.fm_value_changed)
+        self.fm_value_t.textChanged.connect(self.fm_value_changed)
 
         self._typing_timer_fm.timeout.connect(self.update_fm_table)
 
@@ -1817,16 +2016,57 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.fm_owner.setEnabled(True)
             self.fm_owner.clear()
             self.fm_owner.addItems(list(self.customers.values())[1:])
-            self.fm_value_t.setEnabled(False)
+            self.ch_fm_discount.setEnabled(True)
         elif self.fm_type.currentIndex() == 2:
             self.fm_owner.setEnabled(True)
             self.fm_owner.clear()
             self.fm_owner.addItems(self.suppliers.values())
-            self.fm_value_t.setEnabled(False)
+            self.ch_fm_discount.setEnabled(True)
+        elif self.fm_type.currentIndex() in [3, 4]:
+            self.fm_owner.setEnabled(True)
+            self.fm_owner.clear()
+            self.fm_owner.addItems(self.partners.values())
         else:
             self.fm_owner.setEnabled(False)
             self.fm_owner.clear()
-            self.fm_value_t.setEnabled(True)
+
+    def fm_owner_changed(self):
+        if self.fm_type.currentIndex() == 1:
+            if self.fm_owner.currentText() != "":
+                cid = [k for k, v in self.customers.items() if v == self.fm_owner.currentText()][0]
+                self.fm_discount.setText(database.db.query_row("customer", cid)['balance'])
+        elif self.fm_type.currentIndex() == 2:
+            if self.fm_owner.currentText() != "":
+                cid = [k for k, v in self.suppliers.items() if v == self.fm_owner.currentText()][0]
+                self.fm_discount.setText(database.db.query_row("supplier", cid)['balance'])
+
+    def fm_value_changed(self):
+        balance = 0
+        if self.fm_type.currentIndex() == 1:
+            if self.fm_owner.currentText() != "":
+                cid = [k for k, v in self.customers.items() if v == self.fm_owner.currentText()][0]
+                balance = database.db.query_row("customer", cid)['balance']
+        elif self.fm_type.currentIndex() == 2:
+            if self.fm_owner.currentText() != "":
+                cid = [k for k, v in self.suppliers.items() if v == self.fm_owner.currentText()][0]
+                balance = database.db.query_row("supplier", cid)['balance']
+
+        if self.fm_do_tr.text() == '0':
+            QtWidgets.QMessageBox.warning(None, 'خطأ', 'أدخل سعر تصريف الدولار بالليرة التركية من الصفحة الرئيسية')
+            return
+
+        if self.fm_value.text() in ['', '0']:
+            if self.fm_value_t.text() in ['', '0']:
+                discount = round(float(balance), 2)
+            else:
+                discount = round(float(balance) - (float(self.fm_value_t.text()) / float(self.fm_do_tr.text())), 2)
+        else:
+            if self.fm_value_t.text() in ['', '0']:
+                discount = round(float(balance) - float(self.fm_value.text()), 2)
+            else:
+                discount = float(balance) - float(self.fm_value.text()) - (float(self.fm_value_t.text()) / float(self.fm_do_tr.text()))
+                discount = round(discount, 2)
+        self.fm_discount.setText(str(discount))
 
     def s_fm_type_changed(self):
         if self.s_fm_type.currentIndex() == 1:
@@ -1841,6 +2081,12 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.s_fm_owner.clear()
             self.s_fm_owner.addItem('')
             self.s_fm_owner.addItems(self.suppliers.values())
+        elif self.s_fm_type.currentIndex() in [3, 4]:
+            self._typing_timer_fm.start(1000)
+            self.s_fm_owner.setEnabled(True)
+            self.s_fm_owner.clear()
+            self.s_fm_owner.addItem('')
+            self.s_fm_owner.addItems(self.partners.values())
         else:
             self._typing_timer_fm.start(1000)
             self.s_fm_owner.setEnabled(False)
@@ -1853,14 +2099,21 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             fm['owner'] = [k for k, v in self.customers.items() if v == self.fm_owner.currentText()][0]
         elif self.fm_type.currentIndex() == 2:
             fm['owner'] = [k for k, v in self.suppliers.items() if v == self.fm_owner.currentText()][0]
+        elif self.fm_type.currentIndex() in [3, 4]:
+            fm['owner'] = [k for k, v in self.partners.items() if v == self.fm_owner.currentText()][0]
         fm['value'] = self.fm_value.text()
         fm['value_t'] = self.fm_value_t.text()
+        fm['do_tr'] = self.fm_do_tr.text()
         fm['date'] = QDate.toString(self.fm_date.date())
         fm['note'] = self.fm_note.toPlainText()
 
         return fm
 
     def create_new_fm(self):
+        global DOLLAR
+        if DOLLAR == 0:
+            QtWidgets.QMessageBox.warning(None, 'خطأ', 'أدخل سعر تصريف الدولار بالليرة التركية من الصفحة الرئيسية')
+            return
         fm = self.save_fm_info()
         if fm['type']:
             if fm['type'] in ["دفعة من زبون", "دفعة إلى مورد"]:
@@ -1876,10 +2129,16 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                 self.update_customer_table()
             elif fm['type'] == "دفعة إلى مورد":
                 self.update_supplier_table()
+            elif fm['type'] in ["اضافة رصيد", "سحب رصيد"]:
+                self.update_partners_table()
         else:
             QtWidgets.QMessageBox.warning(None, 'خطأ', 'يجب أن تدخل نوع الحركة')
 
     def update_fm(self):
+        global DOLLAR
+        if DOLLAR == 0:
+            QtWidgets.QMessageBox.warning(None, 'خطأ', 'أدخل سعر تصريف الدولار بالليرة التركية من الصفحة الرئيسية')
+            return
         fm = self.save_fm_info()
         fm['id'] = self.fm_id
         if fm['type']:
@@ -1959,12 +2218,14 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.fm_table.resizeColumnsToContents()
 
     def clear_fm_inputs(self):
+        global DOLLAR
         self.fm_id = 0
         self.fm_type.setCurrentIndex(0)
         self.fm_type.setFocus()
         self.fm_owner.setCurrentIndex(0)
         self.fm_value.setText('0')
         self.fm_value_t.setText('0')
+        self.fm_do_tr.setText(str(DOLLAR))
         self.fm_date.setDate(QDate.currentDate())
         self.fm_note.clear()
 
@@ -1986,6 +2247,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                 self.fm_owner.setCurrentText(self.suppliers[fm['owner']])
             self.fm_value.setText(fm['value'])
             self.fm_value_t.setText(fm['value_t'])
+            self.fm_do_tr.setText(fm['do_tr'])
             self.fm_date.setDate(QDate(fm['date']))
             self.fm_note.setText(fm['note'])
 
@@ -2070,7 +2332,7 @@ if __name__ == '__main__':
     locale.setlocale(locale.LC_ALL, "en_US.utf8")
     # ser = os.popen("wmic bios get serialnumber").read().replace("\n", "").replace("	", "").replace(" ", "")
     # ser = subprocess.run("sed -nr 's/^Serial Number: (.*)$/\1/p' /proc/scsi/*/*")
-    
+
     # if ser == SerialNumber:
     mainWindow = AppMainWindow()
     mainWindow.show()

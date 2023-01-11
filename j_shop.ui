@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>1280</width>
-    <height>723</height>
+    <height>741</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>سنتر الجمال</string>
+   <string>سنتر نيو بيبي</string>
   </property>
   <property name="windowIcon">
    <iconset resource="icons.qrc">
@@ -58,13 +58,16 @@
              </font>
             </property>
             <property name="styleSheet">
-             <string notr="true">background-image: url(:/icons/icons/ph2.png);</string>
+             <string notr="true"/>
             </property>
             <property name="text">
              <string/>
             </property>
+            <property name="pixmap">
+             <pixmap resource="icons.qrc">:/icons/icons/ph3.jpg</pixmap>
+            </property>
             <property name="scaledContents">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
@@ -194,6 +197,11 @@
             </item>
             <item>
              <property name="text">
+              <string>شركاء</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
               <string>اشعارات</string>
              </property>
             </item>
@@ -214,7 +222,7 @@
              <enum>QTabWidget::Rounded</enum>
             </property>
             <property name="currentIndex">
-             <number>4</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="tab_1">
              <property name="layoutDirection">
@@ -658,11 +666,11 @@
                   <height>450</height>
                  </size>
                 </property>
-                <property name="styleSheet">
-                 <string notr="true">background-image: url(:/icons/icons/ph2.png);</string>
-                </property>
                 <property name="text">
                  <string/>
+                </property>
+                <property name="pixmap">
+                 <pixmap resource="icons.qrc">:/icons/icons/ph2.png</pixmap>
                 </property>
                 <property name="scaledContents">
                  <bool>true</bool>
@@ -689,10 +697,188 @@
                 </property>
                 <item>
                  <layout class="QGridLayout" name="gridLayout_7">
+                  <item row="7" column="0">
+                   <widget class="QLabel" name="label_23">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="layoutDirection">
+                     <enum>Qt::RightToLeft</enum>
+                    </property>
+                    <property name="text">
+                     <string>ملاحظات</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="1">
+                   <widget class="QTextEdit" name="fm_note">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="label_12">
+                    <property name="text">
+                     <string>القيمة $</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="0">
+                   <widget class="QLabel" name="label_69">
+                    <property name="text">
+                     <string>التصريف</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QComboBox" name="fm_owner">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="layoutDirection">
+                     <enum>Qt::LeftToRight</enum>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string/>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item row="6" column="1">
+                   <widget class="QDateEdit" name="fm_date">
+                    <property name="layoutDirection">
+                     <enum>Qt::LeftToRight</enum>
+                    </property>
+                    <property name="locale">
+                     <locale language="English" country="Kenya"/>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="specialValueText">
+                     <string/>
+                    </property>
+                    <property name="minimumDate">
+                     <date>
+                      <year>1900</year>
+                      <month>1</month>
+                      <day>1</day>
+                     </date>
+                    </property>
+                    <property name="displayFormat">
+                     <string>yyyy-MM-dd</string>
+                    </property>
+                    <property name="date">
+                     <date>
+                      <year>1900</year>
+                      <month>1</month>
+                      <day>1</day>
+                     </date>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="QLineEdit" name="fm_value">
+                    <property name="text">
+                     <string>0</string>
+                    </property>
+                    <property name="maxLength">
+                     <number>11</number>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
                   <item row="0" column="0">
                    <widget class="QLabel" name="label_25">
                     <property name="text">
                      <string>نوع الحركة</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="0">
+                   <widget class="QLabel" name="label_88">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="layoutDirection">
+                     <enum>Qt::RightToLeft</enum>
+                    </property>
+                    <property name="text">
+                     <string>تاريخ الحركة</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="label_19">
+                    <property name="text">
+                     <string>صاحب الحركة</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="1">
+                   <widget class="QLineEdit" name="fm_do_tr">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="text">
+                     <string>0</string>
+                    </property>
+                    <property name="maxLength">
+                     <number>11</number>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="label_68">
+                    <property name="text">
+                     <string>القيمة LT</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1">
+                   <widget class="QLineEdit" name="fm_value_t">
+                    <property name="text">
+                     <string>0</string>
+                    </property>
+                    <property name="maxLength">
+                     <number>11</number>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignCenter</set>
@@ -729,154 +915,45 @@
                     </item>
                     <item>
                      <property name="text">
+                      <string>سحب رصيد</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
                       <string>نفقات</string>
                      </property>
                     </item>
                    </widget>
                   </item>
-                  <item row="2" column="0">
-                   <widget class="QLabel" name="label_12">
-                    <property name="text">
-                     <string>القيمة $</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="4" column="1">
-                   <widget class="QDateEdit" name="fm_date">
-                    <property name="layoutDirection">
-                     <enum>Qt::LeftToRight</enum>
+                   <widget class="QLineEdit" name="fm_discount">
+                    <property name="enabled">
+                     <bool>false</bool>
                     </property>
-                    <property name="locale">
-                     <locale language="English" country="Kenya"/>
+                    <property name="text">
+                     <string>0</string>
+                    </property>
+                    <property name="maxLength">
+                     <number>11</number>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignCenter</set>
-                    </property>
-                    <property name="specialValueText">
-                     <string/>
-                    </property>
-                    <property name="minimumDate">
-                     <date>
-                      <year>1900</year>
-                      <month>1</month>
-                      <day>1</day>
-                     </date>
-                    </property>
-                    <property name="displayFormat">
-                     <string>yyyy-MM-dd</string>
-                    </property>
-                    <property name="date">
-                     <date>
-                      <year>1900</year>
-                      <month>1</month>
-                      <day>1</day>
-                     </date>
                     </property>
                    </widget>
                   </item>
                   <item row="4" column="0">
-                   <widget class="QLabel" name="label_88">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="layoutDirection">
-                     <enum>Qt::RightToLeft</enum>
-                    </property>
-                    <property name="text">
-                     <string>تاريخ الحركة</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QLabel" name="label_19">
-                    <property name="text">
-                     <string>صاحب الحركة</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="1">
-                   <widget class="QTextEdit" name="fm_note">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="1">
-                   <widget class="QLineEdit" name="fm_value">
-                    <property name="maxLength">
-                     <number>11</number>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="0">
-                   <widget class="QLabel" name="label_23">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="layoutDirection">
-                     <enum>Qt::RightToLeft</enum>
-                    </property>
-                    <property name="text">
-                     <string>ملاحظات</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="1">
-                   <widget class="QComboBox" name="fm_owner">
+                   <widget class="QCheckBox" name="ch_fm_discount">
                     <property name="enabled">
                      <bool>false</bool>
                     </property>
-                    <property name="layoutDirection">
-                     <enum>Qt::LeftToRight</enum>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
                     </property>
-                    <item>
-                     <property name="text">
-                      <string/>
-                     </property>
-                    </item>
-                   </widget>
-                  </item>
-                  <item row="3" column="0">
-                   <widget class="QLabel" name="label_68">
                     <property name="text">
-                     <string>القيمة LT</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="1">
-                   <widget class="QLineEdit" name="fm_value_t">
-                    <property name="maxLength">
-                     <number>11</number>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
+                     <string>خصم الباقي</string>
                     </property>
                    </widget>
                   </item>
@@ -1110,6 +1187,11 @@
                       <item>
                        <property name="text">
                         <string>اضافة رصيد</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>سحب رصيد</string>
                        </property>
                       </item>
                       <item>
@@ -3765,6 +3847,430 @@
               </item>
              </layout>
             </widget>
+            <widget class="QWidget" name="tab_8">
+             <attribute name="title">
+              <string>شركاء</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="verticalLayout_4">
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_14" stretch="2,5">
+                <property name="spacing">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>15</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>8</number>
+                </property>
+                <item>
+                 <layout class="QGridLayout" name="gridLayout_11" rowstretch="0,0,0,0,0">
+                  <property name="sizeConstraint">
+                   <enum>QLayout::SetDefaultConstraint</enum>
+                  </property>
+                  <property name="leftMargin">
+                   <number>10</number>
+                  </property>
+                  <property name="horizontalSpacing">
+                   <number>6</number>
+                  </property>
+                  <property name="verticalSpacing">
+                   <number>0</number>
+                  </property>
+                  <item row="2" column="1">
+                   <widget class="QLineEdit" name="pa_phone">
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_70">
+                    <property name="text">
+                     <string>الكود</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="label_59">
+                    <property name="text">
+                     <string>الرصيد</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="label_71">
+                    <property name="text">
+                     <string>رقم تواصل</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="label_72">
+                    <property name="text">
+                     <string>الاسم</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QLineEdit" name="pa_code">
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1">
+                   <widget class="QLineEdit" name="pa_balance">
+                    <property name="text">
+                     <string>0</string>
+                    </property>
+                    <property name="maxLength">
+                     <number>9</number>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="1">
+                   <widget class="QTextEdit" name="pa_note">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="QLabel" name="label_58">
+                    <property name="text">
+                     <string>ملاحظات</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QLineEdit" name="pa_name">
+                    <property name="maxLength">
+                     <number>100</number>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QVBoxLayout" name="verticalLayout_24" stretch="1,1,8,0">
+                  <property name="spacing">
+                   <number>10</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>10</number>
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="label_74">
+                    <property name="font">
+                     <font>
+                      <family>Arial</family>
+                      <pointsize>20</pointsize>
+                      <weight>50</weight>
+                      <italic>false</italic>
+                      <bold>false</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>بحث</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_19">
+                    <item>
+                     <widget class="QLineEdit" name="pa_code_search">
+                      <property name="alignment">
+                       <set>Qt::AlignCenter</set>
+                      </property>
+                      <property name="placeholderText">
+                       <string>الكود</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="pa_name_search">
+                      <property name="alignment">
+                       <set>Qt::AlignCenter</set>
+                      </property>
+                      <property name="placeholderText">
+                       <string>الاسم</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <widget class="QTableWidget" name="pa_table">
+                    <property name="editTriggers">
+                     <set>QAbstractItemView::NoEditTriggers</set>
+                    </property>
+                    <property name="selectionMode">
+                     <enum>QAbstractItemView::SingleSelection</enum>
+                    </property>
+                    <property name="selectionBehavior">
+                     <enum>QAbstractItemView::SelectRows</enum>
+                    </property>
+                    <attribute name="verticalHeaderVisible">
+                     <bool>false</bool>
+                    </attribute>
+                    <column>
+                     <property name="text">
+                      <string>تسلسلي</string>
+                     </property>
+                    </column>
+                    <column>
+                     <property name="text">
+                      <string>الكود</string>
+                     </property>
+                    </column>
+                    <column>
+                     <property name="text">
+                      <string>اسم الشريك</string>
+                     </property>
+                    </column>
+                    <column>
+                     <property name="text">
+                      <string>رقم التواصل</string>
+                     </property>
+                    </column>
+                    <column>
+                     <property name="text">
+                      <string>الرصيد</string>
+                     </property>
+                    </column>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_27" stretch="2,4,5,1,1,4,1,1">
+                    <property name="spacing">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>8</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="QLabel" name="label_75">
+                      <property name="font">
+                       <font>
+                        <pointsize>12</pointsize>
+                        <weight>50</weight>
+                        <italic>false</italic>
+                        <bold>false</bold>
+                       </font>
+                      </property>
+                      <property name="text">
+                       <string>قياس الصفحة:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QSpinBox" name="pa_page_size">
+                      <property name="font">
+                       <font>
+                        <pointsize>12</pointsize>
+                        <weight>50</weight>
+                        <italic>false</italic>
+                        <bold>false</bold>
+                       </font>
+                      </property>
+                      <property name="minimum">
+                       <number>10</number>
+                      </property>
+                      <property name="maximum">
+                       <number>200</number>
+                      </property>
+                      <property name="singleStep">
+                       <number>10</number>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_12">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="pa_last">
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="icons.qrc">
+                        <normaloff>:/icons/icons/last-white.png</normaloff>:/icons/icons/last-white.png</iconset>
+                      </property>
+                      <property name="iconSize">
+                       <size>
+                        <width>40</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="pa_post">
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="icons.qrc">
+                        <normaloff>:/icons/icons/next-white.png</normaloff>:/icons/icons/next-white.png</iconset>
+                      </property>
+                      <property name="iconSize">
+                       <size>
+                        <width>40</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QSpinBox" name="pa_page_num">
+                      <property name="font">
+                       <font>
+                        <pointsize>12</pointsize>
+                        <weight>50</weight>
+                        <italic>false</italic>
+                        <bold>false</bold>
+                       </font>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignCenter</set>
+                      </property>
+                      <property name="minimum">
+                       <number>1</number>
+                      </property>
+                      <property name="maximum">
+                       <number>999</number>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="pa_previous">
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="icons.qrc">
+                        <normaloff>:/icons/icons/previous-white.png</normaloff>:/icons/icons/previous-white.png</iconset>
+                      </property>
+                      <property name="iconSize">
+                       <size>
+                        <width>40</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="pa_first">
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="icons.qrc">
+                        <normaloff>:/icons/icons/first-white.png</normaloff>:/icons/icons/first-white.png</iconset>
+                      </property>
+                      <property name="iconSize">
+                       <size>
+                        <width>40</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_34">
+                <item>
+                 <widget class="QPushButton" name="btn_add_partners">
+                  <property name="text">
+                   <string>اضافة</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_edit_partners">
+                  <property name="text">
+                   <string>تعديل</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_delete_partners">
+                  <property name="text">
+                   <string>حذف</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_clear_partners">
+                  <property name="text">
+                   <string>مسح المدخلات</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_print_table_pa">
+                  <property name="text">
+                   <string>طباعة الجدول</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_to_exel_pa">
+                  <property name="text">
+                   <string>تصدير الجدول</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
             <widget class="QWidget" name="tab_7">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -4506,6 +5012,37 @@
   <tabstop>new_pass_confirm</tabstop>
   <tabstop>btn_save_pass</tabstop>
   <tabstop>btn_cancel_pass</tabstop>
+  <tabstop>dollar_tr</tabstop>
+  <tabstop>btn_ta_dt</tabstop>
+  <tabstop>btn_ta_td</tabstop>
+  <tabstop>ta_dt_d</tabstop>
+  <tabstop>ta_dt_t</tabstop>
+  <tabstop>ta_td_t</tabstop>
+  <tabstop>ta_td_d</tabstop>
+  <tabstop>fm_value_t</tabstop>
+  <tabstop>fm_do_tr</tabstop>
+  <tabstop>c_balance_range</tabstop>
+  <tabstop>s_balance_range</tabstop>
+  <tabstop>pa_table</tabstop>
+  <tabstop>pa_code</tabstop>
+  <tabstop>pa_name</tabstop>
+  <tabstop>pa_phone</tabstop>
+  <tabstop>pa_balance</tabstop>
+  <tabstop>pa_note</tabstop>
+  <tabstop>pa_code_search</tabstop>
+  <tabstop>pa_name_search</tabstop>
+  <tabstop>pa_page_size</tabstop>
+  <tabstop>pa_page_num</tabstop>
+  <tabstop>pa_last</tabstop>
+  <tabstop>pa_post</tabstop>
+  <tabstop>pa_previous</tabstop>
+  <tabstop>pa_first</tabstop>
+  <tabstop>btn_add_partners</tabstop>
+  <tabstop>btn_edit_partners</tabstop>
+  <tabstop>btn_delete_partners</tabstop>
+  <tabstop>btn_clear_partners</tabstop>
+  <tabstop>btn_print_table_pa</tabstop>
+  <tabstop>btn_to_exel_pa</tabstop>
  </tabstops>
  <resources>
   <include location="icons.qrc"/>
