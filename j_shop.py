@@ -671,6 +671,9 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
         self.setup_box()
 
+        self.listWidget: QtWidgets.QListWidget
+        self.listWidget.currentRowChanged.connect(lambda: self.listWidget_change(self.listWidget.currentRow()))
+
         self.btn_ta_dt.clicked.connect(lambda: self.exchange_dollar_turky('do_tu'))
         self.btn_ta_td.clicked.connect(lambda: self.exchange_dollar_turky('tu_do'))
 
@@ -699,6 +702,14 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.setup_controls_bill_buy()
         self.setup_controls_fund_movement()
         self.calculate_main()
+
+    def listWidget_change(self, current_row):
+        global PERMISSION
+        if PERMISSION == '1':
+            self.tabWidget.setCurrentIndex(current_row)
+        else:
+            if current_row in [0, 2]:
+                self.tabWidget.setCurrentIndex(current_row)
 
     def dollar_change(self):
         global DOLLAR

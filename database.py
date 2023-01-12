@@ -79,6 +79,8 @@ class Database:
 
     def get_capital(self, with_box, do_tr):
         pro_capital = self.connection.execute("SELECT sum(quantity * buy_price) as pro_capital FROM product").fetchone()['pro_capital']
+        if pro_capital == '':
+            pro_capital = '0'
         if do_tr == 0:
             box = self.connection.execute("SELECT dollar as box FROM box").fetchone()['box']
         else:
