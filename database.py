@@ -255,10 +255,10 @@ class Database:
                     filter_cmd.append(f'date = :date_from')
 
             sql_cmd += ' and '.join(filter_cmd)
-            sql_cmd += f' limit {limit1}, {limit2}'
+            sql_cmd += f' ORDER by date DESC limit {limit1}, {limit2}'
             return self.connection.execute(sql_cmd, filter).fetchall()
         else:
-            sql_cmd += f' limit {limit1}, {limit2}'
+            sql_cmd += f' ORDER by date DESC limit {limit1}, {limit2}'
             return self.connection.execute(sql_cmd).fetchall()
 
     def get_order_bill(self, table, b_id):

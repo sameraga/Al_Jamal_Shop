@@ -1,6 +1,0 @@
-PyQt5
-sqlcipher3
-xlwt
-pycryptodome
-jinja2
-

@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import subprocess
 import sys
+
+from numpy import round
+
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     from os import chdir
     chdir(sys._MEIPASS)
@@ -249,24 +252,29 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         if discount > (float(product['price_range']) * float(self.d_tr.text()) * quantity):
             discount = float(product['price_range']) * float(self.d_tr.text()) * quantity
             self.bs_table.setItem(current_row, 5, QtWidgets.QTableWidgetItem(str(discount)))
+
         total = (quantity * float(self.bs_table.item(current_row, 3).text())) - (discount / float(self.d_tr.text()))
         total = round(total, 2)
         self.bs_table.setItem(current_row, 6, QtWidgets.QTableWidgetItem(str(total)))
-        total = round(total * float(self.d_tr.text()), 2)
-        self.bs_table.setItem(current_row, 7, QtWidgets.QTableWidgetItem(str(total)))
+
+        total_t = (quantity * float(self.bs_table.item(current_row, 4).text())) - float(self.bs_table.item(current_row, 5).text())
+        total_t = round(total_t, 2)
+        self.bs_table.setItem(current_row, 7, QtWidgets.QTableWidgetItem(str(total_t)))
         self.calculate_total()
 
     def calculate_total(self):
-        total = 0
+        total_d = 0
+        total_t = 0
         for i in range(0, self.bs_table.rowCount()):
-            if self.bs_table.item(i, 5) is not None:
-                total += float(self.bs_table.item(i, 6).text())
-        total = round(total, 2)
-        self.total_d.setText(str(total))
-        ff = round(total - float(self.discount_d.text()), 2)
+            if self.bs_table.item(i, 6) is not None:
+                total_d += float(self.bs_table.item(i, 6).text())
+                total_t += float(self.bs_table.item(i, 7).text())
+        total_d = round(total_d, 2)
+        self.total_d.setText(str(total_d))
+        ff = round(total_d - float(self.discount_d.text()), 2)
         self.last_total_d.setText(str(ff))
-        ff = round(total * float(self.d_tr.text()), 2)
-        self.total_t.setText(str(ff))
+        total_t = round(total_t, 2)
+        self.total_t.setText(str(total_t))
         ff = round(float(self.total_t.text()) - float(self.discount_t.text()), 2)
         self.last_total_t.setText(str(ff))
 
@@ -275,7 +283,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         if x == "d":
             d_float = round(float(self.total_d.text()) - float(self.discount_d.text()), 2)
             self.last_total_d.setText(str(d_float))
-            self.discount_t.setText(str(float(self.discount_d.text()) * DOLLAR))
+            self.discount_t.setText(str(round(float(self.discount_d.text()) * DOLLAR, 2)))
             t_float = round(float(self.total_t.text()) - float(self.discount_t.text()), 2)
             self.last_total_t.setText(str(t_float))
         else:
@@ -732,10 +740,10 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                 d = float(self.ta_dt_d.text())
             if d == 0 or d > float(self.box_dolar.text()):
                 self.btn_ta_dt.setEnabled(False)
-                self.ta_dt_t.setText('0')
+                # self.ta_dt_t.setText('0')
             elif d <= float(self.box_dolar.text()):
                 self.btn_ta_dt.setEnabled(True)
-                self.ta_dt_t.setText(str(round(d * DOLLAR, 2)))
+            self.ta_dt_t.setText(str(round(d * DOLLAR, 2)))
         else:
             if self.ta_td_t.text() == '':
                 d = 0
@@ -743,10 +751,10 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
                 d = float(self.ta_td_t.text())
             if d == 0 or d > float(self.box_turky.text()):
                 self.btn_ta_td.setEnabled(False)
-                self.ta_td_d.setText('0')
+                # self.ta_td_d.setText('0')
             elif d <= float(self.box_turky.text()):
                 self.btn_ta_td.setEnabled(True)
-                self.ta_td_d.setText(str(round(d / DOLLAR, 2)))
+            self.ta_td_d.setText(str(round(d / DOLLAR, 2)))
 
     def exchange_dollar_turky(self, to):
         if to == 'do_tu':
@@ -1751,8 +1759,11 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     def calculate_main(self):
         global DOLLAR
         self.month_sales: QtWidgets.QLCDNumber
-        self.month_sales.display(database.db.get_sales(30))
         self.capital.display(database.db.get_capital(True, DOLLAR))
+        if database.db.get_sales(30) == '':
+            self.month_sales.display(0)
+        else:
+            self.month_sales.display(database.db.get_sales(30))
         if database.db.get_earnings(30) == '':
             self.month_earnings.display(0)
         else:
@@ -2115,6 +2126,9 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         fm['value'] = self.fm_value.text()
         fm['value_t'] = self.fm_value_t.text()
         fm['do_tr'] = self.fm_do_tr.text()
+        self.ch_fm_discount: QtWidgets.QCheckBox
+        if self.ch_fm_discount.isChecked():
+            fm['discount'] = self.fm_discount.text()
         fm['date'] = QDate.toString(self.fm_date.date())
         fm['note'] = self.fm_note.toPlainText()
 

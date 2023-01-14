@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1280</width>
-    <height>783</height>
+    <height>777</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -28,7 +28,13 @@
        <number>0</number>
       </property>
       <widget class="QWidget" name="page">
-       <layout class="QVBoxLayout" name="verticalLayout_18">
+       <layout class="QVBoxLayout" name="verticalLayout_18" stretch="0,1">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>6</number>
+        </property>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="9,2">
           <property name="spacing">
@@ -44,7 +50,7 @@
             </property>
             <property name="maximumSize">
              <size>
-              <width>1100</width>
+              <width>1140</width>
               <height>100</height>
              </size>
             </property>
@@ -105,7 +111,7 @@
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,6">
+         <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0">
           <item>
            <widget class="QListWidget" name="listWidget">
             <property name="sizePolicy">
@@ -222,7 +228,7 @@
              <enum>QTabWidget::Rounded</enum>
             </property>
             <property name="currentIndex">
-             <number>2</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="tab_1">
              <property name="layoutDirection">
@@ -463,6 +469,12 @@
                  <layout class="QVBoxLayout" name="verticalLayout_23" stretch="1,1">
                   <item>
                    <widget class="QLabel" name="label_60">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
                     <property name="font">
                      <font>
                       <pointsize>18</pointsize>
@@ -685,7 +697,7 @@
              </attribute>
              <layout class="QVBoxLayout" name="verticalLayout_26">
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_31" stretch="2,5">
+               <layout class="QHBoxLayout" name="horizontalLayout_31" stretch="0,5">
                 <property name="spacing">
                  <number>5</number>
                 </property>
@@ -2621,6 +2633,11 @@
                       <item>
                        <property name="text">
                         <string>كبير</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>أصول ثابتة</string>
                        </property>
                       </item>
                      </widget>
@@ -4850,6 +4867,7 @@
      <string>ملف</string>
     </property>
     <addaction name="change_pass"/>
+    <addaction name="change_user"/>
     <addaction name="exit"/>
    </widget>
    <addaction name="menu"/>
@@ -4862,6 +4880,11 @@
   <action name="exit">
    <property name="text">
     <string>خروج</string>
+   </property>
+  </action>
+  <action name="change_user">
+   <property name="text">
+    <string>تبديل المستخدم</string>
    </property>
   </action>
  </widget>
@@ -5048,7 +5071,7 @@
   <include location="icons.qrc"/>
   <include location="icons.qrc"/>
   <include location="icons.qrc"/>
-  <include location="../../.designer/backup/icons.qrc"/>
+  <include location="icons.qrc"/>
  </resources>
  <connections/>
 </ui>
