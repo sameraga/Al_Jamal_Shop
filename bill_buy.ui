@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>955</width>
-    <height>720</height>
+    <height>700</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,277 +18,264 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout_11">
-     <item>
-      <layout class="QGridLayout" name="gridLayout_4">
-       <item row="2" column="1">
-        <widget class="QComboBox" name="s_name"/>
-       </item>
-       <item row="0" column="2">
-        <widget class="QLabel" name="label_21">
-         <property name="text">
-          <string>تاريخ الفاتورة</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="3">
-        <widget class="QLabel" name="s_phone">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>-</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLabel" name="bill_code">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>32322</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="2">
-        <widget class="QLabel" name="label_23">
-         <property name="text">
-          <string>رقم تواصل المورد</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_20">
-         <property name="text">
-          <string>رقم الفاتورة</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_22">
-         <property name="text">
-          <string>اسم المورد</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="3">
-        <widget class="QDateEdit" name="b_date">
-         <property name="layoutDirection">
-          <enum>Qt::LeftToRight</enum>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-         <property name="minimumDateTime">
-          <datetime>
-           <hour>0</hour>
-           <minute>0</minute>
-           <second>0</second>
-           <year>1900</year>
-           <month>1</month>
-           <day>1</day>
-          </datetime>
-         </property>
-         <property name="currentSection">
-          <enum>QDateTimeEdit::YearSection</enum>
-         </property>
-         <property name="displayFormat">
-          <string>yyyy-M-d</string>
-         </property>
-         <property name="date">
-          <date>
-           <year>1900</year>
-           <month>1</month>
-           <day>1</day>
-          </date>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_27">
-         <property name="text">
-          <string>رقم الفاتورة المطابقة</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QLineEdit" name="bill_match_code">
-         <property name="maxLength">
-          <number>11</number>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-      </layout>
+    <layout class="QGridLayout" name="gridLayout_4">
+     <item row="2" column="1">
+      <widget class="QComboBox" name="s_name"/>
      </item>
-     <item>
-      <widget class="QTableWidget" name="bb_table">
-       <property name="editTriggers">
-        <set>QAbstractItemView::AllEditTriggers</set>
+     <item row="0" column="2">
+      <widget class="QLabel" name="label_21">
+       <property name="text">
+        <string>تاريخ الفاتورة</string>
        </property>
-       <property name="selectionMode">
-        <enum>QAbstractItemView::SingleSelection</enum>
+      </widget>
+     </item>
+     <item row="2" column="3">
+      <widget class="QLabel" name="s_phone">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
        </property>
-       <property name="selectionBehavior">
-        <enum>QAbstractItemView::SelectRows</enum>
+       <property name="text">
+        <string>-</string>
        </property>
-       <property name="rowCount">
-        <number>1</number>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
        </property>
-       <attribute name="verticalHeaderVisible">
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLabel" name="bill_code">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>32322</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QLabel" name="label_23">
+       <property name="text">
+        <string>رقم تواصل المورد</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_20">
+       <property name="text">
+        <string>رقم الفاتورة</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_22">
+       <property name="text">
+        <string>اسم المورد</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3">
+      <widget class="QDateEdit" name="b_date">
+       <property name="layoutDirection">
+        <enum>Qt::LeftToRight</enum>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+       <property name="minimumDateTime">
+        <datetime>
+         <hour>0</hour>
+         <minute>0</minute>
+         <second>0</second>
+         <year>1900</year>
+         <month>1</month>
+         <day>1</day>
+        </datetime>
+       </property>
+       <property name="currentSection">
+        <enum>QDateTimeEdit::YearSection</enum>
+       </property>
+       <property name="displayFormat">
+        <string>yyyy-M-d</string>
+       </property>
+       <property name="date">
+        <date>
+         <year>1900</year>
+         <month>1</month>
+         <day>1</day>
+        </date>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_27">
+       <property name="text">
+        <string>رقم الفاتورة المطابقة</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="bill_match_code">
+       <property name="maxLength">
+        <number>11</number>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QTableWidget" name="bb_table">
+     <property name="editTriggers">
+      <set>QAbstractItemView::AllEditTriggers</set>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::SingleSelection</enum>
+     </property>
+     <property name="selectionBehavior">
+      <enum>QAbstractItemView::SelectRows</enum>
+     </property>
+     <property name="rowCount">
+      <number>1</number>
+     </property>
+     <attribute name="verticalHeaderVisible">
+      <bool>false</bool>
+     </attribute>
+     <row/>
+     <column>
+      <property name="text">
+       <string>الكود</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>اسم المنتج</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>الكمية</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>سعر القطعة</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>الاجمالي</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>حذف</string>
+      </property>
+     </column>
+    </widget>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout_5">
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="total">
+       <property name="text">
+        <string>0</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_24">
+       <property name="text">
+        <string>الاجمالي: </string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="discount">
+       <property name="text">
+        <string>0</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLabel" name="label_25">
+       <property name="text">
+        <string>النهائي: </string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3">
+      <widget class="QLineEdit" name="last_total">
+       <property name="text">
+        <string>0</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="QCheckBox" name="ch_ispaid">
+       <property name="text">
+        <string>مدفوع</string>
+       </property>
+       <property name="checked">
         <bool>true</bool>
-       </attribute>
-       <row/>
-       <column>
-        <property name="text">
-         <string>الكود</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>اسم المنتج</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>الكمية</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>سعر القطعة</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>الاجمالي</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>حذف</string>
-        </property>
-       </column>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_26">
+       <property name="text">
+        <string>الخصم: </string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_9">
+     <item>
+      <widget class="QPushButton" name="btn_save">
+       <property name="text">
+        <string>حفظ</string>
+       </property>
       </widget>
      </item>
      <item>
-      <layout class="QGridLayout" name="gridLayout_5">
-       <item row="0" column="1">
-        <widget class="QLineEdit" name="total">
-         <property name="text">
-          <string>0</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_24">
-         <property name="text">
-          <string>الاجمالي: </string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QLineEdit" name="discount">
-         <property name="text">
-          <string>0</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="2">
-        <widget class="QLabel" name="label_25">
-         <property name="text">
-          <string>النهائي: </string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="3">
-        <widget class="QLineEdit" name="last_total">
-         <property name="text">
-          <string>0</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="3">
-        <widget class="QCheckBox" name="ch_ispaid">
-         <property name="text">
-          <string>مدفوع</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_26">
-         <property name="text">
-          <string>الخصم: </string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <widget class="QPushButton" name="btn_cancel">
+       <property name="text">
+        <string>إلغاء</string>
+       </property>
+      </widget>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_9">
-       <item>
-        <widget class="QPushButton" name="btn_save">
-         <property name="text">
-          <string>حفظ</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="btn_cancel">
-         <property name="text">
-          <string>إلغاء</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="btn_print_bill">
-         <property name="text">
-          <string>طباعة الفاتورة</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <widget class="QPushButton" name="btn_print_bill">
+       <property name="text">
+        <string>طباعة الفاتورة</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
   </layout>
  </widget>
- <tabstops>
-  <tabstop>s_name</tabstop>
-  <tabstop>b_date</tabstop>
-  <tabstop>bb_table</tabstop>
-  <tabstop>total</tabstop>
-  <tabstop>discount</tabstop>
-  <tabstop>last_total</tabstop>
-  <tabstop>ch_ispaid</tabstop>
- </tabstops>
  <resources/>
  <connections/>
 </ui>
