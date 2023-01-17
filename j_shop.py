@@ -2,8 +2,6 @@
 import subprocess
 import sys
 
-from numpy import round
-
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     from os import chdir
     chdir(sys._MEIPASS)
@@ -21,6 +19,7 @@ from jinja2 import Template
 import xlwt
 import PyQt5.uic as uic
 
+from numpy import round
 import toaster_Notify
 from QDate import QDate
 import database
@@ -34,6 +33,7 @@ USER = ''
 PASS = ''
 PERMISSION = ''
 SerialNumber = 'SerialNumberK2004N0103378'
+# COINS = ['دولار', 'تركي', 'يورو']
 DOLLAR = 0
 
 
@@ -289,7 +289,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         else:
             t_float = round(float(self.total_t.text()) - float(self.discount_t.text()), 2)
             self.last_total_t.setText(str(t_float))
-            self.discount_d.setText(str(float(self.discount_t.text()) / DOLLAR))
+            self.discount_d.setText(str(round(float(self.discount_t.text()) / DOLLAR, 2)))
             d_float = round(float(self.total_d.text()) - float(self.discount_d.text()), 2)
             self.last_total_d.setText(str(d_float))
 
@@ -568,6 +568,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         Form_Main.__init__(self)
         self.setupUi(self)
 
+        self.coins = ['دولار', 'تركي', 'يورو']
+
         self.validator_code = QtGui.QRegExpValidator(QtCore.QRegExp('[\u0621-\u064A0-9a-zA-Z][0-9]*'))
         self.validator_int = QtGui.QRegExpValidator(QtCore.QRegExp('[0-9]+'))
         self.validator_money = QtGui.QRegExpValidator(QtCore.QRegExp('^(([1-9]\d{0,2}(\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$'))
@@ -648,12 +650,20 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.btn_cancel_pass.clicked.connect(
             lambda: self.stackedWidget.setCurrentIndex(0) or self.menubar.setVisible(True))
 
+    def change_user_(self):
+        self.stackedWidget.setCurrentIndex(1)
+        self.txt_username.clear()
+        self.txt_password.clear()
+        self.txt_username.setFocus()
+        self.menubar.setVisible(False)
+
     def save_new_pass(self):
         global PASS
+        global USER
         if self.old_pass.text() == PASS:
             if self.new_pass.text() == self.new_pass_confirm.text():
                 if self.new_pass.text() != '':
-                    database.db.change_user_pass(USER, PASS)
+                    database.db.change_user_pass(USER, self.new_pass.text())
                     self.stackedWidget.setCurrentIndex(0)
                     toaster_Notify.QToaster.show_message(parent=self,
                                                          message="تغيير كلمة المرور\nتم تغيير كلمة المرور بنجاح")
@@ -672,18 +682,22 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
         self.dollar_tr.setValidator(self.validator_money)
         self.ta_dt_d.setValidator(self.validator_money)
-        self.ta_td_t.setValidator(self.validator_money)
 
-        self.ta_dt_d.textChanged.connect(lambda: self.exchange_dollar('dollar'))
-        self.ta_td_t.textChanged.connect(lambda: self.exchange_dollar('turky'))
+        self.ta_dt_d.textChanged.connect(self.exchange_dollar)
+
+        self.coin_exchange_from.addItems(self.coins)
+        c = self.coins.copy()
+        c.remove('دولار')
+        self.coin_exchange_to.addItems(c)
+
+        self.coin_exchange_from.currentTextChanged.connect(self.coin_exchange_from_change)
 
         self.setup_box()
 
         self.listWidget: QtWidgets.QListWidget
         self.listWidget.currentRowChanged.connect(lambda: self.listWidget_change(self.listWidget.currentRow()))
 
-        self.btn_ta_dt.clicked.connect(lambda: self.exchange_dollar_turky('do_tu'))
-        self.btn_ta_td.clicked.connect(lambda: self.exchange_dollar_turky('tu_do'))
+        self.btn_ta_dt.clicked.connect(self.exchange_dollar_turky)
 
         self.customers = database.db.query_csp("customer")
         self.suppliers = database.db.query_csp("supplier")
@@ -699,6 +713,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
         self.dollar_tr.textChanged.connect(self.dollar_change)
         self.change_pass.triggered.connect(self.change_pass_)
+        self.change_user.triggered.connect(self.change_user_)
         self.exit.triggered.connect(lambda: sys.exit(1))
 
         self.update_notification()
@@ -728,43 +743,50 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.calculate_main()
         self.fm_do_tr.setText(str(DOLLAR))
 
-    def exchange_dollar(self, coin):
+    def coin_exchange_from_change(self):
+        c = self.coins.copy()
+        c.remove(self.coin_exchange_from.currentText())
+        self.coin_exchange_to.clear()
+        self.coin_exchange_to.addItems(c)
+        self.ta_dt_d.setText('0')
+        self.ta_dt_t.setText('0')
+
+    def exchange_dollar(self):
         global DOLLAR
         if DOLLAR == 0:
             QtWidgets.QMessageBox.warning(None, 'خطأ', 'أدخل سعر صرف الدولار')
             return
-        if coin == 'dollar':
+        if self.coin_exchange_from.currentText() == "دولار":
             if self.ta_dt_d.text() == '':
                 d = 0
             else:
                 d = float(self.ta_dt_d.text())
             if d == 0 or d > float(self.box_dolar.text()):
                 self.btn_ta_dt.setEnabled(False)
-                # self.ta_dt_t.setText('0')
             elif d <= float(self.box_dolar.text()):
                 self.btn_ta_dt.setEnabled(True)
-            self.ta_dt_t.setText(str(round(d * DOLLAR, 2)))
-        else:
-            if self.ta_td_t.text() == '':
+            if self.coin_exchange_to.currentText() == "تركي":
+                self.ta_dt_t.setText(str(round(d * DOLLAR, 2)))
+        elif self.coin_exchange_from.currentText() == "تركي":
+            if self.ta_dt_d.text() == '':
                 d = 0
             else:
-                d = float(self.ta_td_t.text())
+                d = float(self.ta_dt_d.text())
             if d == 0 or d > float(self.box_turky.text()):
-                self.btn_ta_td.setEnabled(False)
-                # self.ta_td_d.setText('0')
+                self.btn_ta_dt.setEnabled(False)
             elif d <= float(self.box_turky.text()):
-                self.btn_ta_td.setEnabled(True)
-            self.ta_td_d.setText(str(round(d / DOLLAR, 2)))
+                self.btn_ta_dt.setEnabled(True)
+            if self.coin_exchange_to.currentText() == "دولار":
+                self.ta_dt_t.setText(str(round(d / DOLLAR, 2)))
 
-    def exchange_dollar_turky(self, to):
-        if to == 'do_tu':
+    def exchange_dollar_turky(self):
+        if self.coin_exchange_from.currentText() == "دولار" and self.coin_exchange_to.currentText() == "تركي":
             database.db.exchange_dollar_turky("do_tu", float(self.ta_dt_d.text()), float(self.ta_dt_t.text()))
             self.ta_dt_d.setText('0')
             self.ta_dt_t.setText('0')
-        else:
-            database.db.exchange_dollar_turky("tu_do", float(self.ta_td_d.text()), float(self.ta_td_t.text()))
-            self.ta_td_t.setText('0')
-            self.ta_td_d.setText('0')
+        elif self.coin_exchange_from.currentText() == "تركي" and self.coin_exchange_to.currentText() == "دولار":
+            database.db.exchange_dollar_turky("tu_do", float(self.ta_dt_d.text()), float(self.ta_dt_t.text()))
+
         self.setup_box()
 
     def setup_box(self):
@@ -1053,7 +1075,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.p_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignCenter)
             self.p_table.setItem(row_idx, 6, QtWidgets.QTableWidgetItem(row['buy_price']))
             self.p_table.item(row_idx, 6).setTextAlignment(QtCore.Qt.AlignCenter)
-            total_buy = float(row['buy_price']) * float(row['quantity'])
+            total_buy = round(float(row['buy_price']) * float(row['quantity']), 2)
             self.p_table.setItem(row_idx, 7, QtWidgets.QTableWidgetItem(str(total_buy)))
             self.p_table.item(row_idx, 7).setTextAlignment(QtCore.Qt.AlignCenter)
             self.p_table.setItem(row_idx, 8, QtWidgets.QTableWidgetItem(row['sell_price']))
@@ -1803,7 +1825,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             row['c_id'] = self.customers[row['c_id']]
             self.bs_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row['c_id']))
             self.bs_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
-            total = str(float(row['total']) - float(row['discount']))
+            total = str(round(float(row['total']) - float(row['discount']), 2))
             self.bs_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(total))
             self.bs_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
             if row['ispaid'] == '1':
