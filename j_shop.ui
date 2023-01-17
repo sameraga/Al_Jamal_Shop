@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1280</width>
-    <height>777</height>
+    <height>772</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -228,7 +228,7 @@
              <enum>QTabWidget::Rounded</enum>
             </property>
             <property name="currentIndex">
-             <number>1</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="tab_1">
              <property name="layoutDirection">
@@ -405,7 +405,7 @@
                </layout>
               </item>
               <item>
-               <layout class="QVBoxLayout" name="verticalLayout_20" stretch="1,1,1">
+               <layout class="QVBoxLayout" name="verticalLayout_20" stretch="1,1,1,0">
                 <item>
                  <layout class="QGridLayout" name="gridLayout_2">
                   <item row="0" column="0" colspan="2">
@@ -513,16 +513,6 @@
                 </item>
                 <item>
                  <layout class="QGridLayout" name="gridLayout_10">
-                  <item row="3" column="3">
-                   <widget class="QLabel" name="label_61">
-                    <property name="text">
-                     <string>تركي</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="2" column="0">
                    <widget class="QPushButton" name="btn_ta_dt">
                     <property name="enabled">
@@ -533,16 +523,6 @@
                     </property>
                     <property name="autoDefault">
                      <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="2">
-                   <widget class="QLabel" name="label_62">
-                    <property name="text">
-                     <string>&lt;====</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
                     </property>
                    </widget>
                   </item>
@@ -562,67 +542,7 @@
                    </widget>
                   </item>
                   <item row="1" column="1">
-                   <widget class="QLabel" name="label_64">
-                    <property name="text">
-                     <string>تركي</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="1">
-                   <widget class="QLabel" name="label_65">
-                    <property name="text">
-                     <string>دولار</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="3">
-                   <widget class="QLabel" name="label_66">
-                    <property name="text">
-                     <string>دولار</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="0">
-                   <widget class="QPushButton" name="btn_ta_td">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="text">
-                     <string>تحويل</string>
-                    </property>
-                    <property name="autoDefault">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="2">
-                   <widget class="QLabel" name="label_67">
-                    <property name="text">
-                     <string>&lt;====</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="3">
-                   <widget class="QLineEdit" name="ta_dt_d">
-                    <property name="text">
-                     <string>0</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
+                   <widget class="QComboBox" name="coin_exchange_to"/>
                   </item>
                   <item row="2" column="1">
                    <widget class="QLineEdit" name="ta_dt_t">
@@ -637,8 +557,8 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="4" column="3">
-                   <widget class="QLineEdit" name="ta_td_t">
+                  <item row="2" column="3">
+                   <widget class="QLineEdit" name="ta_dt_d">
                     <property name="text">
                      <string>0</string>
                     </property>
@@ -647,20 +567,43 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="4" column="1">
-                   <widget class="QLineEdit" name="ta_td_d">
+                  <item row="1" column="3">
+                   <widget class="QComboBox" name="coin_exchange_from"/>
+                  </item>
+                  <item row="1" column="2">
+                   <widget class="QLabel" name="label_62">
                     <property name="text">
-                     <string>0</string>
+                     <string>&lt;====</string>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignCenter</set>
                     </property>
-                    <property name="readOnly">
-                     <bool>true</bool>
+                   </widget>
+                  </item>
+                  <item row="2" column="2">
+                   <widget class="QLabel" name="label_64">
+                    <property name="text">
+                     <string>&lt;====</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
                     </property>
                    </widget>
                   </item>
                  </layout>
+                </item>
+                <item>
+                 <spacer name="verticalSpacer_5">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                 </spacer>
                 </item>
                </layout>
               </item>
@@ -702,7 +645,7 @@
                  <number>5</number>
                 </property>
                 <property name="topMargin">
-                 <number>15</number>
+                 <number>10</number>
                 </property>
                 <property name="bottomMargin">
                  <number>4</number>
@@ -1477,7 +1420,7 @@
               <item>
                <layout class="QGridLayout" name="gridLayout_5">
                 <property name="topMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <item row="1" column="2">
                  <widget class="QCheckBox" name="ch_billsell_date_to">
@@ -1854,7 +1797,7 @@
               <item>
                <layout class="QGridLayout" name="gridLayout_4">
                 <property name="topMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <item row="0" column="0">
                  <widget class="QLineEdit" name="billbuy_code">
@@ -2228,7 +2171,7 @@
                  <number>0</number>
                 </property>
                 <property name="topMargin">
-                 <number>15</number>
+                 <number>10</number>
                 </property>
                 <property name="bottomMargin">
                  <number>8</number>
@@ -2946,7 +2889,7 @@
                  <number>0</number>
                 </property>
                 <property name="topMargin">
-                 <number>15</number>
+                 <number>10</number>
                 </property>
                 <property name="bottomMargin">
                  <number>8</number>
@@ -3399,7 +3342,7 @@
                  <number>0</number>
                 </property>
                 <property name="topMargin">
-                 <number>15</number>
+                 <number>10</number>
                 </property>
                 <property name="bottomMargin">
                  <number>8</number>
@@ -3875,7 +3818,7 @@
                  <number>0</number>
                 </property>
                 <property name="topMargin">
-                 <number>15</number>
+                 <number>10</number>
                 </property>
                 <property name="bottomMargin">
                  <number>8</number>
@@ -4719,7 +4662,7 @@
                </font>
               </property>
               <property name="text">
-               <string>أدخل كلمة المرور هنا</string>
+               <string>لتعديل كلمة المرور أدخل الكلمة هنا</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -4866,8 +4809,9 @@
     <property name="title">
      <string>ملف</string>
     </property>
-    <addaction name="change_pass"/>
     <addaction name="change_user"/>
+    <addaction name="change_username"/>
+    <addaction name="change_pass"/>
     <addaction name="exit"/>
    </widget>
    <addaction name="menu"/>
@@ -4885,6 +4829,11 @@
   <action name="change_user">
    <property name="text">
     <string>تبديل المستخدم</string>
+   </property>
+  </action>
+  <action name="change_username">
+   <property name="text">
+    <string>تغيير اسم المستخدم</string>
    </property>
   </action>
  </widget>
@@ -5037,11 +4986,8 @@
   <tabstop>btn_cancel_pass</tabstop>
   <tabstop>dollar_tr</tabstop>
   <tabstop>btn_ta_dt</tabstop>
-  <tabstop>btn_ta_td</tabstop>
   <tabstop>ta_dt_d</tabstop>
   <tabstop>ta_dt_t</tabstop>
-  <tabstop>ta_td_t</tabstop>
-  <tabstop>ta_td_d</tabstop>
   <tabstop>fm_value_t</tabstop>
   <tabstop>fm_do_tr</tabstop>
   <tabstop>c_balance_range</tabstop>
