@@ -4,6 +4,7 @@ import sys
 
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     from os import chdir
+
     chdir(sys._MEIPASS)
 
 import glob
@@ -12,6 +13,7 @@ import math
 import os
 import tempfile
 import time
+from uuid6 import uuid8
 import PyQt5.QtCore as QtCore
 import PyQt5.QtGui as QtGui
 import PyQt5.QtWidgets as QtWidgets
@@ -28,7 +30,7 @@ from dlg_choice_code import PrintDialog
 Form_Main, _ = uic.loadUiType('j_shop.ui')
 Form_BillSell, _ = uic.loadUiType('bill_sell.ui')
 Form_BillBuy, _ = uic.loadUiType('bill_buy.ui')
-PAGE_SIZE = 10
+
 USER = ''
 PASS = ''
 PERMISSION = ''
@@ -49,7 +51,8 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         Form_BillSell.__init__(self)
         self.setupUi(self)
 
-        self.validator_money = QtGui.QRegExpValidator(QtCore.QRegExp('^(([1-9]\d{0,2}(\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$'))
+        self.validator_money = QtGui.QRegExpValidator(
+            QtCore.QRegExp('^(([1-9]\d{0,2}(\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$'))
 
         self.ch = id
         self.b_id = id
@@ -257,7 +260,8 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         total = round(total, 2)
         self.bs_table.setItem(current_row, 6, QtWidgets.QTableWidgetItem(str(total)))
 
-        total_t = (quantity * float(self.bs_table.item(current_row, 4).text())) - float(self.bs_table.item(current_row, 5).text())
+        total_t = (quantity * float(self.bs_table.item(current_row, 4).text())) - float(
+            self.bs_table.item(current_row, 5).text())
         total_t = round(total_t, 2)
         self.bs_table.setItem(current_row, 7, QtWidgets.QTableWidgetItem(str(total_t)))
         self.calculate_total()
@@ -358,7 +362,8 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
         Form_BillBuy.__init__(self)
         self.setupUi(self)
 
-        self.validator_money = QtGui.QRegExpValidator(QtCore.QRegExp('^(([1-9]\d{0,2}(\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$'))
+        self.validator_money = QtGui.QRegExpValidator(
+            QtCore.QRegExp('^(([1-9]\d{0,2}(\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$'))
 
         self.b_id = id
         self.code = None
@@ -568,22 +573,21 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         Form_Main.__init__(self)
         self.setupUi(self)
 
-        self.coins = ['دولار', 'تركي', 'يورو']
+        self.coins = ['دولار', 'تركي']
 
         self.validator_code = QtGui.QRegExpValidator(QtCore.QRegExp('[\u0621-\u064A0-9a-zA-Z][0-9]*'))
         self.validator_int = QtGui.QRegExpValidator(QtCore.QRegExp('[0-9]+'))
-        self.validator_money = QtGui.QRegExpValidator(QtCore.QRegExp('^(([1-9]\d{0,2}(\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$'))
+        self.validator_money = QtGui.QRegExpValidator(
+            QtCore.QRegExp('^(([1-9]\d{0,2}(\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$'))
         self.validator_phone = QtGui.QRegExpValidator(QtCore.QRegExp('\+[1-9]{1}[0-9]{11}'))
 
         self._typing_timer_p = QtCore.QTimer()
         self.product_id = 0
         self.product_co = 0
-        self.page_size_product = PAGE_SIZE
 
         self._typing_timer_c = QtCore.QTimer()
         self.customer_id = 0
         self.customer_co = 0
-        self.page_size_customer = PAGE_SIZE
 
         self.customers = None
         self.suppliers = None
@@ -592,7 +596,6 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self._typing_timer_s = QtCore.QTimer()
         self.supplier_id = 0
         self.supplier_co = 0
-        self.page_size_supplier = PAGE_SIZE
 
         self._typing_timer_pa = QtCore.QTimer()
         self.partners_id = 0
@@ -601,16 +604,13 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self._typing_timer_bs = QtCore.QTimer()
         self.bill_sell_id = 0
         self.bill_sell_co = 0
-        self.page_size_bill_sell = PAGE_SIZE
 
         self._typing_timer_bb = QtCore.QTimer()
         self.bill_buy_id = 0
         self.bill_buy_co = 0
-        self.page_size_bill_buy = PAGE_SIZE
 
         self._typing_timer_fm = QtCore.QTimer()
         self.fm_id = 0
-        self.page_size_fm = PAGE_SIZE
 
         self.setup_login()
 
@@ -620,6 +620,85 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.txt_username.setFocus()
         self.btn_in.clicked.connect(self.enter_app)
         self.btn_exit.clicked.connect(lambda: sys.exit(1))
+
+        self.dollar_tr.setValidator(self.validator_money)
+        self.ta_dt_d.setValidator(self.validator_money)
+
+        self.ta_dt_d.textChanged.connect(self.exchange_dollar)
+
+        self.coin_exchange_from.addItems(self.coins)
+        c = self.coins.copy()
+        c.remove('دولار')
+        self.coin_exchange_to.addItems(c)
+
+        self.coin_exchange_from.currentTextChanged.connect(self.coin_exchange_from_change)
+
+        self.listWidget.currentRowChanged.connect(lambda: self.listWidget_change(self.listWidget.currentRow()))
+
+        self.btn_ta_dt.clicked.connect(self.exchange_dollar_turky)
+
+        # update tables
+        self._typing_timer_p.setSingleShot(True)
+        self._typing_timer_c.setSingleShot(True)
+        self._typing_timer_s.setSingleShot(True)
+        self._typing_timer_bs.setSingleShot(True)
+        self._typing_timer_bb.setSingleShot(True)
+        self._typing_timer_fm.setSingleShot(True)
+
+        self.dollar_tr.textChanged.connect(self.dollar_change)
+        self.change_pass.triggered.connect(self.change_pass_)
+        self.change_user.triggered.connect(self.change_user_)
+        self.edit_users.triggered.connect(self.edit_users_)
+        self.btn_save_users.clicked.connect(self.save_users)
+        self.btn_cancel_users.clicked.connect(
+            lambda: self.stackedWidget.setCurrentIndex(0) or self.menubar.setVisible(True))
+        self.btn_add_user.clicked.connect(lambda: self.users_table.setRowCount(self.users_table.rowCount() + 1))
+        self.exit.triggered.connect(lambda: sys.exit(1))
+
+        # #### product methods
+        self.p_code.setValidator(self.validator_code)
+        self.p_code_search.setValidator(self.validator_code)
+        self.p_quantity.setValidator(self.validator_int)
+        self.p_less_quantity.setValidator(self.validator_int)
+        self.p_buy_price.setValidator(self.validator_money)
+        self.p_sell_price.setValidator(self.validator_money)
+        self.p_sell_price_wh.setValidator(self.validator_money)
+        self.p_price_range.setValidator(self.validator_money)
+
+        self.p_class.currentTextChanged.connect(lambda: self.p_class_changed(self.p_class))
+        self.p_class_search.currentTextChanged.connect(lambda: self.p_class_changed(self.p_class_search))
+        self._typing_timer_p.timeout.connect(self.update_product_table)
+
+        # table
+        self.p_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.p_table.doubleClicked.connect(lambda mi: self.fill_product_info(self.p_table.item(mi.row(), 0).id))
+        self.p_table.clicked.connect(lambda mi: self.one_click_p(self.p_table.item(mi.row(), 0).id))
+
+        # search
+        self.p_code_search.textChanged.connect(lambda text: self._typing_timer_p.start(1000))
+        self.p_name_search.textChanged.connect(lambda text: self._typing_timer_p.start(1000))
+        self.p_class_search.currentTextChanged.connect(lambda text: self._typing_timer_p.start(1000))
+        self.p_type_search.currentTextChanged.connect(lambda text: self._typing_timer_p.start(1000))
+
+        self.p_page_num.valueChanged.connect(self.update_product_table)
+        self.p_page_size.valueChanged.connect(lambda: self.change_page_size('product'))
+
+        # btn
+        self.btn_add_product.clicked.connect(self.create_new_product)
+        self.btn_edit_product.clicked.connect(self.update_product)
+        self.btn_delete_product.clicked.connect(self.delete_product)
+        self.btn_clear_product.clicked.connect(self.clear_product_inputs)
+
+        # print and to exel
+        self.btn_print_table_p.clicked.connect(self.print_table_product)
+        self.btn_to_exel_p.clicked.connect(lambda: self.to_excel(self.p_table))
+
+        # pages
+        self.p_post.clicked.connect(lambda: self.p_page_num.setValue(self.p_page_num.value() + 1))
+        self.p_previous.clicked.connect(lambda: self.p_page_num.setValue(self.p_page_num.value() - 1))
+        self.p_last.clicked.connect(lambda: self.p_page_num.setValue(
+            math.ceil(int(database.db.count_row("product", 1)) / self.p_page_size.value())))
+        self.p_first.clicked.connect(lambda: self.p_page_num.setValue(1))
 
     def enter_app(self):
         global USER
@@ -657,6 +736,52 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.txt_username.setFocus()
         self.menubar.setVisible(False)
 
+    def edit_users_(self):
+        self.stackedWidget.setCurrentIndex(3)
+        self.menubar.setVisible(False)
+        self.update_users()
+
+    def update_users(self):
+        rows = database.db.get_users()
+        self.users_table.setRowCount(len(rows))
+        for row_idx, row in enumerate(rows):
+            self.users_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(row['name']))
+            self.users_table.item(row_idx, 0).id = row['id']
+            self.users_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.users_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(row['pass']))
+            self.users_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.users_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row['permission']))
+            self.users_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
+            if row_idx != 0:
+                btn_delete = QtWidgets.QPushButton(QtGui.QIcon.fromTheme('delete'), '')
+                btn_delete.clicked.connect(lambda: self.users_table.removeRow(self.users_table.currentRow()))
+                self.users_table.setCellWidget(row_idx, 3, btn_delete)
+        self.users_table.resizeColumnsToContents()
+
+    def save_users(self):
+        users = []
+        for row in range(self.users_table.rowCount()):
+            user = dict()
+            if self.users_table.item(row, 0) and self.users_table.item(row, 0).text():
+                if hasattr(self.users_table.item(row, 0), 'id'):
+                    user['id'] = self.users_table.item(row, 0).id
+                else:
+                    user['id'] = str(uuid8())
+                user['name'] = self.users_table.item(row, 0).text()
+                if self.users_table.item(row, 1) and self.users_table.item(row, 1).text():
+                    user['pass'] = self.users_table.item(row, 1).text()
+                else:
+                    QtWidgets.QMessageBox.warning(None, 'خطأ', 'لا يجب أن تدخل كلمة مرور للمستخدم')
+                    return
+                if self.users_table.item(row, 2) and self.users_table.item(row, 2).text():
+                    user['permission'] = self.users_table.item(row, 2).text()
+                else:
+                    QtWidgets.QMessageBox.warning(None, 'خطأ', 'لا يجب أن تدخل صلاحيات للمستخدم')
+                    return
+                users.append(user)
+        database.db.insert_users(users)
+        toaster_Notify.QToaster.show_message(parent=self, message="تم حفظ التعديلات بنجاح")
+
     def save_new_pass(self):
         global PASS
         global USER
@@ -680,41 +805,11 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.tabWidget.tabBar().setVisible(False)
         self.tabWidget.setCurrentIndex(0)
 
-        self.dollar_tr.setValidator(self.validator_money)
-        self.ta_dt_d.setValidator(self.validator_money)
-
-        self.ta_dt_d.textChanged.connect(self.exchange_dollar)
-
-        self.coin_exchange_from.addItems(self.coins)
-        c = self.coins.copy()
-        c.remove('دولار')
-        self.coin_exchange_to.addItems(c)
-
-        self.coin_exchange_from.currentTextChanged.connect(self.coin_exchange_from_change)
-
         self.setup_box()
-
-        self.listWidget: QtWidgets.QListWidget
-        self.listWidget.currentRowChanged.connect(lambda: self.listWidget_change(self.listWidget.currentRow()))
-
-        self.btn_ta_dt.clicked.connect(self.exchange_dollar_turky)
 
         self.customers = database.db.query_csp("customer")
         self.suppliers = database.db.query_csp("supplier")
         self.partners = database.db.query_csp("partners")
-
-        # update tables
-        self._typing_timer_p.setSingleShot(True)
-        self._typing_timer_c.setSingleShot(True)
-        self._typing_timer_s.setSingleShot(True)
-        self._typing_timer_bs.setSingleShot(True)
-        self._typing_timer_bb.setSingleShot(True)
-        self._typing_timer_fm.setSingleShot(True)
-
-        self.dollar_tr.textChanged.connect(self.dollar_change)
-        self.change_pass.triggered.connect(self.change_pass_)
-        self.change_user.triggered.connect(self.change_user_)
-        self.exit.triggered.connect(lambda: sys.exit(1))
 
         self.update_notification()
         self.setup_controls_product()
@@ -740,7 +835,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             DOLLAR = 0
         else:
             DOLLAR = float(self.dollar_tr.text())
-            self.calculate_main()
+        self.calculate_main()
         self.fm_do_tr.setText(str(DOLLAR))
 
     def coin_exchange_from_change(self):
@@ -795,33 +890,30 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def change_page_size(self, table):
         if table == 'product':
-            self.page_size_product = self.p_page_size.value()
-            self.p_page_num.setRange(1, math.ceil(int(database.db.count_row("product", 1)) / self.page_size_product))
-            self._typing_timer_p.start(1000)
+            self.p_page_num.setRange(1, math.ceil(int(database.db.count_row("product", 1)) / self.p_page_size.value()))
+            self.update_product_table()
         elif table == 'customer':
-            self.page_size_customer = self.s_page_size_c.value()
-            self.page_num_c.setRange(1, math.ceil(int(database.db.count_customer(1)) / self.page_size_c))
-            self._typing_timer_c.start(1000)
+            self.page_num_c.setRange(1, math.ceil(int(database.db.count_customer(1)) / self.c_page_size.value()))
+            self.update_customer_table()
         elif table == 'supplier':
-            self.page_size_supplier = self.s_page_size.value()
-            self.s_page_num.setRange(1, math.ceil(int(database.db.count_row("supplier", 1)) / self.page_size_s))
-            self._typing_timer_s.start(1000)
+            self.s_page_num.setRange(1, math.ceil(int(database.db.count_row("supplier", 1)) / self.s_page_size.value()))
+            self.update_supplier_table()
         elif table == 'partners':
-            self.pa_page_num.setRange(1, math.ceil(int(database.db.count_row("partners", 1)) / self.pa_page_size.value()))
-            self._typing_timer_pa.start(1000)
+            self.pa_page_num.setRange(1,
+                                      math.ceil(int(database.db.count_row("partners", 1)) / self.pa_page_size.value()))
+            self.update_partners_table()
         elif table == 'bill_sell':
-            self.page_size_bill_sell = self.bs_page_size.value()
             self.bs_page_num.setRange(1,
-                                      math.ceil(int(database.db.count_row("bill_sell", 1)) / self.page_size_bill_sell))
-            self._typing_timer_bs.start(1000)
+                                      math.ceil(int(database.db.count_row("bill_sell", 1)) / self.bs_page_size.value()))
+            self.update_bill_sell_table()
         elif table == 'bill_buy':
-            self.page_size_bill_buy = self.bb_page_size.value()
-            self.bb_page_num.setRange(1, math.ceil(int(database.db.count_row("bill_buy", 1)) / self.page_size_bill_buy))
-            self._typing_timer_bb.start(1000)
+            self.bb_page_num.setRange(1,
+                                      math.ceil(int(database.db.count_row("bill_buy", 1)) / self.bb_page_size.value()))
+            self.update_bill_buy_table()
         elif table == 'fund_movement':
-            self.page_size_fm = self.fm_page_size.value()
-            self.fm_page_num.setRange(1, math.ceil(int(database.db.count_row("fund_movement", 1)) / self.page_size_fm))
-            self._typing_timer_fm.start(1000)
+            self.fm_page_num.setRange(1, math.ceil(
+                int(database.db.count_row("fund_movement", 1)) / self.fm_page_size.value()))
+            self.update_fm_table()
 
     def check_date_from(self, x):
         if x == 'bell_sell':
@@ -894,50 +986,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     # product methods
     def setup_controls_product(self):
-        self.p_code.setValidator(self.validator_code)
-        self.p_code_search.setValidator(self.validator_code)
-        self.p_quantity.setValidator(self.validator_int)
-        self.p_less_quantity.setValidator(self.validator_int)
-        self.p_buy_price.setValidator(self.validator_money)
-        self.p_sell_price.setValidator(self.validator_money)
-        self.p_sell_price_wh.setValidator(self.validator_money)
-        self.p_price_range.setValidator(self.validator_money)
-
-        self.p_class.currentTextChanged.connect(lambda: self.p_class_changed(self.p_class))
-        self.p_class_search.currentTextChanged.connect(lambda: self.p_class_changed(self.p_class_search))
-        self._typing_timer_p.timeout.connect(self.update_product_table)
-
-        # table
-        self.p_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self.p_table.doubleClicked.connect(lambda mi: self.fill_product_info(self.p_table.item(mi.row(), 0).id))
-        self.p_table.clicked.connect(lambda mi: self.one_click_p(self.p_table.item(mi.row(), 0).id))
-        self.p_page_num.setRange(1, math.ceil(int(database.db.count_row("product", 1)) / self.page_size_product))
-
-        # search
-        self.p_code_search.textChanged.connect(lambda text: self._typing_timer_p.start(1000))
-        self.p_name_search.textChanged.connect(lambda text: self._typing_timer_p.start(1000))
-        self.p_class_search.currentTextChanged.connect(lambda text: self._typing_timer_p.start(1000))
-        self.p_type_search.currentTextChanged.connect(lambda text: self._typing_timer_p.start(1000))
-
-        self.p_page_num.valueChanged.connect(lambda text: self._typing_timer_p.start(1000))
-        self.p_page_size.valueChanged.connect(lambda: self.change_page_size('product'))
-
-        # btn
-        self.btn_add_product.clicked.connect(self.create_new_product)
-        self.btn_edit_product.clicked.connect(self.update_product)
-        self.btn_delete_product.clicked.connect(self.delete_product)
-        self.btn_clear_product.clicked.connect(self.clear_product_inputs)
-
-        # print and to exel
-        self.btn_print_table_p.clicked.connect(self.print_table_product)
-        self.btn_to_exel_p.clicked.connect(lambda: self.to_excel(self.p_table))
-
-        # pages
-        self.p_post.clicked.connect(lambda: self.p_page_num.setValue(self.p_page_num.value() + 1))
-        self.p_previous.clicked.connect(lambda: self.p_page_num.setValue(self.p_page_num.value() - 1))
-        self.p_last.clicked.connect(lambda: self.p_page_num.setValue(
-            math.ceil(int(database.db.count_row("product", 1)) / self.page_size_product)))
-        self.p_first.clicked.connect(lambda: self.p_page_num.setValue(1))
+        self.p_page_num.setRange(1, math.ceil(int(database.db.count_row("product", 1)) / self.p_page_size.value()))
 
         self.btn_edit_product.setEnabled(False)
         self.btn_delete_product.setEnabled(False)
@@ -1055,12 +1104,14 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def update_product_table(self):
         fil = self.search_product_save()
-        rows = database.db.query_all_product(fil, self.page_size_product * (self.p_page_num.value() - 1),
-                                             self.page_size_product)
+        count, rows = database.db.query_all_product(fil, self.p_page_size.value() * (self.p_page_num.value() - 1),
+                                                    self.p_page_size.value())
+
+        self.p_page_num.setRange(1, math.ceil(int(count) / self.p_page_size.value()))
         self.p_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
             self.p_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
-                str(row_idx + 1 + (self.page_size_product * (self.p_page_num.value() - 1)))))
+                str(row_idx + 1 + (self.p_page_size.value() * (self.p_page_num.value() - 1)))))
             self.p_table.item(row_idx, 0).id = row['id']
             self.p_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
             self.p_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(row['code'])))
@@ -1156,12 +1207,12 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.c_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.c_table.doubleClicked.connect(lambda mi: self.fill_customer_info(self.c_table.item(mi.row(), 0).id))
         self.c_table.clicked.connect(lambda mi: self.one_click_c(self.c_table.item(mi.row(), 0).id))
-        self.c_page_num.setRange(1, math.ceil(int(database.db.count_row("customer", 1)) / self.page_size_customer))
+        self.c_page_num.setRange(1, math.ceil(int(database.db.count_row("customer", 1)) / self.c_page_size.value()))
 
         # search
         self.c_code_search.textChanged.connect(lambda text: self._typing_timer_c.start(1000))
         self.c_name_search.textChanged.connect(lambda text: self._typing_timer_c.start(1000))
-        self.c_page_num.valueChanged.connect(lambda text: self._typing_timer_c.start(1000))
+        self.c_page_num.valueChanged.connect(self.update_customer_table)
         self.c_page_size.valueChanged.connect(lambda: self.change_page_size('customer'))
 
         # btn
@@ -1178,7 +1229,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.c_post.clicked.connect(lambda: self.c_page_num.setValue(self.c_page_num.value() + 1))
         self.c_previous.clicked.connect(lambda: self.c_page_num.setValue(self.c_page_num.value() - 1))
         self.c_last.clicked.connect(lambda: self.c_page_num.setValue(
-            math.ceil(int(database.db.count_row("customer", 1)) / self.page_size_customer)))
+            math.ceil(int(database.db.count_row("customer", 1)) / self.c_page_size.value())))
         self.c_first.clicked.connect(lambda: self.c_page_num.setValue(1))
 
         self.btn_edit_customer.setEnabled(False)
@@ -1264,12 +1315,14 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def update_customer_table(self):
         fil = self.search_customer_save()
-        rows = database.db.query_all_cs('customer', fil, self.page_size_customer * (self.c_page_num.value() - 1),
-                                        self.page_size_customer)
+        count, rows = database.db.query_all_cs('customer', fil,
+                                               self.c_page_size.value() * (self.c_page_num.value() - 1),
+                                               self.c_page_size.value())
+        self.c_page_num.setRange(1, math.ceil(int(count) / self.c_page_size.value()))
         self.c_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
             self.c_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
-                str(row_idx + 1 + (self.page_size_customer * (self.c_page_num.value() - 1)))))
+                str(row_idx + 1 + (self.c_page_size.value() * (self.c_page_num.value() - 1)))))
             self.c_table.item(row_idx, 0).id = row['id']
             self.c_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
             self.c_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(row['code'])))
@@ -1346,13 +1399,13 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.s_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.s_table.doubleClicked.connect(lambda mi: self.fill_supplier_info(self.s_table.item(mi.row(), 0).id))
         self.s_table.clicked.connect(lambda mi: self.one_click_s(self.s_table.item(mi.row(), 0).id))
-        self.s_page_num.setRange(1, math.ceil(int(database.db.count_row("supplier", 1)) / self.page_size_supplier))
+        self.s_page_num.setRange(1, math.ceil(int(database.db.count_row("supplier", 1)) / self.s_page_size.value()))
 
         # search
         self.s_code_search.textChanged.connect(lambda text: self._typing_timer_s.start(1000))
         self.s_name_search.textChanged.connect(lambda text: self._typing_timer_s.start(1000))
 
-        self.s_page_num.valueChanged.connect(lambda text: self._typing_timer_s.start(1000))
+        self.s_page_num.valueChanged.connect(self.update_supplier_table)
         self.s_page_size.valueChanged.connect(lambda: self.change_page_size('supplier'))
 
         # btn
@@ -1369,7 +1422,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.s_post.clicked.connect(lambda: self.s_page_num.setValue(self.s_page_num.value() + 1))
         self.s_previous.clicked.connect(lambda: self.s_page_num.setValue(self.s_page_num.value() - 1))
         self.s_last.clicked.connect(lambda: self.s_page_num.setValue(
-            math.ceil(int(database.db.count_row("supplier", 1)) / self.page_size_supplier)))
+            math.ceil(int(database.db.count_row("supplier", 1)) / self.s_page_size.value())))
         self.s_first.clicked.connect(lambda: self.s_page_num.setValue(1))
 
         self.btn_edit_supplier.setEnabled(False)
@@ -1456,12 +1509,14 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def update_supplier_table(self):
         fil = self.search_supplier_save()
-        rows = database.db.query_all_cs('supplier', fil, self.page_size_supplier * (self.s_page_num.value() - 1),
-                                        self.page_size_supplier)
+        count, rows = database.db.query_all_cs('supplier', fil,
+                                               self.s_page_size.value() * (self.s_page_num.value() - 1),
+                                               self.s_page_size.value())
+        self.s_page_num.setRange(1, math.ceil(int(count) / self.s_page_size.value()))
         self.s_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
             self.s_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
-                str(row_idx + 1 + (self.page_size_supplier * (self.s_page_num.value() - 1)))))
+                str(row_idx + 1 + (self.s_page_size.value() * (self.s_page_num.value() - 1)))))
             self.s_table.item(row_idx, 0).id = row['id']
             self.s_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
             self.s_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(row['code'])))
@@ -1542,7 +1597,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.pa_code_search.textChanged.connect(lambda text: self._typing_timer_pa.start(1000))
         self.pa_name_search.textChanged.connect(lambda text: self._typing_timer_pa.start(1000))
 
-        self.pa_page_num.valueChanged.connect(lambda text: self._typing_timer_pa.start(1000))
+        self.pa_page_num.valueChanged.connect(self.update_partners_table)
         self.pa_page_size.valueChanged.connect(lambda: self.change_page_size('partners'))
 
         # btn
@@ -1558,7 +1613,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         # pages
         self.pa_post.clicked.connect(lambda: self.pa_page_num.setValue(self.pa_page_num.value() + 1))
         self.pa_previous.clicked.connect(lambda: self.pa_page_num.setValue(self.pa_page_num.value() - 1))
-        self.pa_last.clicked.connect(lambda: self.pa_page_num.setValue(math.ceil(int(database.db.count_row("partners", 1)) / self.pa_page_size.value())))
+        self.pa_last.clicked.connect(lambda: self.pa_page_num.setValue(
+            math.ceil(int(database.db.count_row("partners", 1)) / self.pa_page_size.value())))
         self.pa_first.clicked.connect(lambda: self.pa_page_num.setValue(1))
 
         self.btn_edit_partners.setEnabled(False)
@@ -1643,8 +1699,9 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def update_partners_table(self):
         fil = self.search_partners_save()
-        rows = database.db.query_all_cs('partners', fil, self.pa_page_size.value() * (self.s_page_num.value() - 1),
+        count, rows = database.db.query_all_cs('partners', fil, self.pa_page_size.value() * (self.pa_page_num.value() - 1),
                                         self.pa_page_size.value())
+        self.pa_page_num.setRange(1, math.ceil(int(count) / self.pa_page_size.value()))
         self.pa_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
             self.pa_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
@@ -1717,7 +1774,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.bs_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.bs_table.doubleClicked.connect(lambda mi: self.double_click_bs(self.bs_table.item(mi.row(), 0).id))
         self.bs_table.clicked.connect(lambda mi: self.one_click_bs(self.bs_table.item(mi.row(), 0).id))
-        self.bs_page_num.setRange(1, math.ceil(int(database.db.count_row("bill_sell", 1)) / self.page_size_bill_sell))
+        self.bs_page_num.setRange(1, math.ceil(int(database.db.count_row("bill_sell", 1)) / self.bs_page_size.value()))
 
         self.billsell_code.textChanged.connect(lambda text: self._typing_timer_bs.start(1000))
         self.billsell_cname.currentTextChanged.connect(lambda text: self._typing_timer_bs.start(1000))
@@ -1725,7 +1782,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.ch_billsell_date_from.toggled.connect(lambda: self.check_date_from('bell_sell'))
         self.ch_billsell_date_to.toggled.connect(lambda: self.check_date_to('bell_sell'))
 
-        self.bs_page_num.valueChanged.connect(lambda text: self._typing_timer_bs.start(1000))
+        self.bs_page_num.valueChanged.connect(self.update_bill_sell_table)
         self.bs_page_size.valueChanged.connect(lambda: self.change_page_size('bell_sell'))
 
         # print and to exel
@@ -1781,7 +1838,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     def calculate_main(self):
         global DOLLAR
         self.month_sales: QtWidgets.QLCDNumber
-        self.capital.display(database.db.get_capital(True, DOLLAR))
+        cap = round(database.db.get_capital(True, DOLLAR), 2)
+        self.capital.display(cap)
         if database.db.get_sales(30) == '':
             self.month_sales.display(0)
         else:
@@ -1812,12 +1870,12 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def update_bill_sell_table(self):
         fil = self.search_bill_sell_save()
-        rows = database.db.query_all_bill("bill_sell", fil, self.page_size_bill_sell * (self.bs_page_num.value() - 1),
-                                          self.page_size_bill_sell)
+        rows = database.db.query_all_bill("bill_sell", fil, self.bs_page_size.value() * (self.bs_page_num.value() - 1),
+                                          self.bs_page_size.value())
         self.bs_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
             self.bs_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
-                str(row_idx + 1 + (self.page_size_bill_sell * (self.bs_page_num.value() - 1)))))
+                str(row_idx + 1 + (self.bs_page_size.value() * (self.bs_page_num.value() - 1)))))
             self.bs_table.item(row_idx, 0).id = row['id']
             self.bs_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
             self.bs_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(row['code'])))
@@ -1872,7 +1930,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.bb_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.bb_table.doubleClicked.connect(lambda mi: self.double_click(self.bb_table.item(mi.row(), 0).id))
         self.bb_table.clicked.connect(lambda mi: self.one_click_bb(self.bb_table.item(mi.row(), 0).id))
-        self.bb_page_num.setRange(1, math.ceil(int(database.db.count_row("bill_buy", 1)) / self.page_size_bill_buy))
+        self.bb_page_num.setRange(1, math.ceil(int(database.db.count_row("bill_buy", 1)) / self.bb_page_size.value()))
 
         self.billbuy_code.textChanged.connect(lambda text: self._typing_timer_bb.start(1000))
         self.billbuy_sname.currentTextChanged.connect(lambda text: self._typing_timer_bb.start(1000))
@@ -1880,7 +1938,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.ch_billbuy_date_from.toggled.connect(lambda: self.check_date_from('bell_buy'))
         self.ch_billbuy_date_to.toggled.connect(lambda: self.check_date_to('bell_buy'))
 
-        self.bb_page_num.valueChanged.connect(lambda text: self._typing_timer_bb.start(1000))
+        self.bb_page_num.valueChanged.connect(self.update_bill_buy_table)
         self.bb_page_size.valueChanged.connect(lambda: self.change_page_size('bell_buy'))
 
         # print and to exel bill
@@ -1944,12 +2002,12 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def update_bill_buy_table(self):
         fil = self.search_bill_buy_save()
-        rows = database.db.query_all_bill("bill_buy", fil, self.page_size_bill_buy * (self.bb_page_num.value() - 1),
-                                          self.page_size_bill_sell)
+        rows = database.db.query_all_bill("bill_buy", fil, self.bb_page_size.value() * (self.bb_page_num.value() - 1),
+                                          self.bb_page_size.value())
         self.bb_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
             self.bb_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
-                str(row_idx + 1 + (self.page_size_bill_buy * (self.bb_page_num.value() - 1)))))
+                str(row_idx + 1 + (self.bb_page_size.value() * (self.bb_page_num.value() - 1)))))
             self.bb_table.item(row_idx, 0).id = row['id']
             self.bb_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
             self.bb_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(row['code'])))
@@ -2010,7 +2068,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.fm_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.fm_table.doubleClicked.connect(lambda mi: self.fill_fm_info(self.fm_table.item(mi.row(), 0).id))
         self.fm_table.clicked.connect(lambda mi: self.one_click_fm(self.fm_table.item(mi.row(), 0).id))
-        self.fm_page_num.setRange(1, math.ceil(int(database.db.count_row("fund_movement", 1)) / self.page_size_fm))
+        self.fm_page_num.setRange(1,
+                                  math.ceil(int(database.db.count_row("fund_movement", 1)) / self.fm_page_size.value()))
 
         # search
         self.s_fm_type.currentTextChanged.connect(self.s_fm_type_changed)
@@ -2019,7 +2078,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.ch_fm_date_to.toggled.connect(lambda: self.check_date_to('fund_movement'))
         self.s_fm_note.textChanged.connect(lambda: self._typing_timer_fm.start(1000))
 
-        self.fm_page_num.valueChanged.connect(lambda text: self._typing_timer_fm.start(1000))
+        self.fm_page_num.valueChanged.connect(self.update_fm_table)
         self.fm_page_size.valueChanged.connect(lambda: self.change_page_size('fund_movement'))
 
         # btn
@@ -2036,7 +2095,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.fm_post.clicked.connect(lambda: self.fm_page_num.setValue(self.fm_page_num.value() + 1))
         self.fm_previous.clicked.connect(lambda: self.fm_page_num.setValue(self.fm_page_num.value() - 1))
         self.fm_last.clicked.connect(lambda: self.fm_page_num.setValue(
-            math.ceil(int(database.db.count_row("fund_movement", 1)) / self.page_size_fm)))
+            math.ceil(int(database.db.count_row("fund_movement", 1)) / self.fm_page_size.value())))
         self.fm_first.clicked.connect(lambda: self.fm_page_num.setValue(1))
 
         self.fm_date_from.setSpecialValueText(' ')
@@ -2067,10 +2126,20 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             self.fm_owner.addItems(self.suppliers.values())
             self.ch_fm_discount.setEnabled(True)
         elif self.fm_type.currentIndex() in [3, 4]:
+            self.ch_fm_discount.setCheckState(False)
+            self.ch_fm_discount.setEnabled(False)
+            self.fm_discount.setText('0')
+            self.fm_discount.setEnabled(False)
+
             self.fm_owner.setEnabled(True)
             self.fm_owner.clear()
             self.fm_owner.addItems(self.partners.values())
         else:
+            self.ch_fm_discount.setCheckState(False)
+            self.ch_fm_discount.setEnabled(False)
+            self.fm_discount.setText('0')
+            self.fm_discount.setEnabled(False)
+
             self.fm_owner.setEnabled(False)
             self.fm_owner.clear()
 
@@ -2108,7 +2177,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             if self.fm_value_t.text() in ['', '0']:
                 discount = round(float(balance) - float(self.fm_value.text()), 2)
             else:
-                discount = float(balance) - float(self.fm_value.text()) - (float(self.fm_value_t.text()) / float(self.fm_do_tr.text()))
+                discount = float(balance) - float(self.fm_value.text()) - (
+                        float(self.fm_value_t.text()) / float(self.fm_do_tr.text()))
                 discount = round(discount, 2)
         self.fm_discount.setText(str(discount))
 
@@ -2237,11 +2307,13 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
 
     def update_fm_table(self):
         fil = self.search_fm_save()
-        rows = database.db.query_all_fm(fil, self.page_size_fm * (self.fm_page_num.value() - 1), self.page_size_fm)
+        count, rows = database.db.query_all_fm(fil, self.fm_page_size.value() * (self.fm_page_num.value() - 1),
+                                        self.fm_page_size.value())
+        self.fm_page_num.setRange(1, math.ceil(int(count) / self.fm_page_size.value()))
         self.fm_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
             self.fm_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(
-                str(row_idx + 1 + (self.page_size_fm * (self.fm_page_num.value() - 1)))))
+                str(row_idx + 1 + (self.fm_page_size.value() * (self.fm_page_num.value() - 1)))))
             self.fm_table.item(row_idx, 0).id = row['id']
             self.fm_table.item(row_idx, 0).is_bill = 0
             self.fm_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)

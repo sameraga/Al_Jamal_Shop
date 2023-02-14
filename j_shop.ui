@@ -25,7 +25,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="page">
        <layout class="QVBoxLayout" name="verticalLayout_18" stretch="0,1">
@@ -228,7 +228,7 @@
              <enum>QTabWidget::Rounded</enum>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>7</number>
             </property>
             <widget class="QWidget" name="tab_1">
              <property name="layoutDirection">
@@ -617,8 +617,8 @@
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>600</width>
-                  <height>450</height>
+                  <width>500</width>
+                  <height>400</height>
                  </size>
                 </property>
                 <property name="text">
@@ -629,6 +629,9 @@
                 </property>
                 <property name="scaledContents">
                  <bool>true</bool>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
                 </property>
                </widget>
               </item>
@@ -4792,6 +4795,150 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="page_4">
+       <layout class="QVBoxLayout" name="verticalLayout_28" stretch="1,9,1">
+        <item>
+         <spacer name="verticalSpacer_6">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>61</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <item>
+           <spacer name="horizontalSpacer_15">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_27">
+            <item>
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>جدول المستخدمين</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QTableWidget" name="users_table">
+              <property name="editTriggers">
+               <set>QAbstractItemView::AllEditTriggers</set>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::SingleSelection</enum>
+              </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectItems</enum>
+              </property>
+              <property name="rowCount">
+               <number>2</number>
+              </property>
+              <attribute name="verticalHeaderVisible">
+               <bool>true</bool>
+              </attribute>
+              <row>
+               <property name="text">
+                <string>1</string>
+               </property>
+              </row>
+              <row/>
+              <column>
+               <property name="text">
+                <string>اسم المستخدم</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>كلمة المرور</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>صلاحيات مدير ؟</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>حذف</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_4">
+              <item>
+               <widget class="QPushButton" name="btn_save_users">
+                <property name="text">
+                 <string>حفظ التعديلات</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btn_add_user">
+                <property name="text">
+                 <string>أضف مستخدم</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btn_cancel_users">
+                <property name="text">
+                 <string>رجوع</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_14">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_7">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>61</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -4810,7 +4957,7 @@
      <string>ملف</string>
     </property>
     <addaction name="change_user"/>
-    <addaction name="change_username"/>
+    <addaction name="edit_users"/>
     <addaction name="change_pass"/>
     <addaction name="exit"/>
    </widget>
@@ -4831,9 +4978,9 @@
     <string>تبديل المستخدم</string>
    </property>
   </action>
-  <action name="change_username">
+  <action name="edit_users">
    <property name="text">
-    <string>تغيير اسم المستخدم</string>
+    <string>تعديل المستخدمين</string>
    </property>
   </action>
  </widget>
@@ -5014,6 +5161,7 @@
   <tabstop>btn_to_exel_pa</tabstop>
  </tabstops>
  <resources>
+  <include location="icons.qrc"/>
   <include location="icons.qrc"/>
   <include location="icons.qrc"/>
   <include location="icons.qrc"/>
