@@ -73,24 +73,26 @@ class Database:
     def count_table(self, table, id):
         return self.connection.execute(f"SELECT count(*) as count FROM {table} where id = ?", (id, )).fetchone()['count']
 
-    def get_earnings(self, day):
-        day = f'-{day} day'
-        return self.connection.execute(
-            "SELECT sum((quantity * (SELECT sell_price - buy_price FROM product WHERE id = p_id)) - discount) "
-            "as earnings FROM sell_order WHERE b_id in (SELECT id FROM bill_sell "
-            "WHERE date <= DATE() and date >= DATE(DATE(), ?))", (day,)).fetchone()['earnings']
+    def get_earnings(self, now, month):
+        earn_sale = self.connection.execute(
+            "SELECT sum((sell_order.total - sell_order.discount) - sell_order.quantity * product.buy_price) as earn_sale "
+            "FROM sell_order, product WHERE sell_order.p_id = product.id and"
+            " b_id in (SELECT id FROM bill_sell WHERE date <= ? and date > ?)", (now, month)
+        ).fetchone()['earn_sale']
 
-    def get_sales(self, day):
-        day = f'-{day} day'
-        return self.connection.execute(
-            "SELECT sum(total - discount) as sales FROM bill_sell WHERE date <= DATE() and date >= DATE(DATE(),?)",
-            (day,)).fetchone()['sales']
+        naf = self.connection.execute(
+            "SELECT value + (value_t / do_tr) as naf FROM fund_movement WHERE type = 'نفقات' and date <= ? and date > ?", (now, month)
+        ).fetchone()['naf']
 
-    def get_purchases(self, day):
-        day = f'-{day} day'
+        return float(earn_sale) - float(naf)
+
+    def get_sales(self, now, month):
         return self.connection.execute(
-            "SELECT sum(total - discount) as purchases FROM bill_buy WHERE date <= DATE() and date >= DATE(DATE(),?)",
-            (day,)).fetchone()['purchases']
+            "SELECT sum(total - discount) as sales FROM bill_sell WHERE date <= ? and date > ?", (now, month)).fetchone()['sales']
+
+    def get_purchases(self, now, month):
+        return self.connection.execute(
+            "SELECT sum(total - discount) as purchases FROM bill_buy WHERE date <= ? and date > ?", (now, month)).fetchone()['purchases']
 
     def get_capital(self, with_box, do_tr) -> float:
         pro_capital = self.connection.execute("SELECT sum(quantity * buy_price) as pro_capital FROM product").fetchone()[
@@ -102,7 +104,7 @@ class Database:
         else:
             box = self.connection.execute("SELECT dollar + (turky / ?) as box FROM box", (do_tr,)).fetchone()['box']
         if with_box:
-            return float(box) + float(pro_capital)
+            return float(box if box else '0') + float(pro_capital)
         else:
             return float(pro_capital)
 

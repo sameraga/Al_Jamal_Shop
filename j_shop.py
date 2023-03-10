@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import subprocess
 import sys
 
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
@@ -21,6 +20,7 @@ from jinja2 import Template
 import xlwt
 import PyQt5.uic as uic
 
+from datetime import datetime, timedelta
 from numpy import round
 import toaster_Notify
 from QDate import QDate
@@ -885,8 +885,10 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.setup_box()
 
     def setup_box(self):
-        self.box_dolar.setText(database.db.get_box()['dollar'])
-        self.box_turky.setText(database.db.get_box()['turky'])
+        box = database.db.get_box()
+
+        self.box_dolar.setText(box['dollar'] if box['dollar'] else '0')
+        self.box_turky.setText(box['turky'] if box['turky'] else '0')
 
     def change_page_size(self, table):
         if table == 'product':
@@ -1840,18 +1842,27 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         self.month_sales: QtWidgets.QLCDNumber
         cap = round(database.db.get_capital(True, DOLLAR), 2)
         self.capital.display(cap)
-        if database.db.get_sales(30) == '':
+
+        now = datetime.now().date()
+        month = now - timedelta(days=now.day)
+
+        sales = database.db.get_sales(now, month)
+        if sales == '':
             self.month_sales.display(0)
         else:
-            self.month_sales.display(database.db.get_sales(30))
-        if database.db.get_earnings(30) == '':
+            self.month_sales.display(sales)
+
+        earning = database.db.get_earnings(now, month)
+        if earning == '':
             self.month_earnings.display(0)
         else:
-            self.month_earnings.display(database.db.get_earnings(30))
-        if database.db.get_purchases(30) == '':
+            self.month_earnings.display(earning)
+
+        purchases = database.db.get_purchases(now, month)
+        if purchases == '':
             self.month_purchases.display(0)
         else:
-            self.month_purchases.display(database.db.get_purchases(30))
+            self.month_purchases.display(purchases)
 
         self.setup_box()
 
