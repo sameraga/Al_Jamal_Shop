@@ -257,7 +257,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="digitCount">
-                     <number>5</number>
+                     <number>6</number>
                     </property>
                     <property name="value" stdset="0">
                      <double>5.670000000000000</double>
@@ -302,7 +302,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="digitCount">
-                     <number>5</number>
+                     <number>6</number>
                     </property>
                     <property name="value" stdset="0">
                      <double>5.670000000000000</double>
@@ -338,7 +338,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="digitCount">
-                     <number>5</number>
+                     <number>6</number>
                     </property>
                     <property name="value" stdset="0">
                      <double>5.670000000000000</double>
@@ -374,7 +374,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="digitCount">
-                     <number>5</number>
+                     <number>6</number>
                     </property>
                     <property name="segmentStyle">
                      <enum>QLCDNumber::Filled</enum>
