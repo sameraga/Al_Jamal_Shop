@@ -19,7 +19,7 @@ import PyQt5.QtWidgets as QtWidgets
 from jinja2 import Template
 import xlwt
 import PyQt5.uic as uic
-
+import icons_rc
 from datetime import datetime, timedelta
 from numpy import round
 import toaster_Notify
