@@ -74,21 +74,24 @@ class Database:
         return self.connection.execute(f"SELECT count(*) as count FROM {table} where id = ?", (id, )).fetchone()['count']
 
     def get_earnings(self, now, month):
-        earn_sale = self.connection.execute(
-            "SELECT sum((sell_order.total - sell_order.discount) - sell_order.quantity * product.buy_price) as earn_sale "
-            "FROM sell_order, product WHERE sell_order.p_id = product.id and"
-            " b_id in (SELECT id FROM bill_sell WHERE date <= ? and date > ?)", (now, month)
-        ).fetchone()['earn_sale']
+        sales = self.get_sales(now, month)
+        sales = float(sales or 0)
+        cost = self.connection.execute(
+            "SELECT sum(sell_order.quantity * product.buy_price) as cost "
+            "FROM sell_order, product WHERE sell_order.p_id = product.id and "
+            "b_id in (SELECT id FROM bill_sell WHERE date <= ? and date > ?)", (now, month)
+        ).fetchone()['cost']
+        cost = float(cost or 0)
 
         naf = self.connection.execute(
             "SELECT value + (value_t / do_tr) as naf FROM fund_movement WHERE type = 'نفقات' and date <= ? and date > ?", (now, month)
-        ).fetchone()['naf']
-
-        return float(earn_sale) - float(naf)
+        ).fetchone()
+        naf = naf['naf'] if naf else 0
+        return sales - cost - float(naf)
 
     def get_sales(self, now, month):
         return self.connection.execute(
-            "SELECT sum(total - discount) as sales FROM bill_sell WHERE date <= ? and date > ?", (now, month)).fetchone()['sales']
+            "SELECT sum(paid_d + paid_t / dollar_tr) as sales FROM bill_sell WHERE date <= ? and date > ?", (now, month)).fetchone()['sales']
 
     def get_purchases(self, now, month):
         return self.connection.execute(
@@ -104,7 +107,7 @@ class Database:
         else:
             box = self.connection.execute("SELECT dollar + (turky / ?) as box FROM box", (do_tr,)).fetchone()['box']
         if with_box:
-            return float(box if box else '0') + float(pro_capital)
+            return float(box or 0) + float(pro_capital)
         else:
             return float(pro_capital)
 

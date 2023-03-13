@@ -137,10 +137,11 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
             self.last_total_t.setText(str(format_float))
             if bill['ispaid'] == '1':
                 self.ch_ispaid.setChecked(True)
-                self.paid_d.setText(bill['paid_d'])
-                self.paid_t.setText(bill['paid_t'])
             else:
                 self.ch_ispaid.setChecked(False)
+            self.paid_d.setText(bill['paid_d'])
+            self.paid_t.setText(bill['paid_t'])
+
         self.bill_code.setText(str(self.code))
         orders = database.db.get_order_bill('sell_order_v', self.b_id)
         self.bs_table.setRowCount(len(orders) + 1)
@@ -277,6 +278,7 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         self.total_d.setText(str(total_d))
         ff = round(total_d - float(self.discount_d.text()), 2)
         self.last_total_d.setText(str(ff))
+        self.paid_d.setText(str(ff))
         total_t = round(total_t, 2)
         self.total_t.setText(str(total_t))
         ff = round(float(self.total_t.text()) - float(self.discount_t.text()), 2)
@@ -887,8 +889,8 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
     def setup_box(self):
         box = database.db.get_box()
 
-        self.box_dolar.setText(box['dollar'] if box['dollar'] else '0')
-        self.box_turky.setText(box['turky'] if box['turky'] else '0')
+        self.box_dolar.setText(box['dollar'])
+        self.box_turky.setText(box['turky'])
 
     def change_page_size(self, table):
         if table == 'product':
@@ -1850,19 +1852,16 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
         if sales == '':
             self.month_sales.display(0)
         else:
-            self.month_sales.display(sales)
+            self.month_sales.display(round(float(sales), 2))
 
         earning = database.db.get_earnings(now, month)
-        if earning == '':
-            self.month_earnings.display(0)
-        else:
-            self.month_earnings.display(earning)
+        self.month_earnings.display(round(earning, 2))
 
         purchases = database.db.get_purchases(now, month)
         if purchases == '':
             self.month_purchases.display(0)
         else:
-            self.month_purchases.display(purchases)
+            self.month_purchases.display(round(float(purchases), 2))
 
         self.setup_box()
 
@@ -1894,7 +1893,7 @@ class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
             row['c_id'] = self.customers[row['c_id']]
             self.bs_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row['c_id']))
             self.bs_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
-            total = str(round(float(row['total']) - float(row['discount']), 2))
+            total = str(round(float(row['paid_d']) + (float(row['paid_t']) / float(row['dollar_tr'])), 2))
             self.bs_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(total))
             self.bs_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
             if row['ispaid'] == '1':
