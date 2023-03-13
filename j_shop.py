@@ -42,6 +42,8 @@ class ReadOnlyDelegate(QtWidgets.QStyledItemDelegate):
 
 
 class BillSell(QtWidgets.QDialog):
+    bs_table: QtWidgets.QTableWidget
+
     def __init__(self, id):
         QtWidgets.QDialog.__init__(self)
         uic.loadUi("bill_sell.ui", self)
@@ -68,7 +70,6 @@ class BillSell(QtWidgets.QDialog):
         self.c_name.addItems(database.db.query_csp("customer").values())
         self.c_name.currentTextChanged.connect(self.c_name_changed)
 
-        self.bs_table: QtWidgets.QTableWidget
         delegate = ReadOnlyDelegate(self.bs_table)
         self.bs_table.setItemDelegateForColumn(3, delegate)
         self.bs_table.setItemDelegateForColumn(4, delegate)
@@ -198,8 +199,7 @@ class BillSell(QtWidgets.QDialog):
         self.calculate_total()
 
     def table_key_press_event(self, event: QtGui.QKeyEvent):
-        self.bs_table: QtWidgets.QTableWidget
-        if event.key() == QtCore.Qt.Key_Return:
+        if event.key() == QtCore.Qt.Key.Key_Return:
             if (
                 self.bs_table.currentColumn() == 0
                 and self.bs_table.currentRow() + 1 == self.bs_table.rowCount()
@@ -461,6 +461,8 @@ class BillSell(QtWidgets.QDialog):
 
 
 class BillBuy(QtWidgets.QDialog):
+    bb_table: QtWidgets.QTableWidget
+
     def __init__(self, id):
         QtWidgets.QDialog.__init__(self)
         uic.loadUi("bill_buy.ui", self)
@@ -482,7 +484,6 @@ class BillBuy(QtWidgets.QDialog):
         self.s_name.addItems(database.db.query_csp("supplier").values())
         self.s_name.currentTextChanged.connect(self.s_name_changed)
 
-        self.bb_table: QtWidgets.QTableWidget
         delegate = ReadOnlyDelegate(self.bb_table)
         self.bb_table.setItemDelegateForColumn(1, delegate)
         self.bb_table.setItemDelegateForColumn(4, delegate)
@@ -561,8 +562,7 @@ class BillBuy(QtWidgets.QDialog):
         self.calculate_total()
 
     def table_key_press_event(self, event: QtGui.QKeyEvent):
-        self.bb_table: QtWidgets.QTableWidget
-        if event.key() == QtCore.Qt.Key_Return:
+        if event.key() == QtCore.Qt.Key.Key_Return:
             if (
                 self.bb_table.currentColumn() == 0
                 and self.bb_table.currentRow() + 1 == self.bb_table.rowCount()
@@ -2374,7 +2374,6 @@ class AppMainWindow(QtWidgets.QMainWindow):
 
     def calculate_main(self):
         global DOLLAR
-        self.month_sales: QtWidgets.QLCDNumber
         cap = round(database.db.get_capital(True, DOLLAR), 2)
         self.capital.display(cap)
 
@@ -2897,7 +2896,7 @@ class AppMainWindow(QtWidgets.QMainWindow):
             self.s_fm_owner.setEnabled(False)
             self.s_fm_owner.clear()
 
-    def save_fm_info(self):
+    def save_fm_info(self) -> dict:
         fm = dict()
         fm["type"] = self.fm_type.currentText()
         if self.fm_type.currentIndex() == 1:

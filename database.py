@@ -225,13 +225,15 @@ class Database:
 
     def get_query_count(self, query: str, filter: dict = {}):
         @lru_cache(128)
-        def _get_query_count(frozen_filter: frozenset):
-            g = re_query.match(query).group(1)
-            l = re_limit.sub("", g)
-            new_query = f"select count(*) as count from {l}"
-            return self.connection.execute(new_query, dict(frozen_filter)).fetchone()[
-                "count"
-            ]
+        def _get_query_count(frozen_filter: frozenset) -> str:
+            if m := re_query.match(query):
+                g = m.group(1)
+                l = re_limit.sub("", g)
+                new_query = f"select count(*) as count from {l}"
+                return self.connection.execute(
+                    new_query, dict(frozen_filter)
+                ).fetchone()["count"]
+            return "0"
 
         return _get_query_count(frozenset(filter.items()))
 
