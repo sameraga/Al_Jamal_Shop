@@ -27,10 +27,6 @@ from QDate import QDate
 import database
 from dlg_choice_code import PrintDialog
 
-Form_Main, _ = uic.loadUiType("j_shop.ui")
-Form_BillSell, _ = uic.loadUiType("bill_sell.ui")
-Form_BillBuy, _ = uic.loadUiType("bill_buy.ui")
-
 USER = ""
 PASS = ""
 PERMISSION = ""
@@ -45,11 +41,10 @@ class ReadOnlyDelegate(QtWidgets.QStyledItemDelegate):
         return
 
 
-class BillSell(QtWidgets.QDialog, Form_BillSell):
+class BillSell(QtWidgets.QDialog):
     def __init__(self, id):
         QtWidgets.QDialog.__init__(self)
-        Form_BillSell.__init__(self)
-        self.setupUi(self)
+        uic.loadUi("bill_sell.ui", self)
 
         self.validator_money = QtGui.QRegExpValidator(
             QtCore.QRegExp("^(([1-9]\d{0,2}(\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$")
@@ -465,11 +460,10 @@ class BillSell(QtWidgets.QDialog, Form_BillSell):
         print("done")
 
 
-class BillBuy(QtWidgets.QDialog, Form_BillBuy):
+class BillBuy(QtWidgets.QDialog):
     def __init__(self, id):
         QtWidgets.QDialog.__init__(self)
-        Form_BillBuy.__init__(self)
-        self.setupUi(self)
+        uic.loadUi("bill_buy.ui", self)
 
         self.validator_money = QtGui.QRegExpValidator(
             QtCore.QRegExp("^(([1-9]\d{0,2}(\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$")
@@ -722,11 +716,10 @@ class BillBuy(QtWidgets.QDialog, Form_BillBuy):
         pass
 
 
-class AppMainWindow(QtWidgets.QMainWindow, Form_Main):
+class AppMainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
-        Form_Main.__init__(self)
-        self.setupUi(self)
+        uic.loadUi("j_shop.ui", self)
 
         self.coins = ["دولار", "تركي"]
 
