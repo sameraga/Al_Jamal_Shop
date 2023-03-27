@@ -26,7 +26,7 @@ class PrintDialog(QtWidgets.QDialog, FormPrintDialog):  # type: ignore
     def setup_controls(self):
         # setup table
         self.table_view.setSizeAdjustPolicy(
-            QtWidgets.QAbstractScrollArea.AdjustToContents
+            QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents
         )
         self.table_view.setColumnCount(len(self.table_view_columns))
         self.table_view.setHorizontalHeaderLabels(self.table_view_columns)

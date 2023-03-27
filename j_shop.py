@@ -31,7 +31,6 @@ USER = ""
 PASS = ""
 PERMISSION = ""
 SerialNumber = "SerialNumberK2004N0103378"
-# COINS = ['دولار', 'تركي', 'يورو']
 DOLLAR = 0
 
 
@@ -48,8 +47,8 @@ class BillSell(QtWidgets.QDialog):
         QtWidgets.QDialog.__init__(self)
         uic.loadUi("bill_sell.ui", self)
 
-        self.validator_money = QtGui.QRegExpValidator(
-            QtCore.QRegExp("^(([1-9]\d{0,2}(\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$")
+        self.validator_money = QtGui.QRegularExpressionValidator(
+            QtCore.QRegularExpression("^(([1-9]\d{0,2}(\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$")
         )
 
         self.ch = id
@@ -76,7 +75,7 @@ class BillSell(QtWidgets.QDialog):
         self.bs_table.setItemDelegateForColumn(6, delegate)
         self.bs_table.setItemDelegateForColumn(7, delegate)
         self.bs_table.setRowCount(1)
-        self.bs_table.keyReleaseEvent = self.table_key_press_event
+        self.bs_table.keyReleaseEvent = self.table_key_press_event_t
 
         self.discount_d.returnPressed.connect(lambda: self.discount_on_press("d"))
         self.discount_t.returnPressed.connect(lambda: self.discount_on_press("t"))
@@ -127,17 +126,14 @@ class BillSell(QtWidgets.QDialog):
                 database.db.get_name_by_id("customer", bill["c_id"])
             )
             self.total_d.setText(str(bill["total"]))
-            format_float = round(float(bill["total"]) * float(bill["dollar_tr"]), 2)
-            self.total_t.setText(str(format_float))
             self.discount_d.setText(str(bill["discount"]))
+
             format_float = round(float(bill["discount"]) * float(bill["dollar_tr"]), 2)
             self.discount_t.setText(str(format_float))
+
             format_float = round(float(bill["total"]) - float(bill["discount"]), 2)
             self.last_total_d.setText(str(format_float))
-            format_float = round(
-                float(self.total_t.text()) - float(self.discount_t.text()), 2
-            )
-            self.last_total_t.setText(str(format_float))
+
             if bill["ispaid"] == "1":
                 self.ch_ispaid.setChecked(True)
             else:
@@ -148,6 +144,7 @@ class BillSell(QtWidgets.QDialog):
         self.bill_code.setText(str(self.code))
         orders = database.db.get_order_bill("sell_order_v", self.b_id)
         self.bs_table.setRowCount(len(orders) + 1)
+        total_t_format = 0
         for row_idx, row in enumerate(orders):
             self.bs_table.setItem(
                 row_idx, 0, QtWidgets.QTableWidgetItem(str(row["code"]))
@@ -181,24 +178,29 @@ class BillSell(QtWidgets.QDialog):
             self.bs_table.setItem(
                 row_idx, 6, QtWidgets.QTableWidgetItem(str(row["total"]))
             )
-            format_float = round(
-                float(self.bs_table.item(row_idx, 6).text()) * float(bill["dollar_tr"]),
-                2,
-            )
+            format_float = round((float(row["quantity"]) * format_float) - float(row["discount"]), 2)
             self.bs_table.setItem(
                 row_idx, 7, QtWidgets.QTableWidgetItem(str(format_float))
             )
+            total_t_format += format_float
             btn_delete = QtWidgets.QPushButton(QtGui.QIcon.fromTheme("delete"), "")
-            btn_delete.clicked.connect(
-                lambda: self.delete_order(self.bs_table.currentRow())
-            )
+            btn_delete.clicked.connect(lambda:self.delete_order(self.bs_table.currentRow()))
+            btn_delete.setAutoDefault(False)
             self.bs_table.setCellWidget(row_idx, 8, btn_delete)
+        self.bs_table.resizeColumnsToContents()
+
+        self.total_t.setText(str(total_t_format))
+
+        format_float = round(
+            float(self.total_t.text()) - float(self.discount_t.text()), 2
+        )
+        self.last_total_t.setText(str(format_float))
 
     def delete_order(self, current_row):
         self.bs_table.removeRow(current_row)
         self.calculate_total()
 
-    def table_key_press_event(self, event: QtGui.QKeyEvent):
+    def table_key_press_event_t(self, event: QtGui.QKeyEvent):
         if event.key() == QtCore.Qt.Key.Key_Return:
             if (
                 self.bs_table.currentColumn() == 0
@@ -213,6 +215,7 @@ class BillSell(QtWidgets.QDialog):
                 self.update_table(self.bs_table.currentRow())
             else:
                 self.enter_event(self.bs_table.currentRow())
+        QtWidgets.QTableWidget.keyReleaseEvent(self.bs_table, event)
 
     def update_table(self, current_row):
         code = self.bs_table.item(current_row, 0).text()
@@ -302,10 +305,12 @@ class BillSell(QtWidgets.QDialog):
 
             btn_delete = QtWidgets.QPushButton(QtGui.QIcon.fromTheme("delete"), "")
             btn_delete.clicked.connect(
-                lambda: self.delete_order(self.bs_table.currentRow())
+                lambda checked: self.delete_order(self.bs_table.currentRow())
             )
+            btn_delete.setAutoDefault(False)
             self.bs_table.setCellWidget(current_row, 8, btn_delete)
             self.calculate_total()
+            self.bs_table.resizeColumnsToContents()
         else:
             self.bs_table.setItem(current_row, 0, QtWidgets.QTableWidgetItem(""))
             QtWidgets.QMessageBox.warning(
@@ -338,6 +343,7 @@ class BillSell(QtWidgets.QDialog):
             discount = (
                 float(product["price_range"]) * float(self.d_tr.text()) * quantity
             )
+            discount = round(discount, 2)
             self.bs_table.setItem(
                 current_row, 5, QtWidgets.QTableWidgetItem(str(discount))
             )
@@ -353,6 +359,7 @@ class BillSell(QtWidgets.QDialog):
         )
         total_t = round(total_t, 2)
         self.bs_table.setItem(current_row, 7, QtWidgets.QTableWidgetItem(str(total_t)))
+        self.bs_table.resizeColumnsToContents()
         self.calculate_total()
 
     def calculate_total(self):
@@ -366,7 +373,9 @@ class BillSell(QtWidgets.QDialog):
         self.total_d.setText(str(total_d))
         ff = round(total_d - float(self.discount_d.text()), 2)
         self.last_total_d.setText(str(ff))
+
         self.paid_d.setText(str(ff))
+
         total_t = round(total_t, 2)
         self.total_t.setText(str(total_t))
         ff = round(float(self.total_t.text()) - float(self.discount_t.text()), 2)
@@ -379,6 +388,7 @@ class BillSell(QtWidgets.QDialog):
                 float(self.total_d.text()) - float(self.discount_d.text()), 2
             )
             self.last_total_d.setText(str(d_float))
+            self.paid_d.setText(str(d_float))
             self.discount_t.setText(
                 str(round(float(self.discount_d.text()) * DOLLAR, 2))
             )
@@ -398,15 +408,15 @@ class BillSell(QtWidgets.QDialog):
                 float(self.total_d.text()) - float(self.discount_d.text()), 2
             )
             self.last_total_d.setText(str(d_float))
+            self.paid_d.setText(str(d_float))
 
     def paid_change(self, x):
-        global DOLLAR
         if x == "d":
             dd = float(self.last_total_d.text()) - float(self.paid_d.text())
-            self.paid_t.setText(str(round(dd * DOLLAR, 2)))
+            self.paid_t.setText(str(round(dd * float(self.d_tr.text()), 2)))
         else:
             tt = float(self.last_total_t.text()) - float(self.paid_t.text())
-            self.paid_d.setText(str(round(tt / DOLLAR, 2)))
+            self.paid_d.setText(str(round(tt / float(self.d_tr.text()), 2)))
 
     def save_bill(self):
         bill = dict()
@@ -467,8 +477,8 @@ class BillBuy(QtWidgets.QDialog):
         QtWidgets.QDialog.__init__(self)
         uic.loadUi("bill_buy.ui", self)
 
-        self.validator_money = QtGui.QRegExpValidator(
-            QtCore.QRegExp("^(([1-9]\d{0,2}(\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$")
+        self.validator_money = QtGui.QRegularExpressionValidator(
+            QtCore.QRegularExpression("^(([1-9]\d{0,2}(\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$")
         )
 
         self.b_id = id
@@ -555,6 +565,7 @@ class BillBuy(QtWidgets.QDialog):
             btn_delete.clicked.connect(
                 lambda: self.delete_order(self.bb_table.currentRow())
             )
+            btn_delete.setAutoDefault(False)
             self.bb_table.setCellWidget(row_idx, 5, btn_delete)
 
     def delete_order(self, current_row):
@@ -634,6 +645,7 @@ class BillBuy(QtWidgets.QDialog):
         btn_delete.clicked.connect(
             lambda: self.delete_order(self.bb_table.currentRow())
         )
+        btn_delete.setAutoDefault(False)
         self.bb_table.setCellWidget(current_row, 5, btn_delete)
         self.calculate_total()
 
@@ -645,7 +657,7 @@ class BillBuy(QtWidgets.QDialog):
             self.bb_table.setItem(current_row, 2, QtWidgets.QTableWidgetItem("1"))
         quantity = int(self.bb_table.item(current_row, 2).text())
 
-        total = quantity * float(self.bb_table.item(current_row, 3).text())
+        total = round(quantity * float(self.bb_table.item(current_row, 3).text()), 2)
         self.bb_table.setItem(current_row, 4, QtWidgets.QTableWidgetItem(str(total)))
         self.calculate_total()
 
@@ -723,15 +735,15 @@ class AppMainWindow(QtWidgets.QMainWindow):
 
         self.coins = ["دولار", "تركي"]
 
-        self.validator_code = QtGui.QRegExpValidator(
-            QtCore.QRegExp("[\u0621-\u064A0-9a-zA-Z][0-9]*")
+        self.validator_code = QtGui.QRegularExpressionValidator(
+            QtCore.QRegularExpression("[\u0621-\u064A0-9a-zA-Z][0-9]*")
         )
-        self.validator_int = QtGui.QRegExpValidator(QtCore.QRegExp("[0-9]+"))
-        self.validator_money = QtGui.QRegExpValidator(
-            QtCore.QRegExp("^(([1-9]\d{0,2}(\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$")
+        self.validator_int = QtGui.QRegularExpressionValidator(QtCore.QRegularExpression("[0-9]+"))
+        self.validator_money = QtGui.QRegularExpressionValidator(
+            QtCore.QRegularExpression("^(([1-9]\d{0,2}(\d{3})*)|([1-9]\d*)|(0))(\.\d{1,2})?$")
         )
-        self.validator_phone = QtGui.QRegExpValidator(
-            QtCore.QRegExp("\+[1-9]{1}[0-9]{11}")
+        self.validator_phone = QtGui.QRegularExpressionValidator(
+            QtCore.QRegularExpression("^\\+?[1-9][0-9]{7,14}$")
         )
 
         self._typing_timer_p = QtCore.QTimer()
@@ -835,7 +847,7 @@ class AppMainWindow(QtWidgets.QMainWindow):
         self._typing_timer_p.timeout.connect(self.update_product_table)
 
         # table
-        self.p_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.p_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         self.p_table.doubleClicked.connect(
             lambda mi: self.fill_product_info(self.p_table.item(mi.row(), 0).id)
         )
@@ -937,15 +949,15 @@ class AppMainWindow(QtWidgets.QMainWindow):
                 row_idx, 0, QtWidgets.QTableWidgetItem(row["name"])
             )
             self.users_table.item(row_idx, 0).id = row["id"]
-            self.users_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.users_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.users_table.setItem(
                 row_idx, 1, QtWidgets.QTableWidgetItem(row["pass"])
             )
-            self.users_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.users_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.users_table.setItem(
                 row_idx, 2, QtWidgets.QTableWidgetItem(row["permission"])
             )
-            self.users_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.users_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             if row_idx != 0:
                 btn_delete = QtWidgets.QPushButton(QtGui.QIcon.fromTheme("delete"), "")
                 btn_delete.clicked.connect(
@@ -1101,7 +1113,7 @@ class AppMainWindow(QtWidgets.QMainWindow):
             and self.coin_exchange_to.currentText() == "دولار"
         ):
             database.db.exchange_dollar_turky(
-                "tu_do", float(self.ta_dt_d.text()), float(self.ta_dt_t.text())
+                "tu_do", float(self.ta_dt_t.text()), float(self.ta_dt_d.text())
             )
 
         self.setup_box()
@@ -1401,13 +1413,14 @@ class AppMainWindow(QtWidgets.QMainWindow):
 
     def update_product_table(self):
         fil = self.search_product_save()
-        count, rows = database.db.query_all_product(
+        count = database.db.get_query_count("SELECT count(id) as count from product", fil)
+        self.p_page_num.setRange(1, float.__ceil__(int(count) / self.p_page_size.value()))
+
+        rows = database.db.query_all_product(
             fil,
             self.p_page_size.value() * (self.p_page_num.value() - 1),
             self.p_page_size.value(),
         )
-
-        self.p_page_num.setRange(1, math.ceil(int(count) / self.p_page_size.value()))
         self.p_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
             self.p_table.setItem(
@@ -1422,34 +1435,34 @@ class AppMainWindow(QtWidgets.QMainWindow):
                 ),
             )
             self.p_table.item(row_idx, 0).id = row["id"]
-            self.p_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.p_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.p_table.setItem(
                 row_idx, 1, QtWidgets.QTableWidgetItem(str(row["code"]))
             )
-            self.p_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.p_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.p_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row["name"]))
-            self.p_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.p_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.p_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(row["class"]))
-            self.p_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.p_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.p_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(row["type"]))
-            self.p_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.p_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.p_table.setItem(
                 row_idx, 5, QtWidgets.QTableWidgetItem(row["quantity"])
             )
-            self.p_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.p_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.p_table.setItem(
                 row_idx, 6, QtWidgets.QTableWidgetItem(row["buy_price"])
             )
-            self.p_table.item(row_idx, 6).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.p_table.item(row_idx, 6).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             total_buy = round(float(row["buy_price"]) * float(row["quantity"]), 2)
             self.p_table.setItem(row_idx, 7, QtWidgets.QTableWidgetItem(str(total_buy)))
-            self.p_table.item(row_idx, 7).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.p_table.item(row_idx, 7).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.p_table.setItem(
                 row_idx, 8, QtWidgets.QTableWidgetItem(row["sell_price"])
             )
-            self.p_table.item(row_idx, 8).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.p_table.item(row_idx, 8).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.p_table.setItem(row_idx, 9, QtWidgets.QTableWidgetItem(row["source"]))
-            self.p_table.item(row_idx, 9).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.p_table.item(row_idx, 9).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.p_table.resizeColumnsToContents()
         self.update_notification()
 
@@ -1529,7 +1542,7 @@ class AppMainWindow(QtWidgets.QMainWindow):
         self._typing_timer_c.timeout.connect(self.update_customer_table)
 
         # table
-        self.c_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.c_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         self.c_table.doubleClicked.connect(
             lambda mi: self.fill_customer_info(self.c_table.item(mi.row(), 0).id)
         )
@@ -1673,13 +1686,15 @@ class AppMainWindow(QtWidgets.QMainWindow):
 
     def update_customer_table(self):
         fil = self.search_customer_save()
-        count, rows = database.db.query_all_cs(
+        count = database.db.get_query_count("SELECT count(id) as count from customer", fil)
+        self.c_page_num.setRange(1, math.ceil(int(count) / self.c_page_size.value()))
+        rows = database.db.query_all_cs(
             "customer",
             fil,
             self.c_page_size.value() * (self.c_page_num.value() - 1),
             self.c_page_size.value(),
         )
-        self.c_page_num.setRange(1, math.ceil(int(count) / self.c_page_size.value()))
+
         self.c_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
             self.c_table.setItem(
@@ -1694,19 +1709,19 @@ class AppMainWindow(QtWidgets.QMainWindow):
                 ),
             )
             self.c_table.item(row_idx, 0).id = row["id"]
-            self.c_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.c_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.c_table.setItem(
                 row_idx, 1, QtWidgets.QTableWidgetItem(str(row["code"]))
             )
-            self.c_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.c_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.c_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row["name"]))
-            self.c_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.c_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.c_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(row["phone"]))
-            self.c_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.c_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.c_table.setItem(
                 row_idx, 4, QtWidgets.QTableWidgetItem(str(row["balance"]))
             )
-            self.c_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.c_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.c_table.resizeColumnsToContents()
 
     def clear_customer_inputs(self):
@@ -1778,7 +1793,7 @@ class AppMainWindow(QtWidgets.QMainWindow):
         self._typing_timer_s.timeout.connect(self.update_supplier_table)
 
         # table
-        self.s_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.s_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         self.s_table.doubleClicked.connect(
             lambda mi: self.fill_supplier_info(self.s_table.item(mi.row(), 0).id)
         )
@@ -1924,13 +1939,14 @@ class AppMainWindow(QtWidgets.QMainWindow):
 
     def update_supplier_table(self):
         fil = self.search_supplier_save()
-        count, rows = database.db.query_all_cs(
+        count = database.db.get_query_count("SELECT count(id) as count from supplier", fil)
+        self.s_page_num.setRange(1, math.ceil(int(count) / self.s_page_size.value()))
+        rows = database.db.query_all_cs(
             "supplier",
             fil,
             self.s_page_size.value() * (self.s_page_num.value() - 1),
             self.s_page_size.value(),
         )
-        self.s_page_num.setRange(1, math.ceil(int(count) / self.s_page_size.value()))
         self.s_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
             self.s_table.setItem(
@@ -1945,19 +1961,19 @@ class AppMainWindow(QtWidgets.QMainWindow):
                 ),
             )
             self.s_table.item(row_idx, 0).id = row["id"]
-            self.s_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.s_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.s_table.setItem(
                 row_idx, 1, QtWidgets.QTableWidgetItem(str(row["code"]))
             )
-            self.s_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.s_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.s_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row["name"]))
-            self.s_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.s_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.s_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(row["phone"]))
-            self.s_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.s_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.s_table.setItem(
                 row_idx, 4, QtWidgets.QTableWidgetItem(str(row["balance"]))
             )
-            self.s_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.s_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.s_table.resizeColumnsToContents()
 
     def clear_supplier_inputs(self):
@@ -2028,7 +2044,7 @@ class AppMainWindow(QtWidgets.QMainWindow):
 
         # table
         self.pa_table.setSizeAdjustPolicy(
-            QtWidgets.QAbstractScrollArea.AdjustToContents
+            QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents
         )
         self.pa_table.doubleClicked.connect(
             lambda mi: self.fill_partners_info(self.pa_table.item(mi.row(), 0).id)
@@ -2176,13 +2192,14 @@ class AppMainWindow(QtWidgets.QMainWindow):
 
     def update_partners_table(self):
         fil = self.search_partners_save()
-        count, rows = database.db.query_all_cs(
+        count = database.db.get_query_count("SELECT count(id) as count from partners", fil)
+        self.pa_page_num.setRange(1, math.ceil(int(count) / self.pa_page_size.value()))
+        rows = database.db.query_all_cs(
             "partners",
             fil,
             self.pa_page_size.value() * (self.pa_page_num.value() - 1),
             self.pa_page_size.value(),
         )
-        self.pa_page_num.setRange(1, math.ceil(int(count) / self.pa_page_size.value()))
         self.pa_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
             self.pa_table.setItem(
@@ -2197,19 +2214,19 @@ class AppMainWindow(QtWidgets.QMainWindow):
                 ),
             )
             self.pa_table.item(row_idx, 0).id = row["id"]
-            self.pa_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.pa_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.pa_table.setItem(
                 row_idx, 1, QtWidgets.QTableWidgetItem(str(row["code"]))
             )
-            self.pa_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.pa_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.pa_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row["name"]))
-            self.pa_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.pa_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.pa_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(row["phone"]))
-            self.pa_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.pa_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.pa_table.setItem(
                 row_idx, 4, QtWidgets.QTableWidgetItem(str(row["balance"]))
             )
-            self.pa_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.pa_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.pa_table.resizeColumnsToContents()
 
     def clear_partners_inputs(self):
@@ -2274,7 +2291,7 @@ class AppMainWindow(QtWidgets.QMainWindow):
         self.billsell_cname.addItems(self.customers.values())
 
         self.bs_table.setSizeAdjustPolicy(
-            QtWidgets.QAbstractScrollArea.AdjustToContents
+            QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents
         )
         self.bs_table.doubleClicked.connect(
             lambda mi: self.double_click_bs(self.bs_table.item(mi.row(), 0).id)
@@ -2436,14 +2453,14 @@ class AppMainWindow(QtWidgets.QMainWindow):
                 ),
             )
             self.bs_table.item(row_idx, 0).id = row["id"]
-            self.bs_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.bs_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.bs_table.setItem(
                 row_idx, 1, QtWidgets.QTableWidgetItem(str(row["code"]))
             )
-            self.bs_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.bs_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             row["c_id"] = self.customers[row["c_id"]]
             self.bs_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row["c_id"]))
-            self.bs_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.bs_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             total = str(
                 round(
                     float(row["paid_d"])
@@ -2452,15 +2469,15 @@ class AppMainWindow(QtWidgets.QMainWindow):
                 )
             )
             self.bs_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(total))
-            self.bs_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.bs_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             if row["ispaid"] == "1":
                 row["ispaid"] = "مدفوعة"
             else:
                 row["ispaid"] = "غير مدفوعة"
             self.bs_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(row["ispaid"]))
-            self.bs_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.bs_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.bs_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(row["date"]))
-            self.bs_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.bs_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.bs_table.resizeColumnsToContents()
         self.update_notification()
 
@@ -2503,7 +2520,7 @@ class AppMainWindow(QtWidgets.QMainWindow):
         self.billbuy_sname.addItems(self.suppliers.values())
 
         self.bb_table.setSizeAdjustPolicy(
-            QtWidgets.QAbstractScrollArea.AdjustToContents
+            QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents
         )
         self.bb_table.doubleClicked.connect(
             lambda mi: self.double_click(self.bb_table.item(mi.row(), 0).id)
@@ -2633,25 +2650,25 @@ class AppMainWindow(QtWidgets.QMainWindow):
                 ),
             )
             self.bb_table.item(row_idx, 0).id = row["id"]
-            self.bb_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.bb_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.bb_table.setItem(
                 row_idx, 1, QtWidgets.QTableWidgetItem(str(row["code"]))
             )
-            self.bb_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.bb_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             row["s_id"] = self.suppliers[row["s_id"]]
             self.bb_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row["s_id"]))
-            self.bb_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.bb_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             total = str(float(row["total"]) - float(row["discount"]))
             self.bb_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(total))
-            self.bb_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.bb_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             if row["ispaid"] == "1":
                 row["ispaid"] = "مدفوعة"
             else:
                 row["ispaid"] = "غير مدفوعة"
             self.bb_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(row["ispaid"]))
-            self.bb_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.bb_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.bb_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(row["date"]))
-            self.bb_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.bb_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.bb_table.resizeColumnsToContents()
         self.update_notification()
 
@@ -2700,7 +2717,7 @@ class AppMainWindow(QtWidgets.QMainWindow):
 
         # table
         self.fm_table.setSizeAdjustPolicy(
-            QtWidgets.QAbstractScrollArea.AdjustToContents
+            QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents
         )
         self.fm_table.doubleClicked.connect(
             lambda mi: self.fill_fm_info(self.fm_table.item(mi.row(), 0).id)
@@ -3027,12 +3044,14 @@ class AppMainWindow(QtWidgets.QMainWindow):
 
     def update_fm_table(self):
         fil = self.search_fm_save()
-        count, rows = database.db.query_all_fm(
+        count = database.db.get_query_count_fm("SELECT count(id) as count from fund_movement", fil)
+        self.fm_page_num.setRange(1, math.ceil(int(count) / self.fm_page_size.value()))
+        rows = database.db.query_all_fm(
             fil,
             self.fm_page_size.value() * (self.fm_page_num.value() - 1),
             self.fm_page_size.value(),
         )
-        self.fm_page_num.setRange(1, math.ceil(int(count) / self.fm_page_size.value()))
+
         self.fm_table.setRowCount(len(rows))
         for row_idx, row in enumerate(rows):
             self.fm_table.setItem(
@@ -3048,25 +3067,25 @@ class AppMainWindow(QtWidgets.QMainWindow):
             )
             self.fm_table.item(row_idx, 0).id = row["id"]
             self.fm_table.item(row_idx, 0).is_bill = 0
-            self.fm_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.fm_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.fm_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(row["type"]))
-            self.fm_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.fm_table.item(row_idx, 1).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             if row["type"] == "دفعة من زبون":
                 row["owner"] = self.customers[row["owner"]]
             elif row["type"] == "دفعة إلى مورد":
                 row["owner"] = self.suppliers[row["owner"]]
             self.fm_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(row["owner"]))
-            self.fm_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.fm_table.item(row_idx, 2).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.fm_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(row["value"]))
-            self.fm_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.fm_table.item(row_idx, 3).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.fm_table.setItem(
                 row_idx, 4, QtWidgets.QTableWidgetItem(row["value_t"])
             )
-            self.fm_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.fm_table.item(row_idx, 4).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.fm_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(row["date"]))
-            self.fm_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.fm_table.item(row_idx, 5).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.fm_table.setItem(row_idx, 6, QtWidgets.QTableWidgetItem(row["note"]))
-            self.fm_table.item(row_idx, 6).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.fm_table.item(row_idx, 6).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         self.fm_table.resizeColumnsToContents()
 
@@ -3177,7 +3196,7 @@ class AppMainWindow(QtWidgets.QMainWindow):
                     )
                 ),
             )
-            self.notif_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.notif_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             noti = f"إن المادة {row['name']} ذات الكود  {row['code']}  انتهت بالفعل "
             self.notif_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(noti))
         for row_idx, row in enumerate(pro1):
@@ -3193,7 +3212,7 @@ class AppMainWindow(QtWidgets.QMainWindow):
                     )
                 ),
             )
-            self.notif_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.notif_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             noti = (
                 f"إن المادة {row['name']} ذات الكود  {row['code']}  شارفت على الانتهاء"
             )
@@ -3211,7 +3230,7 @@ class AppMainWindow(QtWidgets.QMainWindow):
                     )
                 ),
             )
-            self.notif_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+            self.notif_table.item(row_idx, 0).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             noti = f"إن السيد المحترم {row['name']} بلغ الحد المسموح به وهو {row['range_balance']}"
             self.notif_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(noti))
         self.notif_table.resizeColumnsToContents()
@@ -3229,6 +3248,6 @@ if __name__ == "__main__":
     mainWindow.setWindowIcon(QtGui.QIcon("icons/ph1.png"))
     for filename in glob.glob("html/tmp/*"):
         os.remove(filename)
-    exit_code = app.exec_()
+    exit_code = app.exec()
     # else:
     #     QtWidgets.QMessageBox.warning(None, 'خطأ', 'البرنامج غير مفعل\n يجب تفعيل هذا البرنامج من الشركة')

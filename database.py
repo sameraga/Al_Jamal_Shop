@@ -223,22 +223,41 @@ class Database:
             f"select * from product where code like ?", (code,)
         ).fetchall()
 
+    # def get_query_count(self, query: str, filter: dict = {}):
+    #     @lru_cache(128)
+    #     def _get_query_count(frozen_filter: frozenset) -> str:
+    #         if m := re_query.match(query):
+    #             g = m.group(1)
+    #             l = re_limit.sub("", g)
+    #             new_query = f"select count(*) as count from {l}"
+    #             return self.connection.execute(
+    #                 new_query, dict(frozen_filter)
+    #             ).fetchone()["count"]
+    #         return "0"
+    #
+    #     return _get_query_count(frozenset(filter.items()))
+    #
+    # def clear_query_count_cache(self):
+    #     self.get_query_count.cache_clear()
+
     def get_query_count(self, query: str, filter: dict = {}):
-        @lru_cache(128)
-        def _get_query_count(frozen_filter: frozenset) -> str:
-            if m := re_query.match(query):
-                g = m.group(1)
-                l = re_limit.sub("", g)
-                new_query = f"select count(*) as count from {l}"
-                return self.connection.execute(
-                    new_query, dict(frozen_filter)
-                ).fetchone()["count"]
-            return "0"
-
-        return _get_query_count(frozenset(filter.items()))
-
-    def clear_query_count_cache(self):
-        self.get_query_count.cache_clear()
+        if filter:
+            query += " where "
+            filter_cmd = []
+            if "code" in filter:
+                filter["code"] = f'%{filter["code"]}%'
+                filter_cmd.append(f"code like :code")
+            if "name" in filter:
+                filter["name"] = f'%{filter["name"]}%'
+                filter_cmd.append(f"name like :name")
+            if "class" in filter:
+                filter_cmd.append(f"class =:class")
+            if "type" in filter:
+                filter_cmd.append(f"type =:type")
+            query += " and ".join(filter_cmd)
+            return self.connection.execute(query, filter).fetchone()["count"]
+        else:
+            return self.connection.execute(query).fetchone()["count"]
 
     def query_all_product(self, filter: dict, limit1, limit2):
         sql_cmd = "SELECT id, code, name, class, type, source, quantity, buy_price, sell_price from product"
@@ -258,12 +277,10 @@ class Database:
 
             sql_cmd += " and ".join(filter_cmd)
             sql_cmd += f" limit {limit1}, {limit2}"
-            count = self.get_query_count(sql_cmd, filter)
-            return count, self.connection.execute(sql_cmd, filter).fetchall()
+            return self.connection.execute(sql_cmd, filter).fetchall()
         else:
-            count = self.get_query_count(sql_cmd)
             sql_cmd += f" limit {limit1}, {limit2}"
-            return count, self.connection.execute(sql_cmd).fetchall()
+            return self.connection.execute(sql_cmd).fetchall()
 
     # ################################################################
 
@@ -300,14 +317,33 @@ class Database:
 
             sql_cmd += " and ".join(filter_cmd)
             sql_cmd += f" limit {limit1}, {limit2}"
-            count = self.get_query_count(sql_cmd, filter)
-            return count, self.connection.execute(sql_cmd, filter).fetchall()
+            return self.connection.execute(sql_cmd, filter).fetchall()
         else:
             sql_cmd += f" limit {limit1}, {limit2}"
-            count = self.get_query_count(sql_cmd)
-            return count, self.connection.execute(sql_cmd).fetchall()
+            return self.connection.execute(sql_cmd).fetchall()
 
     # ################################################################
+
+    def get_query_count_fm(self, query: str, filter: dict = {}):
+        if filter:
+            query += " where "
+            filter_cmd = []
+            if "type" in filter:
+                filter_cmd.append(f"type = :type")
+            if "owner" in filter:
+                filter_cmd.append(f"owner = :owner")
+            if "date_from" in filter:
+                if "date_to" in filter:
+                    filter_cmd.append(f"date between :date_from and :date_to")
+                else:
+                    filter_cmd.append(f"date = :date_from")
+            if "note" in filter:
+                filter["note"] = f'%{filter["note"]}%'
+                filter_cmd.append(f"note like :note")
+            query += " and ".join(filter_cmd)
+            return self.connection.execute(query, filter).fetchone()["count"]
+        else:
+            return self.connection.execute(query).fetchone()["count"]
 
     def query_all_fm(self, filter: dict, limit1, limit2):
         sql_cmd = f"SELECT * from fund_movement"
@@ -329,12 +365,10 @@ class Database:
                 filter_cmd.append(f"note like :note")
             sql_cmd += " and ".join(filter_cmd)
             sql_cmd += f" ORDER by date DESC limit {limit1}, {limit2}"
-            count = self.get_query_count(sql_cmd, filter)
-            return count, self.connection.execute(sql_cmd, filter).fetchall()
+            return self.connection.execute(sql_cmd, filter).fetchall()
         else:
             sql_cmd += f" ORDER by date DESC limit {limit1}, {limit2}"
-            count = self.get_query_count(sql_cmd)
-            return count, self.connection.execute(sql_cmd).fetchall()
+            return self.connection.execute(sql_cmd).fetchall()
 
     def get_balance(self, type_fm, owner):
         if type_fm == "دفعة من زبون":

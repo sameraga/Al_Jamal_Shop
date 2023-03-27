@@ -8,7 +8,7 @@ class QToaster(QtWidgets.QFrame):
         super(QToaster, self).__init__(*args, **kwargs)
         QtWidgets.QHBoxLayout(self)
 
-        self.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Maximum)
 
         self.setStyleSheet(
             """
@@ -125,7 +125,7 @@ class QToaster(QtWidgets.QFrame):
         parent,
         message,
         icon=QtWidgets.QStyle.PixelMetric,
-        corner=QtCore.Qt.BottomLeftCorner,
+        corner=QtCore.Qt.Corner.BottomLeftCorner,
         margin=85,
         closable=True,
         timeout=5000,
