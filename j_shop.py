@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 import sys
+from urllib import request
+
+import requests
 
 if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
     from os import chdir
@@ -184,7 +187,7 @@ class BillSell(QtWidgets.QDialog):
             )
             total_t_format += format_float
             btn_delete = QtWidgets.QPushButton(QtGui.QIcon.fromTheme("delete"), "")
-            btn_delete.clicked.connect(lambda:self.delete_order(self.bs_table.currentRow()))
+            btn_delete.clicked.connect(lambda: self.delete_order(self.bs_table.currentRow()))
             btn_delete.setAutoDefault(False)
             self.bs_table.setCellWidget(row_idx, 8, btn_delete)
         self.bs_table.resizeColumnsToContents()
@@ -203,14 +206,14 @@ class BillSell(QtWidgets.QDialog):
     def table_key_press_event_t(self, event: QtGui.QKeyEvent):
         if event.key() == QtCore.Qt.Key.Key_Return:
             if (
-                self.bs_table.currentColumn() == 0
-                and self.bs_table.currentRow() + 1 == self.bs_table.rowCount()
+                    self.bs_table.currentColumn() == 0
+                    and self.bs_table.currentRow() + 1 == self.bs_table.rowCount()
             ):
                 self.update_table(self.bs_table.currentRow())
                 self.bs_table.setRowCount(self.bs_table.rowCount() + 1)
             elif (
-                self.bs_table.currentColumn() == 0
-                and self.bs_table.currentRow() + 1 != self.bs_table.rowCount()
+                    self.bs_table.currentColumn() == 0
+                    and self.bs_table.currentRow() + 1 != self.bs_table.rowCount()
             ):
                 self.update_table(self.bs_table.currentRow())
             else:
@@ -244,8 +247,8 @@ class BillSell(QtWidgets.QDialog):
         if int(product["quantity"]) >= 1:
             for idx in range(self.bs_table.rowCount() - 1):
                 if (
-                    self.bs_table.item(idx, 0).text() == product["code"]
-                    and current_row != idx
+                        self.bs_table.item(idx, 0).text() == product["code"]
+                        and current_row != idx
                 ):
                     new = int(self.bs_table.item(idx, 2).text()) + 1
                     self.bs_table.setItem(idx, 2, QtWidgets.QTableWidgetItem(str(new)))
@@ -338,10 +341,10 @@ class BillSell(QtWidgets.QDialog):
             )
 
         if discount > (
-            float(product["price_range"]) * float(self.d_tr.text()) * quantity
+                float(product["price_range"]) * float(self.d_tr.text()) * quantity
         ):
             discount = (
-                float(product["price_range"]) * float(self.d_tr.text()) * quantity
+                    float(product["price_range"]) * float(self.d_tr.text()) * quantity
             )
             discount = round(discount, 2)
             self.bs_table.setItem(
@@ -349,7 +352,7 @@ class BillSell(QtWidgets.QDialog):
             )
 
         total = (quantity * float(self.bs_table.item(current_row, 3).text())) - (
-            discount / float(self.d_tr.text())
+                discount / float(self.d_tr.text())
         )
         total = round(total, 2)
         self.bs_table.setItem(current_row, 6, QtWidgets.QTableWidgetItem(str(total)))
@@ -575,14 +578,14 @@ class BillBuy(QtWidgets.QDialog):
     def table_key_press_event(self, event: QtGui.QKeyEvent):
         if event.key() == QtCore.Qt.Key.Key_Return:
             if (
-                self.bb_table.currentColumn() == 0
-                and self.bb_table.currentRow() + 1 == self.bb_table.rowCount()
+                    self.bb_table.currentColumn() == 0
+                    and self.bb_table.currentRow() + 1 == self.bb_table.rowCount()
             ):
                 self.update_table(self.bb_table.currentRow())
                 self.bb_table.setRowCount(self.bb_table.rowCount() + 1)
             elif (
-                self.bb_table.currentColumn() == 0
-                and self.bb_table.currentRow() + 1 != self.bb_table.rowCount()
+                    self.bb_table.currentColumn() == 0
+                    and self.bb_table.currentRow() + 1 != self.bb_table.rowCount()
             ):
                 self.update_table(self.bb_table.currentRow())
             else:
@@ -614,8 +617,8 @@ class BillBuy(QtWidgets.QDialog):
 
         for idx in range(self.bb_table.rowCount() - 1):
             if (
-                self.bb_table.item(idx, 0).text() == product["code"]
-                and current_row != idx
+                    self.bb_table.item(idx, 0).text() == product["code"]
+                    and current_row != idx
             ):
                 new = int(self.bb_table.item(idx, 2).text()) + 1
                 self.bb_table.setItem(idx, 2, QtWidgets.QTableWidgetItem(str(new)))
@@ -666,8 +669,9 @@ class BillBuy(QtWidgets.QDialog):
         for i in range(0, self.bb_table.rowCount()):
             if self.bb_table.item(i, 4) is not None:
                 total += float(self.bb_table.item(i, 4).text())
+        total = round(total, 2)
         self.total.setText(str(total))
-        self.last_total.setText(str(total - float(self.discount.text())))
+        self.last_total.setText(str(round(total - float(self.discount.text()), 2)))
 
     def discount_on_press(self):
         self.last_total.setText(
@@ -814,6 +818,8 @@ class AppMainWindow(QtWidgets.QMainWindow):
         self._typing_timer_bb.setSingleShot(True)
         self._typing_timer_fm.setSingleShot(True)
 
+        self.get_dollar_exchange()
+        self.refresh_dollar_exchange.clicked.connect(self.get_dollar_exchange)
         self.dollar_tr.textChanged.connect(self.dollar_change)
         self.change_pass.triggered.connect(self.change_pass_)
         self.change_user.triggered.connect(self.change_user_)
@@ -821,7 +827,7 @@ class AppMainWindow(QtWidgets.QMainWindow):
         self.btn_save_users.clicked.connect(self.save_users)
         self.btn_cancel_users.clicked.connect(
             lambda: self.stackedWidget.setCurrentIndex(0)
-            or self.menubar.setVisible(True)
+                    or self.menubar.setVisible(True)
         )
         self.btn_add_user.clicked.connect(
             lambda: self.users_table.setRowCount(self.users_table.rowCount() + 1)
@@ -898,6 +904,15 @@ class AppMainWindow(QtWidgets.QMainWindow):
         )
         self.p_first.clicked.connect(lambda: self.p_page_num.setValue(1))
 
+    def get_dollar_exchange(self):
+        # get dollar_turky from net begin
+        try:
+            do_on = requests.get("https://northsoftit.com/er")
+            do_on = do_on.json()
+            self.dollar_tr.setText(str(do_on[0]['buyRate']))
+        except:
+            self.dollar_tr.setText("0")
+
     def enter_app(self):
         global USER
         global PASS
@@ -926,7 +941,7 @@ class AppMainWindow(QtWidgets.QMainWindow):
         self.btn_save_pass.clicked.connect(self.save_new_pass)
         self.btn_cancel_pass.clicked.connect(
             lambda: self.stackedWidget.setCurrentIndex(0)
-            or self.menubar.setVisible(True)
+                    or self.menubar.setVisible(True)
         )
 
     def change_user_(self):
@@ -977,8 +992,8 @@ class AppMainWindow(QtWidgets.QMainWindow):
                     user["id"] = str(uuid8())
                 user["name"] = self.users_table.item(row, 0).text()
                 if (
-                    self.users_table.item(row, 1)
-                    and self.users_table.item(row, 1).text()
+                        self.users_table.item(row, 1)
+                        and self.users_table.item(row, 1).text()
                 ):
                     user["pass"] = self.users_table.item(row, 1).text()
                 else:
@@ -987,8 +1002,8 @@ class AppMainWindow(QtWidgets.QMainWindow):
                     )
                     return
                 if (
-                    self.users_table.item(row, 2)
-                    and self.users_table.item(row, 2).text()
+                        self.users_table.item(row, 2)
+                        and self.users_table.item(row, 2).text()
                 ):
                     user["permission"] = self.users_table.item(row, 2).text()
                 else:
@@ -1100,8 +1115,8 @@ class AppMainWindow(QtWidgets.QMainWindow):
 
     def exchange_dollar_turky(self):
         if (
-            self.coin_exchange_from.currentText() == "دولار"
-            and self.coin_exchange_to.currentText() == "تركي"
+                self.coin_exchange_from.currentText() == "دولار"
+                and self.coin_exchange_to.currentText() == "تركي"
         ):
             database.db.exchange_dollar_turky(
                 "do_tu", float(self.ta_dt_d.text()), float(self.ta_dt_t.text())
@@ -1109,8 +1124,8 @@ class AppMainWindow(QtWidgets.QMainWindow):
             self.ta_dt_d.setText("0")
             self.ta_dt_t.setText("0")
         elif (
-            self.coin_exchange_from.currentText() == "تركي"
-            and self.coin_exchange_to.currentText() == "دولار"
+                self.coin_exchange_from.currentText() == "تركي"
+                and self.coin_exchange_to.currentText() == "دولار"
         ):
             database.db.exchange_dollar_turky(
                 "tu_do", float(self.ta_dt_t.text()), float(self.ta_dt_d.text())
@@ -1121,8 +1136,11 @@ class AppMainWindow(QtWidgets.QMainWindow):
     def setup_box(self):
         box = database.db.get_box()
 
-        self.box_dolar.setText(box["dollar"])
-        self.box_turky.setText(box["turky"])
+        dollar = round(float(box['dollar']), 2)
+        turky = round(float(box['turky']), 2)
+
+        self.box_dolar.setText(str(dollar))
+        self.box_turky.setText(str(turky))
 
     def change_page_size(self, table):
         if table == "product":
@@ -1313,7 +1331,10 @@ class AppMainWindow(QtWidgets.QMainWindow):
         product["class"] = self.p_class.currentText()
         product["type"] = self.p_type.currentText()
         product["source"] = self.p_source.text()
-        product["quantity"] = self.p_quantity.text()
+        if self.p_quantity.text():
+            product["quantity"] = self.p_quantity.text()
+        else:
+            product["quantity"] = '0'
         product["less_quantity"] = self.p_less_quantity.text()
         product["buy_price"] = self.p_buy_price.text()
         product["sell_price"] = self.p_sell_price.text()
@@ -1326,10 +1347,10 @@ class AppMainWindow(QtWidgets.QMainWindow):
         product = self.save_product_info()
         if product["code"] and product["name"]:
             if (
-                product["buy_price"]
-                and product["sell_price"]
-                and product["sell_price_wh"]
-                and product["price_range"]
+                    (product["buy_price"] and product["buy_price"] != '0')
+                    and (product["sell_price"] and product["sell_price"] != '0')
+                    and (product["sell_price_wh"] and product["sell_price_wh"] != '0')
+                    and (product["price_range"] and product["price_range"] != '0')
             ):
                 if int(database.db.count_row("product", product["code"])) == 0:
                     database.db.insert_row("product", product)
@@ -1351,10 +1372,10 @@ class AppMainWindow(QtWidgets.QMainWindow):
         product["id"] = self.product_id
         if product["code"] and product["name"]:
             if (
-                product["buy_price"]
-                and product["sell_price"]
-                and product["sell_price_wh"]
-                and product["price_range"]
+                    (product["buy_price"] and product["buy_price"] != '0')
+                    and (product["sell_price"] and product["sell_price"] != '0')
+                    and (product["sell_price_wh"] and product["sell_price_wh"] != '0')
+                    and (product["price_range"] and product["price_range"] != '0')
             ):
                 if product["code"] == self.product_co:
                     database.db.update_row("product", product)
@@ -1454,6 +1475,8 @@ class AppMainWindow(QtWidgets.QMainWindow):
                 row_idx, 6, QtWidgets.QTableWidgetItem(row["buy_price"])
             )
             self.p_table.item(row_idx, 6).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+            if row["quantity"] == '':
+                row["quantity"] = '0'
             total_buy = round(float(row["buy_price"]) * float(row["quantity"]), 2)
             self.p_table.setItem(row_idx, 7, QtWidgets.QTableWidgetItem(str(total_buy)))
             self.p_table.item(row_idx, 7).setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
@@ -2882,9 +2905,9 @@ class AppMainWindow(QtWidgets.QMainWindow):
                 discount = round(float(balance) - float(self.fm_value.text()), 2)
             else:
                 discount = (
-                    float(balance)
-                    - float(self.fm_value.text())
-                    - (float(self.fm_value_t.text()) / float(self.fm_do_tr.text()))
+                        float(balance)
+                        - float(self.fm_value.text())
+                        - (float(self.fm_value_t.text()) / float(self.fm_do_tr.text()))
                 )
                 discount = round(discount, 2)
         self.fm_discount.setText(str(discount))

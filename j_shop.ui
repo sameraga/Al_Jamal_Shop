@@ -228,7 +228,7 @@
              <enum>QTabWidget::Rounded</enum>
             </property>
             <property name="currentIndex">
-             <number>4</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="tab_1">
              <property name="layoutDirection">
@@ -468,25 +468,52 @@
                 <item>
                  <layout class="QVBoxLayout" name="verticalLayout_23" stretch="1,1">
                   <item>
-                   <widget class="QLabel" name="label_60">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>18</pointsize>
-                     </font>
-                    </property>
-                    <property name="text">
-                     <string>سعر الصرف</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
+                   <layout class="QHBoxLayout" name="horizontalLayout_35" stretch="1,1">
+                    <item>
+                     <widget class="QPushButton" name="refresh_dollar_exchange">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="icons.qrc">
+                        <normaloff>:/icons/icons/refresh.png</normaloff>:/icons/icons/refresh.png</iconset>
+                      </property>
+                      <property name="iconSize">
+                       <size>
+                        <width>32</width>
+                        <height>32</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="label_60">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <pointsize>18</pointsize>
+                       </font>
+                      </property>
+                      <property name="text">
+                       <string>سعر الصرف</string>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignCenter</set>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
                   </item>
                   <item>
                    <widget class="QLineEdit" name="dollar_tr">
@@ -1504,6 +1531,9 @@
                   <property name="placeholderText">
                    <string>رقم الفاتورة</string>
                   </property>
+                  <property name="clearButtonEnabled">
+                   <bool>true</bool>
+                  </property>
                  </widget>
                 </item>
                 <item row="1" column="1">
@@ -1809,6 +1839,9 @@
                   </property>
                   <property name="placeholderText">
                    <string>رقم الفاتورة</string>
+                  </property>
+                  <property name="clearButtonEnabled">
+                   <bool>true</bool>
                   </property>
                  </widget>
                 </item>
@@ -2493,6 +2526,9 @@
                       <property name="placeholderText">
                        <string>الاسم</string>
                       </property>
+                      <property name="clearButtonEnabled">
+                       <bool>true</bool>
+                      </property>
                      </widget>
                     </item>
                     <item row="0" column="0">
@@ -2505,6 +2541,9 @@
                       </property>
                       <property name="placeholderText">
                        <string>الكود</string>
+                      </property>
+                      <property name="clearButtonEnabled">
+                       <bool>true</bool>
                       </property>
                      </widget>
                     </item>
@@ -3070,6 +3109,9 @@
                       <property name="placeholderText">
                        <string>الكود</string>
                       </property>
+                      <property name="clearButtonEnabled">
+                       <bool>true</bool>
+                      </property>
                      </widget>
                     </item>
                     <item>
@@ -3079,6 +3121,9 @@
                       </property>
                       <property name="placeholderText">
                        <string>الاسم</string>
+                      </property>
+                      <property name="clearButtonEnabled">
+                       <bool>true</bool>
                       </property>
                      </widget>
                     </item>
@@ -3552,6 +3597,9 @@
                       <property name="placeholderText">
                        <string>الكود</string>
                       </property>
+                      <property name="clearButtonEnabled">
+                       <bool>true</bool>
+                      </property>
                      </widget>
                     </item>
                     <item>
@@ -3561,6 +3609,9 @@
                       </property>
                       <property name="placeholderText">
                        <string>الاسم</string>
+                      </property>
+                      <property name="clearButtonEnabled">
+                       <bool>true</bool>
                       </property>
                      </widget>
                     </item>
@@ -3976,6 +4027,9 @@
                       <property name="placeholderText">
                        <string>الكود</string>
                       </property>
+                      <property name="clearButtonEnabled">
+                       <bool>true</bool>
+                      </property>
                      </widget>
                     </item>
                     <item>
@@ -3985,6 +4039,9 @@
                       </property>
                       <property name="placeholderText">
                        <string>الاسم</string>
+                      </property>
+                      <property name="clearButtonEnabled">
+                       <bool>true</bool>
                       </property>
                      </widget>
                     </item>
