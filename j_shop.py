@@ -740,7 +740,7 @@ class AppMainWindow(QtWidgets.QMainWindow):
         self.coins = ["دولار", "تركي"]
 
         self.validator_code = QtGui.QRegularExpressionValidator(
-            QtCore.QRegularExpression("[\u0621-\u064A0-9a-zA-Z][0-9]*")
+            QtCore.QRegularExpression("[\u0621-\u064A0-9a-zA-Z]{0,3}[0-9]*")
         )
         self.validator_int = QtGui.QRegularExpressionValidator(QtCore.QRegularExpression("[0-9]+"))
         self.validator_money = QtGui.QRegularExpressionValidator(
