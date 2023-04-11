@@ -16,6 +16,7 @@ import os
 import tempfile
 import time
 from uuid6 import uuid8
+from pathlib import Path
 import PyQt5.QtCore as QtCore
 import PyQt5.QtGui as QtGui
 import PyQt5.QtWidgets as QtWidgets
@@ -27,9 +28,11 @@ from datetime import datetime, timedelta
 from numpy import round
 import toaster_Notify
 from QDate import QDate
+from backup import run_backup
 import database
 from dlg_choice_code import PrintDialog
 
+app_directory = Path.cwd()
 USER = ""
 PASS = ""
 PERMISSION = ""
@@ -590,6 +593,7 @@ class BillBuy(QtWidgets.QDialog):
                 self.update_table(self.bb_table.currentRow())
             else:
                 self.enter_event(self.bb_table.currentRow())
+        QtWidgets.QTableWidget.keyReleaseEvent(self.bb_table, event)
 
     def update_table(self, current_row):
         code = self.bb_table.item(current_row, 0).text()
@@ -651,14 +655,15 @@ class BillBuy(QtWidgets.QDialog):
         btn_delete.setAutoDefault(False)
         self.bb_table.setCellWidget(current_row, 5, btn_delete)
         self.calculate_total()
+        self.bb_table.resizeColumnsToContents()
 
     def enter_event(self, current_row):
-        if self.bb_table.item(current_row, 4).text() == "":
-            self.bb_table.setItem(current_row, 4, QtWidgets.QTableWidgetItem("0"))
+        if self.bb_table.item(current_row, 3).text() == "":
+            self.bb_table.setItem(current_row, 3, QtWidgets.QTableWidgetItem("0"))
 
         if self.bb_table.item(current_row, 2).text() == "":
             self.bb_table.setItem(current_row, 2, QtWidgets.QTableWidgetItem("1"))
-        quantity = int(self.bb_table.item(current_row, 2).text())
+        quantity = float(self.bb_table.item(current_row, 2).text())
 
         total = round(quantity * float(self.bb_table.item(current_row, 3).text()), 2)
         self.bb_table.setItem(current_row, 4, QtWidgets.QTableWidgetItem(str(total)))
@@ -809,6 +814,7 @@ class AppMainWindow(QtWidgets.QMainWindow):
         )
 
         self.btn_ta_dt.clicked.connect(self.exchange_dollar_turky)
+        self.btn_back_up.clicked.connect(self.export_backup)
 
         # update tables
         self._typing_timer_p.setSingleShot(True)
@@ -905,13 +911,35 @@ class AppMainWindow(QtWidgets.QMainWindow):
         self.p_first.clicked.connect(lambda: self.p_page_num.setValue(1))
 
     def get_dollar_exchange(self):
+        global DOLLAR
         # get dollar_turky from net begin
         try:
             do_on = requests.get("https://northsoftit.com/er")
             do_on = do_on.json()
+            DOLLAR = do_on[0]['buyRate']
             self.dollar_tr.setText(str(do_on[0]['buyRate']))
         except:
             self.dollar_tr.setText("0")
+
+    def export_backup(self):
+        # user_dir = os.environ["USER"]
+        dir_path = QtWidgets.QFileDialog.getExistingDirectory(
+            self, "اختيار مجلد", os.path.dirname(__file__)
+        )
+        if dir_path:
+            if run_backup(app_directory, dir_path):
+                toaster_Notify.QToaster.show_message(
+                    parent=self, message="تم تصدير نسخة احتياطية"
+                )
+            else:
+                toaster_Notify.QToaster.show_message(
+                    parent=self, message="حدث خطأ أثناء تصدير نسخة احتياطية"
+                )
+        else:
+            toaster_Notify.QToaster.show_message(
+                parent=self,
+                message="حدث خطأ \n لم تختر مسار لنقل النسخة الاحتياطية له",
+            )
 
     def enter_app(self):
         global USER
